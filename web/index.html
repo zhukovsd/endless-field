@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="web-app/FieldManager.js"></script>
+    <script src="web-app/FieldView.js"></script>
+    <title>Title</title>
+    <script>
+        window.onload = function() {
+            FieldView.init();
+        };
+
+        FieldManager.onStateChange = function() {
+            switch (FieldManager.state) {
+                case (FieldManagerState.LOADED): {
+                    FieldView.paint();
+
+//                    errorContainer.setAttribute("hidden", "");
+
+//                    MazeView.setMazeData(MazeManager.mazeData);
+//                    MazeView.setVisibleByKind(MazeGraphKind.SHORTEST_PATH, document.getElementById("showpathcheckbox").checked);
+
+//                    MazeView.paint();
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="fieldcanvascontainer">
+        <canvas id="fieldcanvas"></canvas>
+    </div>
+
+    <input type="button" value="Button" onclick="FieldManager.requestField();">
+</body>
+</html>
