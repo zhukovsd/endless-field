@@ -43,18 +43,22 @@ var FieldView = new function() {
         canvasContext.fillStyle = 'black';
         canvasContext.fillText('hi', 500, 25);
 
-        canvasContext.fillStyle = "#ebebeb";
+        canvasContext.fillStyle = "#cbcbcb";
         canvasContext.strokeStyle = 'black';
         canvasContext.lineWidth = 2;
 
-        var cells = FieldManager.cells;
-        for (var i = 0; i < cells.length; i++) {
-            canvasContext.beginPath();
-            canvasContext.rect(5 + cells[i].column * 25, 5 + cells[i].row * 25, 21, 21);
-            canvasContext.stroke();
+        for (var row = 0; row < 10; row++) {
+            for (var column = 0; column < 10; column++) {
+                var cell = FieldManager.getCell(row, column);
 
-            if (cells[i].isChecked) {
-                canvasContext.fill();
+                canvasContext.beginPath();
+                canvasContext.rect(5 + column * 25, 5 + row * 25, 21, 21);
+
+                if (cell.isChecked) {
+                    canvasContext.fill();
+                }
+
+                canvasContext.stroke();
             }
         }
     }

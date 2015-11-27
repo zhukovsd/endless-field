@@ -14,7 +14,11 @@ var FieldManager = new function() {
     this.state = FieldManagerState.UNINITIALIZED;
     this.onStateChange = null;
 
-    this.cells = [];
+    var webSocket = new WebSocket("ws://localhost:8080/online-minesweeper/action");
+    //webSocket.onopen = function(){
+    //};
+
+    var cells = [];
 
     this.setState = function(state) {
         this.state = state;
@@ -52,7 +56,15 @@ var FieldManager = new function() {
 
     this.onRequestResult = function(response) {
         try {
-            this.cells = JSON.parse(response).cells;
+            var responseCells = JSON.parse(response).cells;
+
+            for (var i = 0; i < responseCells.length; i++) {
+                var responseCell = responseCells[i];
+                cells[JSON.stringify({row: responseCell.row, column: responseCell.column})] = responseCell.cell;
+            }
+
+            //this.getCell(1, 1);
+            //this.getCell(1, 2);
 
             //if (this.mazeData.status == 0)
                 this.setState(FieldManagerState.LOADED);
@@ -61,5 +73,19 @@ var FieldManager = new function() {
         } catch (exception) {
             this.setState(FieldManagerState.SERVER_ERROR);
         }
+    };
+
+    this.getCell = function(row, column) {
+        return cells[JSON.stringify({row: row, column: column})];
+    };
+
+    webSocket.onmessage = function(message) {
+        //alert(message.data);
+
+        FieldManager.onRequestResult(message.data);
+    };
+
+    this.test = function() {
+        webSocket.send("test");
     }
 };

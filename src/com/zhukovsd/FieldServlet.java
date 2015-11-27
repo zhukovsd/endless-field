@@ -14,16 +14,16 @@ public class FieldServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        ArrayList<FieldCell> cells = new ArrayList<>();
+        FieldServletResponse response = new FieldServletResponse();
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
-                cells.add(field.getCell(i, j));
+                response.addCell(i, j, field.getCell(i, j));
             }
         }
 
         field.getCell(1, 1).isChecked = true;
 
-        FieldServletResponse response = new FieldServletResponse(cells);
+
         resp.getOutputStream().write(response.toJson().getBytes());
     }
 }
