@@ -19,6 +19,8 @@ class ResponseCell {
  * Created by ZhukovSD on 25.11.2015.
  */
 public class FieldServletResponse {
+    private static Gson gson = new Gson();
+
     private ArrayList<ResponseCell> cells = new ArrayList<>();
 
     FieldServletResponse() { }
@@ -28,8 +30,6 @@ public class FieldServletResponse {
     }
 
     String toJson() {
-        Gson gson = new Gson();
-
         return gson.toJson(this);
     }
 }

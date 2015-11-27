@@ -6,22 +6,21 @@
     <script src="web-app/FieldView.js"></script>
     <title>Title</title>
     <script>
+        var fieldView = new FieldView();
+        var fieldManager = new FieldManager();
+
         window.onload = function() {
-            FieldView.init();
+            fieldView.init();
         };
 
-        FieldManager.onStateChange = function() {
-            switch (FieldManager.state) {
+        fieldManager.onStateChange = function() {
+            switch (fieldManager.state) {
                 case (FieldManagerState.LOADED): {
-                     FieldView.paint();
+                     fieldView.paint();
                 }
             }
         };
 
-//        function postToServer(){
-//            ws.send(document.getElementById("msg").value);
-//            document.getElementById("msg").value = "";
-//        }
 //        function closeConnect(){
 //            ws.close();
 //        }
@@ -60,7 +59,7 @@
         <canvas id="fieldcanvas"></canvas>
     </div>
 
-    <input type="button" value="Button" onclick="FieldManager.requestField();">
-    <input type="button" value="Button" onclick="FieldManager.test();">
+    <input type="button" value="Button" onclick="fieldManager.requestField();">
+    <input type="button" value="Button" onclick="fieldManager.test();">
 </body>
 </html>

@@ -10,11 +10,12 @@ FieldManagerState = {
     SERVER_ERROR: 4
 };
 
-var FieldManager = new function() {
+FieldManager = function() {
     this.state = FieldManagerState.UNINITIALIZED;
     this.onStateChange = null;
 
     var webSocket = new WebSocket("ws://localhost:8080/online-minesweeper/action");
+    webSocket.manager = this;
     //webSocket.onopen = function(){
     //};
 
@@ -29,24 +30,26 @@ var FieldManager = new function() {
     };
 
     this.requestField = function() {
+        var manager = this;
+
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
             switch (xhr.readyState) {
                 case 0: break; // UNINITIALIZED
                 case 1: // LOADING
-                    FieldManager.setState(FieldManagerState.LOADING);
+                    manager.setState(FieldManagerState.LOADING);
                     break;
                 case 2: break; // LOADED
                 case 3: break; // INTERACTIVE
                 case 4: // COMPLETED
                     if (xhr.status == 200) {
-                        FieldManager.onRequestResult(xhr.responseText);
+                        manager.onRequestResult(xhr.responseText);
                     }
                     else
-                        FieldManager.setState(FieldManagerState.NETWORK_ERROR);
+                        manager.setState(FieldManagerState.NETWORK_ERROR);
 
                     break;
-                default: FieldManager.setState(FieldManagerState.NETWORK_ERROR);
+                default: manager.setState(FieldManagerState.NETWORK_ERROR);
             }
         };
 
@@ -80,9 +83,12 @@ var FieldManager = new function() {
     };
 
     webSocket.onmessage = function(message) {
-        //alert(message.data);
+        this.manager.onRequestResult(message.data);
+    };
 
-        FieldManager.onRequestResult(message.data);
+    this.cellClick = function(cellPosition) {
+        if (cellPosition != null)
+            webSocket.send(JSON.stringify(cellPosition));
     };
 
     this.test = function() {

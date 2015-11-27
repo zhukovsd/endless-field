@@ -1,6 +1,9 @@
 package com.zhukovsd;
 
+import com.google.gson.Gson;
+
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.*;
 
 import javax.websocket.OnClose;
@@ -8,7 +11,17 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
-import javax.websocket.server.*;
+
+class CellPosition {
+    private static Gson gson = new Gson();
+
+    int row = -1;
+    int column = -1;
+
+    static CellPosition createFromJSON(String json) {
+        return gson.fromJson(json, CellPosition.class);
+    }
+}
 
 /**
  * Created by ZhukovSD on 27.11.2015.
@@ -51,14 +64,17 @@ public class ActionWebSocketServlet {
     public void onMessage(String message, Session userSession) {
         System.out.println("Message Received: " + message);
 
-        Random rand = new Random();
-        int row = rand.nextInt(10);
-        int column = rand.nextInt(10);
+//        Random rand = new Random();
+//        int row = rand.nextInt(10);
+//        int column = rand.nextInt(10);
+
+        CellPosition cellPosition = CellPosition.createFromJSON(message);
+        FieldServletResponse response = new FieldServletResponse();
 
         // synchronize
-        FieldServletResponse response = new FieldServletResponse();
-        response.addCell(row, column, FieldServlet.field.getCell(row, column));
-        FieldServlet.field.getCell(row, column).isChecked = true;
+        FieldCell cell = FieldServlet.field.getCell(cellPosition.row, cellPosition.column);
+        response.addCell(cellPosition.row, cellPosition.column, cell);
+        cell.isChecked = !cell.isChecked;
         // synchronize
 
         for (Session session : userSessions) {
