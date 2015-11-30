@@ -1,14 +1,16 @@
 body {
     text-align: center;
 }
-#mazecanvascontainer {
+#fieldcanvascontainer {
+    background-color: #fff2a1;
     width: 100%;
-    height: 0;
+    height: 300px;
     overflow-x: auto;
     overflow-y: hidden;
     margin-top: 19px;
 }
-#mazecanvas {
+#fieldcanvas {
+    background-color: white;
     display: block;
     width: 400px;
     height: 100%;

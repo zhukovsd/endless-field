@@ -38,7 +38,7 @@ public class Field {
     public Field() {
         for (int i = 0; i < 300; i++) {
             for (int j = 0; j < 300; j++) {
-                map.put(new Key(i, j), new FieldCell(i + ", " + j));
+                map.put(new Key(i, j), new FieldCell(i + "," + j));
             }
         }
     }
