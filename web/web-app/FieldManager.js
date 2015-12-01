@@ -29,7 +29,7 @@ FieldManager = function() {
         }
     };
 
-    this.requestField = function() {
+    this.requestField = function(scope) {
         var manager = this;
 
         var xhr = new XMLHttpRequest();
@@ -53,7 +53,10 @@ FieldManager = function() {
             }
         };
 
-        xhr.open("GET", "http://localhost:8080/online-minesweeper/field", true);
+        xhr.open(
+            "GET", "http://localhost:8080/online-minesweeper/field?scope="+
+            encodeURIComponent(JSON.stringify(scope)), true
+        );
         xhr.send(null);
     };
 
@@ -87,8 +90,11 @@ FieldManager = function() {
     };
 
     this.cellClick = function(cellPosition) {
-        if (cellPosition != null)
+        if (cellPosition != null) {
             webSocket.send(JSON.stringify(cellPosition));
+
+            //console.log("hi");
+        }
     };
 
     this.test = function() {

@@ -14,16 +14,35 @@ FieldView = function() {
     this.cameraScope = function() {
         var size = this.getSize();
 
-        var x = Math.ceil((this.cameraPosition.x - 5) / 25) - 1;
-        if ((this.cameraPosition.x - 5) % 25 > 21) x++;
-        if ((this.cameraPosition.x - 5) % 25 == 0) x++;
-        if (x < 0) x = 0;
+        var leftVisibleColumnIndex = Math.ceil((this.cameraPosition.x - 5) / 25) - 1;
+        // if mod > cell width, then this cell are not visible yet
+        if ((this.cameraPosition.x - 5) % 25 > 21) leftVisibleColumnIndex++;
+        if ((this.cameraPosition.x - 5) % 25 == 0) leftVisibleColumnIndex++;
+        if (leftVisibleColumnIndex < 0) leftVisibleColumnIndex = 0;
 
+        var topVisibleRowIndex = Math.ceil((this.cameraPosition.y - 5) / 25) - 1;
+        // if mod > cell height, then this cell are not visible yet
+        if ((this.cameraPosition.y - 5) % 25 > 21) topVisibleRowIndex++;
+        if ((this.cameraPosition.y - 5) % 25 == 0) topVisibleRowIndex++;
+        if (topVisibleRowIndex < 0) topVisibleRowIndex = 0;
 
+        var leftTopCellOrigin = {
+            x: 5 + leftVisibleColumnIndex * 25 - this.cameraPosition.x,
+            y: 5 + topVisibleRowIndex * 25 - this.cameraPosition.y
+        };
 
-        console.log(x);
+        var visibleColumnsCount = Math.ceil((width - leftTopCellOrigin.x) / 25);
+        if ((width - leftTopCellOrigin.x) % 25 == 0) visibleColumnsCount++;
 
-        return {originRow: 0, originColumn: 0, rowCount: 0, columnCount: 0};
+        var visibleRowsCount = Math.ceil((height - leftTopCellOrigin.y) / 25);
+        if ((height - leftTopCellOrigin.y) % 25 == 0) visibleRowsCount++;
+
+        //console.log(leftVisibleColumnIndex + ", " + topVisibleRowIndex + ", " + visibleColumnsCount);
+
+        return {
+            originRow: topVisibleRowIndex, originColumn: leftVisibleColumnIndex,
+            rowCount: visibleRowsCount, columnCount: visibleColumnsCount
+        };
     };
 
     this.getCellsScope = function() {
@@ -45,6 +64,12 @@ FieldView = function() {
         var cameraPositionOnMouseDown = {x: 0, y: 0};
         var mouseOffset = {x: 0, y: 0};
 
+        function doOnClick(evt) {
+            //console.log('click');
+            var mousePos = getMousePos(canvas, evt);
+            fieldManager.cellClick(view.cellByPoint(mousePos));
+        }
+
         function getMousePos(canvas, evt) {
             var rect = canvas.getBoundingClientRect();
             return {
@@ -53,14 +78,14 @@ FieldView = function() {
             };
         }
 
-        canvas.addEventListener('click', function(evt) {
-            //console.log('click');
-            var mousePos = getMousePos(canvas, evt);
-            fieldManager.cellClick(cellByPoint(mousePos));
-        }, false);
+        //
 
         canvas.addEventListener('mousedown', function(evt) {
             //console.log('down');
+
+            //
+            canvas.addEventListener('click', doOnClick, false);
+
             isDragging = true;
             dragMousePos = getMousePos(canvas, evt);
             cameraPositionOnMouseDown = {x: view.cameraPosition.x, y: view.cameraPosition.y};
@@ -70,6 +95,9 @@ FieldView = function() {
             //console.log('move');
 
             if (isDragging) {
+                //
+                if (isDragging) canvas.removeEventListener("click", doOnClick);
+
                 var mousePos = getMousePos(canvas, evt);
 
                 mouseOffset = {x: mousePos.x - dragMousePos.x, y: mousePos.y - dragMousePos.y};
@@ -78,8 +106,7 @@ FieldView = function() {
                 if (view.cameraPosition.x < 0) view.cameraPosition.x = 0;
                 if (view.cameraPosition.y < 0) view.cameraPosition.y = 0;
 
-                //console.log(JSON.stringify(view.cameraPosition));
-                view.cameraScope();
+                // console.log(JSON.stringify(view.cameraScope()));
 
                 view.paint();
             }
@@ -87,6 +114,12 @@ FieldView = function() {
 
         canvas.addEventListener('mouseup', function(evt) {
             //console.log('up');
+
+            isDragging = false;
+        }, false);
+
+        canvas.addEventListener('mouseleave', function(evt) {
+            //console.log('leave');
             isDragging = false;
         }, false);
     };
@@ -112,16 +145,17 @@ FieldView = function() {
         }
     }
 
-    function cellByPoint(Point) {
+    this.cellByPoint = function(Point) {
         var cellPos = {};
-        cellPos.row = Math.floor((Point.y - 5) / 25);
-        cellPos.column = Math.floor((Point.x - 5) / 25);
 
-        if (((Point.x - 5) % 25 > 21) | ((Point.y - 5) % 25 > 21))
+        cellPos.row = Math.floor((this.cameraPosition.y + Point.y - 5) / 25);
+        cellPos.column = Math.floor((this.cameraPosition.x + Point.x - 5) / 25);
+
+        if (((Point.x - 5) % 25 > 21) || ((Point.y - 5) % 25 > 21))
             cellPos = null;
 
         return cellPos;
-    }
+    };
 
     this.paint = function() {
         // setSize(700, 10 * 25 + 10);
@@ -135,22 +169,28 @@ FieldView = function() {
         canvasContext.strokeStyle = 'black';
         canvasContext.lineWidth = 2;
 
-        for (var row = 0; row < 10; row++) {
-            for (var column = 0; column < 10; column++) {
+        var cameraScope = this.cameraScope();
+        for (var row = cameraScope.originRow; row < cameraScope.originRow + cameraScope.rowCount; row++) {
+            for (var column = cameraScope.originColumn; column < cameraScope.originColumn + cameraScope.columnCount; column++) {
                 var cell = fieldManager.getCell(row, column);
 
                 canvasContext.beginPath();
                 canvasContext.rect(5 + column * 25 - this.cameraPosition.x, 5 + row * 25 - this.cameraPosition.y, 21, 21);
 
-                if (cell.isChecked) {
-                    canvasContext.fillStyle = "#cbcbcb";
+                if (cell != null) {
+                    if (cell.isChecked) {
+                        canvasContext.fillStyle = "#cbcbcb";
+                        canvasContext.fill();
+                    }
+
+                    canvasContext.fillStyle = "black";
+                    canvasContext.fillText(cell.text, 7 + column * 25 - this.cameraPosition.x, 14 + row * 25 - this.cameraPosition.y);
+
+                    canvasContext.stroke();
+                } else {
+                    canvasContext.fillStyle = "#ffaaaa";
                     canvasContext.fill();
                 }
-
-                canvasContext.fillStyle = "black";
-                canvasContext.fillText(cell.text, 7 + column * 25 - this.cameraPosition.x, 14 + row * 25 - this.cameraPosition.y);
-
-                canvasContext.stroke();
             }
         }
     }
