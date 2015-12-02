@@ -45,8 +45,21 @@ FieldView = function() {
         };
     };
 
-    this.getCellsScope = function() {
+    this.cellsScope = function() {
+        var cameraScope = this.cameraScope();
 
+        //
+        var result = {
+            originRow: cameraScope.originRow - cameraScope.rowCount / 2,
+            originColumn: cameraScope.originColumn - cameraScope.columnCount / 2,
+            rowCount: cameraScope.rowCount * 2,
+            columnCount: cameraScope.columnCount * 2
+        };
+
+        if (result.originRow < 0) result.originRow = 0;
+        if (result.originColumn < 0) result.originColumn = 0;
+
+        return result;
     };
 
     this.init = function() {
@@ -65,7 +78,7 @@ FieldView = function() {
         var mouseOffset = {x: 0, y: 0};
 
         function doOnClick(evt) {
-            //console.log('click');
+            console.log('click');
             var mousePos = getMousePos(canvas, evt);
             fieldManager.cellClick(view.cellByPoint(mousePos));
         }
@@ -81,22 +94,22 @@ FieldView = function() {
         //
 
         canvas.addEventListener('mousedown', function(evt) {
-            //console.log('down');
-
-            //
-            canvas.addEventListener('click', doOnClick, false);
+            console.log('down');
 
             isDragging = true;
             dragMousePos = getMousePos(canvas, evt);
             cameraPositionOnMouseDown = {x: view.cameraPosition.x, y: view.cameraPosition.y};
+
+            //
+            canvas.addEventListener('click', doOnClick, false);
         }, false);
 
         canvas.addEventListener('mousemove', function(evt) {
-            //console.log('move');
+            console.log('move');
 
             if (isDragging) {
                 //
-                if (isDragging) canvas.removeEventListener("click", doOnClick);
+                canvas.removeEventListener("click", doOnClick);
 
                 var mousePos = getMousePos(canvas, evt);
 

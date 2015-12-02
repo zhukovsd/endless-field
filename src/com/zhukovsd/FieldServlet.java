@@ -29,6 +29,10 @@ public class FieldServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         ClientScope scope =  ClientScope.createFromJSON(URLDecoder.decode(req.getParameter("scope"), "UTF-8"));
 
+        System.out.println("id = " + req.getSession().getId());
+
+        // identify client, save it's scope
+
         FieldServletResponse response = new FieldServletResponse();
         for (int i = scope.originRow; i < scope.originRow + scope.rowCount; i++) {
             for (int j = scope.originColumn; j < scope.originColumn + scope.columnCount; j++) {
@@ -37,7 +41,6 @@ public class FieldServlet extends HttpServlet {
         }
 
         field.getCell(1, 1).isChecked = true;
-
 
         resp.getOutputStream().write(response.toJson().getBytes());
     }

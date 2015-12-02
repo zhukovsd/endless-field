@@ -16,6 +16,7 @@ FieldManager = function() {
 
     var webSocket = new WebSocket("ws://localhost:8080/online-minesweeper/action");
     webSocket.manager = this;
+
     //webSocket.onopen = function(){
     //};
 
