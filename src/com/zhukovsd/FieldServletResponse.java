@@ -21,9 +21,9 @@ class ResponseCell {
 public class FieldServletResponse {
     private static Gson gson = new Gson();
 
-    private ArrayList<ResponseCell> cells = new ArrayList<>();
+    ArrayList<ResponseCell> cells = new ArrayList<>();
 
-    FieldServletResponse() { }
+    // FieldServletResponse() { }
 
     void addCell(int row, int column, FieldCell cell) {
         cells.add(new ResponseCell(row, column, cell));

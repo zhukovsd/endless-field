@@ -14,6 +14,7 @@ FieldView = function() {
     this.cameraScope = function() {
         var size = this.getSize();
 
+        // TODO: 08.12.2015 remove hardcoded params
         var leftVisibleColumnIndex = Math.ceil((this.cameraPosition.x - 5) / 25) - 1;
         // if mod > cell width, then this cell are not visible yet
         if ((this.cameraPosition.x - 5) % 25 > 21) leftVisibleColumnIndex++;
@@ -48,10 +49,10 @@ FieldView = function() {
     this.cellsScope = function() {
         var cameraScope = this.cameraScope();
 
-        //
+        // TODO: 08.12.2015 cellsScope, cameraScope results as Rect objects
         var result = {
-            originRow: cameraScope.originRow - cameraScope.rowCount / 2,
-            originColumn: cameraScope.originColumn - cameraScope.columnCount / 2,
+            originRow: cameraScope.originRow - Math.round(cameraScope.rowCount / 2),
+            originColumn: cameraScope.originColumn - Math.round(cameraScope.columnCount / 2),
             rowCount: cameraScope.rowCount * 2,
             columnCount: cameraScope.columnCount * 2
         };
@@ -76,11 +77,23 @@ FieldView = function() {
 
         var cameraPositionOnMouseDown = {x: 0, y: 0};
         var mouseOffset = {x: 0, y: 0};
+        var a = {};
+
+        //var dataURL;
+        //var image;
 
         function doOnClick(evt) {
-            console.log('click');
+            //console.log('click');
             var mousePos = getMousePos(canvas, evt);
             fieldManager.cellClick(view.cellByPoint(mousePos));
+        }
+
+        function doOnDragEnd() {
+            if ((a.originRow != view.cameraScope().originRow) || (a.originColumn != view.cameraScope().originColumn)) {
+                fieldManager.requestField(fieldView.cellsScope());
+            } else {
+                //console.log('no');
+            }
         }
 
         function getMousePos(canvas, evt) {
@@ -94,23 +107,27 @@ FieldView = function() {
         //
 
         canvas.addEventListener('mousedown', function(evt) {
-            console.log('down');
+            //console.log('down');
+
+            evt.preventDefault();
 
             isDragging = true;
             dragMousePos = getMousePos(canvas, evt);
             cameraPositionOnMouseDown = {x: view.cameraPosition.x, y: view.cameraPosition.y};
+            a = view.cameraScope();
+
+            //dataURL = canvas.toDataURL();
+            //image = new Image();
+            //image.src = dataURL;
 
             //
             canvas.addEventListener('click', doOnClick, false);
         }, false);
 
         canvas.addEventListener('mousemove', function(evt) {
-            console.log('move');
+            //console.log('move');
 
             if (isDragging) {
-                //
-                canvas.removeEventListener("click", doOnClick);
-
                 var mousePos = getMousePos(canvas, evt);
 
                 mouseOffset = {x: mousePos.x - dragMousePos.x, y: mousePos.y - dragMousePos.y};
@@ -119,21 +136,44 @@ FieldView = function() {
                 if (view.cameraPosition.x < 0) view.cameraPosition.x = 0;
                 if (view.cameraPosition.y < 0) view.cameraPosition.y = 0;
 
+                if (Math.abs(mouseOffset.x) + Math.abs(mouseOffset.y) > 5) {
+                    canvas.removeEventListener('click', doOnClick);
+                    //console.log('event removed');
+                }
+
                 // console.log(JSON.stringify(view.cameraScope()));
 
+                //canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+                //canvasContext.drawImage(image, mouseOffset.x, mouseOffset.y);
+
+                // TODO optimize paint of mouse move
                 view.paint();
             }
         }, false);
 
         canvas.addEventListener('mouseup', function(evt) {
-            //console.log('up');
+            console.log('up');
 
-            isDragging = false;
+            if (isDragging) {
+                isDragging = false;
+                doOnDragEnd();
+            }
         }, false);
 
         canvas.addEventListener('mouseleave', function(evt) {
             //console.log('leave');
-            isDragging = false;
+            if (isDragging) {
+                isDragging = false;
+                doOnDragEnd();
+            }
+        }, false);
+
+        var i = 0;
+
+        canvas.addEventListener('touchmove', function(evt) {
+            canvasContext.fillText(i.toString(), 5 + i, 5);
+
+            i += 15;
         }, false);
     };
 
@@ -170,11 +210,12 @@ FieldView = function() {
         return cellPos;
     };
 
+    // TODO repaint only certain cell
     this.paint = function() {
         // setSize(700, 10 * 25 + 10);
         canvasContext.clearRect(0, 0, canvas.width, canvas.height);
 
-        canvasContext.font = '7pt Arial';
+        canvasContext.font = '6pt Arial';
         //canvasContext.fillStyle = 'black';
         //canvasContext.fillText('hi', 500, 25);
 

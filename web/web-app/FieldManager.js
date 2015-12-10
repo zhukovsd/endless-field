@@ -4,18 +4,34 @@
 
 FieldManagerState = {
     UNINITIALIZED: 0,
-    LOADING: 1,
-    LOADED: 2,
-    NETWORK_ERROR: 3,
-    SERVER_ERROR: 4
+    CONNECTED: 1,
+    NETWORK_ERROR: 2,
+    SERVER_ERROR: 3
 };
 
 FieldManager = function() {
+    this.id = -1;
+
     this.state = FieldManagerState.UNINITIALIZED;
     this.onStateChange = null;
 
-    var webSocket = new WebSocket("ws://localhost:8080/online-minesweeper/action");
+    var webSocket = new WebSocket("ws://" + location.host + "/online-minesweeper/action");
     webSocket.manager = this;
+
+    webSocket.onmessage = function(message) {
+        var msg = JSON.parse(message.data);
+
+        // ?
+        if (typeof msg.id === 'undefined')
+            this.manager.onRequestResult(message.data);
+        else {
+            // alert(msg.id);
+            this.manager.id = msg.id;
+            this.manager.setState(FieldManagerState.CONNECTED);
+        }
+    };
+
+    webSocket.onerror = function() { };
 
     //webSocket.onopen = function(){
     //};
@@ -25,12 +41,17 @@ FieldManager = function() {
     this.setState = function(state) {
         this.state = state;
 
+        if (this.state = FieldManagerState.CONNECTED)
+            fieldManager.requestField(fieldView.cellsScope());
+
         if (typeof this.onStateChange !== 'undefined') {
-            this.onStateChange(this.state)
+            this.onStateChange(this.state);
         }
     };
 
     this.requestField = function(scope) {
+        console.log('requesting cells...');
+
         var manager = this;
 
         var xhr = new XMLHttpRequest();
@@ -38,7 +59,7 @@ FieldManager = function() {
             switch (xhr.readyState) {
                 case 0: break; // UNINITIALIZED
                 case 1: // LOADING
-                    manager.setState(FieldManagerState.LOADING);
+                    //manager.setState(FieldManagerState.LOADING);
                     break;
                 case 2: break; // LOADED
                 case 3: break; // INTERACTIVE
@@ -54,9 +75,11 @@ FieldManager = function() {
             }
         };
 
+        var requestData = {clientID: this.id, scope: scope};
+
         xhr.open(
-            "GET", "http://localhost:8080/online-minesweeper/field?scope="+
-            encodeURIComponent(JSON.stringify(scope)), true
+            "GET", "/online-minesweeper/field?data="+
+            encodeURIComponent(JSON.stringify(requestData)), true
         );
         xhr.send(null);
     };
@@ -74,7 +97,8 @@ FieldManager = function() {
             //this.getCell(1, 2);
 
             //if (this.mazeData.status == 0)
-                this.setState(FieldManagerState.LOADED);
+            //    this.setState(FieldManagerState.LOADED);
+                fieldView.paint();
             //else
             //    this.setState(FieldManagerState.SERVER_ERROR);
         } catch (exception) {
@@ -84,10 +108,6 @@ FieldManager = function() {
 
     this.getCell = function(row, column) {
         return cells[JSON.stringify({row: row, column: column})];
-    };
-
-    webSocket.onmessage = function(message) {
-        this.manager.onRequestResult(message.data);
     };
 
     this.cellClick = function(cellPosition) {
