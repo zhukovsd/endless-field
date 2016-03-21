@@ -6,7 +6,7 @@ package com.zhukovsd.endlessfield.field;
 public class CellPosition {
     static int hashCodeFactor = 2539;
 
-    int row, column;
+    public final int row, column;
 
     public CellPosition(int row, int column) {
         this.row = row;

@@ -41,6 +41,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
             chunkMap.put(chunkId, chunk);
 
             // TODO: 21.03.2016 store chunk
+            dataSource.storeChunk(chunk, chunkId);
         }
 
         return chunk.get(position);

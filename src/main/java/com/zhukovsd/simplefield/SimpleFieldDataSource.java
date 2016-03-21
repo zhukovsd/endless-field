@@ -8,6 +8,11 @@ import com.zhukovsd.endlessfield.field.*;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import org.bson.Document;
 
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * Created by ZhukovSD on 20.03.2016.
  */
@@ -42,6 +47,30 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
             );
         }
 
-        return null;
+        return chunk;
+    }
+
+    @Override
+    public void storeChunk(EndlessFieldChunk<SimpleFieldCell> chunk, int chunkId) {
+//        Document d = new Document()
+        ArrayList<Document> cells = new ArrayList<>();
+
+        for (Map.Entry<CellPosition, SimpleFieldCell> entry : chunk.entrySet()) {
+            CellPosition position = entry.getKey();
+            SimpleFieldCell cell = entry.getValue();
+
+            cells.add(new Document("row_index", position.row)
+                    .append("column_index", position.column)
+                    .append("chunk_id", chunkId)
+                    .append("checked", cell.isChecked())
+            );
+        }
+
+        // TODO: 21.03.2016 handle mongo exceptions
+        collection.insertMany(cells);
+    }
+
+    public static void main(String[] args) {
+        ExecutorService exec = Executors.newCachedThreadPool();
     }
 }

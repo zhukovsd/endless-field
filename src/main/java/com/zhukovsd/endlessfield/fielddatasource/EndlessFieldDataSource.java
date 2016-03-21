@@ -10,4 +10,5 @@ import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 public interface EndlessFieldDataSource<T extends EndlessFieldCell> {
     boolean containsChunk(Integer chunkId);
     EndlessFieldChunk<T> getChunk(Integer chunkId, ChunkSize chunkSize);
+    void storeChunk(EndlessFieldChunk<T> chunk, int chunkId);
 }

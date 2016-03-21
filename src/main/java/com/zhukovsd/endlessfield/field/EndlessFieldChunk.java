@@ -1,5 +1,7 @@
 package com.zhukovsd.endlessfield.field;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -18,5 +20,9 @@ public class EndlessFieldChunk<T extends EndlessFieldCell> {
 
     public T put(CellPosition key, T value) {
         return cellsMap.put(key, value);
+    }
+
+    public Set<Map.Entry<CellPosition, T>> entrySet() {
+        return cellsMap.entrySet();
     }
 }
