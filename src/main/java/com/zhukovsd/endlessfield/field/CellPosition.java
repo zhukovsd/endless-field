@@ -31,4 +31,13 @@ public class CellPosition {
         result = hashCodeFactor * result + column;
         return result;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder(Integer.toString(row));
+        builder.append(", ");
+        builder.append(column);
+
+        return builder.toString();
+    }
 }

@@ -8,7 +8,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by ZhukovSD on 13.03.2016.
  */
 public class EndlessFieldChunk<T extends EndlessFieldCell> {
-    ConcurrentHashMap<CellPosition, T> cellsMap;
+    private ConcurrentHashMap<CellPosition, T> cellsMap;
+
+    // TODO: 23.03.2016 set to true on read from data source
+    private boolean isStored = false;
 
     public EndlessFieldChunk(int capacity) {
         cellsMap = new ConcurrentHashMap<>(capacity);
@@ -24,5 +27,13 @@ public class EndlessFieldChunk<T extends EndlessFieldCell> {
 
     public Set<Map.Entry<CellPosition, T>> entrySet() {
         return cellsMap.entrySet();
+    }
+
+    public synchronized boolean isStored() {
+        return isStored;
+    }
+
+    public synchronized void setStored(boolean stored) {
+        isStored = stored;
     }
 }

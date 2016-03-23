@@ -10,4 +10,11 @@ public class ChunkIdGenerator {
 //        return 0;
         return (position.row / chunkSize.rowCount) * idFactor + (position.column / chunkSize.columnCount);
     }
+
+    static CellPosition chunkOrigin(ChunkSize chunkSize, int chunkId) {
+        return new CellPosition(
+                (chunkId / idFactor) * chunkSize.rowCount,
+                (chunkId % idFactor) * chunkSize.columnCount
+        );
+    }
 }

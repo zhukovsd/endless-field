@@ -59,6 +59,7 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
             CellPosition position = entry.getKey();
             SimpleFieldCell cell = entry.getValue();
 
+            // TODO: 23.03.2016 row & column indexes calculated from chunk index to be unique
             cells.add(new Document("row_index", position.row)
                     .append("column_index", position.column)
                     .append("chunk_id", chunkId)
