@@ -2,6 +2,8 @@ package com.zhukovsd.endlessfield.field;
 
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.endlessfield.fielddatasource.StoreChunkTask;
+import de.jkeylockmanager.manager.KeyLockManager;
+import de.jkeylockmanager.manager.KeyLockManagers;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +24,8 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     // TODO: 23.03.2016 consider optimal thread pool size
     private ExecutorService chunkStoreExec = Executors.newFixedThreadPool(5);
 
+    private final KeyLockManager lockManager = KeyLockManagers.newLock();
+
     private ThreadLocal<EndlessFieldChunk<T>> lockedChunk = new ThreadLocal<>();
 
     public EndlessField(ChunkSize chunkSize, EndlessFieldDataSource<T> dataSource, EndlessFieldCellFactory<T> cellFactory) {
@@ -30,27 +34,28 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         this.cellFactory = cellFactory;
     }
 
-    private EndlessFieldChunk<T> getChunk(Integer chunkId) {
-        EndlessFieldChunk<T> chunk;
-
-        // get already loaded chunk
-        if (chunkMap.containsKey(chunkId))
-            chunk = chunkMap.get(chunkId);
-        // get stored, but not loaded chunk
-        else if (dataSource.containsChunk(chunkId)) {
-            chunk = dataSource.getChunk(chunkId, chunkSize);
-            // TODO: 21.03.2016 check if chunk has correct size
-            chunk.setStored(true);
-
-            chunkMap.put(chunkId, chunk);
-        // generate new chunk and store it
-        } else {
-            chunk = generateChunk(chunkId);
-            chunkMap.put(chunkId, chunk);
-
+    // TODO: 24.03.2016 rename to provideChunk?
+    public EndlessFieldChunk<T> getChunk(Integer chunkId) {
+        EndlessFieldChunk<T> chunk = lockManager.executeLocked(chunkId, () -> {
+            // get already loaded chunk
+            if (chunkMap.containsKey(chunkId))
+                return chunkMap.get(chunkId);
+            // get stored, but not loaded chunk
+            else if (dataSource.containsChunk(chunkId)) {
+                EndlessFieldChunk<T> c = dataSource.getChunk(chunkId, chunkSize);
+                // TODO: 21.03.2016 check if chunk has correct size
+                c.setStored(true);
+                chunkMap.put(chunkId, c);
+                return c;
+            // generate new chunk and store it
+            } else {
+                EndlessFieldChunk<T> c = generateChunk(chunkId);
+                chunkMap.put(chunkId, c);
+                return c;
 //            dataSource.storeChunk(chunk, chunkId);
 //            chunkStoreExec.submit(new StoreChunkTask<T>(dataSource, chunk, chunkId));
-        }
+            }
+        });
 
         return chunk;
     }
@@ -109,17 +114,13 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return chunkMap.entrySet();
     }
 
-    public EndlessFieldChunk<T> test(Integer chunkId) {
-        return chunkMap.get(chunkId);
-    }
-
     public void lockChunk(Integer chunkId) {
         EndlessFieldChunk<T> chunk = getChunk(chunkId);
 
         lockedChunk.set(chunk);
         chunk.lock.lock();
 
-        System.out.println("chunk " + chunk + " locked by thread " + Thread.currentThread().getName());
+//        System.out.println("chunk " + chunk + " locked by thread " + Thread.currentThread().getName());
     }
 
     public void unlockChunk() {
@@ -128,7 +129,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         chunk.lock.unlock();
         lockedChunk.remove();
 
-        System.out.println("chunk " + chunk + " unlocked by thread " + Thread.currentThread().getName());
+//        System.out.println("chunk " + chunk + " unlocked by thread " + Thread.currentThread().getName());
     }
 
     void commitCellsUpdate(Iterable<CellEntry<T>> cellEntries) {
