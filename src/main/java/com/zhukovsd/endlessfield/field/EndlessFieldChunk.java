@@ -3,6 +3,7 @@ package com.zhukovsd.endlessfield.field;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by ZhukovSD on 13.03.2016.
@@ -12,6 +13,8 @@ public class EndlessFieldChunk<T extends EndlessFieldCell> {
 
     // TODO: 23.03.2016 set to true on read from data source
     private boolean isStored = false;
+
+    public ReentrantLock lock = new ReentrantLock(); // TODO: 23.03.2016 remove public
 
     public EndlessFieldChunk(int capacity) {
         cellsMap = new ConcurrentHashMap<>(capacity);

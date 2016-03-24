@@ -3,7 +3,6 @@ package com.zhukovsd;
 import com.zhukovsd.endlessfield.field.*;
 import com.zhukovsd.simplefield.*;
 
-import java.sql.Time;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,12 +16,15 @@ public class Main {
         SimpleField field = new SimpleField(new ChunkSize(50, 50), new SimpleFieldDataSource(), new SimpleFieldCellFactory());
         Random rand = new Random();
 
-        // 500ms w/o storing, 10000ms w/ sync storing, 1000ms w/ async storing with 5 threads
+        // 550ms w/o storing, 10000ms w/ sync storing, 1000ms w/ async storing with 5 threads
         // full reading - 3000ms
         long time = System.nanoTime();
-        for (int i = 0; i < 999999; i++) {
-            field.getEntry(new CellPosition(rand.nextInt(1000), rand.nextInt(1000)));
+        ArrayList<CellPosition> positions = new ArrayList<>(1000000);
+        for (int i = 0; i < 1000000; i++) {
+//            field.getEntry(new CellPosition(rand.nextInt(1000), rand.nextInt(1000)));
+            positions.add(new CellPosition(rand.nextInt(1000), rand.nextInt(1000)));
         }
+        field.getCells(positions);
         time = (System.nanoTime() - time) / 1000000;
         System.out.println(time + "ms");
 
@@ -44,24 +46,55 @@ public class Main {
 }
 
 class UpdateSynchronization {
-    static class UpdateRunnable implements Runnable {
+    static abstract class CancelableTask implements Runnable {
+        static volatile boolean cancelled = false;
+        static void cancel() {
+            cancelled = true;
+        }
+    }
+
+    static class UpdateTask extends CancelableTask {
+        SimpleField field;
         Iterable<SimpleFieldCell> cells;
 
-        public UpdateRunnable(Iterable<SimpleFieldCell> cells) {
+        UpdateTask(SimpleField field, Iterable<SimpleFieldCell> cells) {
+            this.field = field;
             this.cells = cells;
         }
 
         @Override
         public void run() {
-            while (true) {
-//                for (SimpleFieldCell cell : cells) {
-//                    cell.setChecked(!cell.isChecked());
-//                }
+            while (!cancelled) {
+                field.test(0).lock.lock();
 
                 try {
-                    TimeUnit.SECONDS.sleep(2);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    for (SimpleFieldCell cell : cells) {
+                        cell.setChecked(!cell.isChecked());
+                    }
+                } finally {
+                    field.test(0).lock.unlock();
+                }
+            }
+        }
+    }
+
+    static class EntryLockCounterTask extends CancelableTask {
+        SimpleField field;
+
+        static long counter = 0;
+
+        public EntryLockCounterTask(SimpleField field) {
+            this.field = field;
+        }
+
+        @Override
+        public void run() {
+            while (!cancelled) {
+                field.test(0).lock.lock();
+                try {
+                    counter++;
+                } finally {
+                    field.test(0).lock.unlock();
                 }
             }
         }
@@ -71,36 +104,80 @@ class UpdateSynchronization {
         ExecutorService exec = Executors.newCachedThreadPool();
 
         SimpleField field = new SimpleField(new ChunkSize(50, 50), new SimpleFieldDataSource(), new SimpleFieldCellFactory());
+        field.getCell(new CellPosition(0, 0));
 
-        int maxRow = 3, maxColumn = 3;
-        ArrayList<SimpleFieldCell> cells = new ArrayList<>();
-
-        for (int row = 0; row < maxRow; row++) {
-            for (int column = 0; column < maxColumn; column++) {
-                cells.add(field.getCell(new CellPosition(row, column)));
-            }
-        }
-
-//        for (int i = 0; i < 1; i++) {
-//            exec.submit(new UpdateRunnable(new ArrayList<SimpleFieldCell>(cells)));
-//        }
-
-        while (true) {
-            Set<Boolean> statesSet = new HashSet<>();
-
-            for (int row = 0; row < maxRow; row++) {
-                for (int column = 0; column < maxColumn; column++) {
-                    statesSet.add(field.getCell(new CellPosition(row, column)).isChecked());
+        exec.execute(
+            new Runnable() {
+                @Override
+                public void run() {
+                    field.lockChunk(0);
+                    try {
+                        TimeUnit.SECONDS.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    field.unlockChunk();
                 }
             }
+        );
 
-            if (statesSet.size() == 1) {
-                System.out.println("ok");
-            } else {
-                System.out.println("sync issue");
-            }
+        exec.execute(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        field.lockChunk(0);
+                        field.unlockChunk();
+                    }
+                }
+        );
 
-            TimeUnit.SECONDS.sleep(1);
-        }
+//        int maxRow = 3, maxColumn = 3;
+//        ArrayList<SimpleFieldCell> cells = new ArrayList<>();
+//
+//        for (int row = 0; row < maxRow; row++) {
+//            for (int column = 0; column < maxColumn; column++) {
+//                cells.add(field.getCell(new CellPosition(row, column)));
+//            }
+//        }
+//
+//        for (int i = 0; i < 9; i++) {
+//            exec.submit(new UpdateTask(field, new ArrayList<SimpleFieldCell>(cells)));
+//        }
+//        exec.submit(new EntryLockCounterTask(field));
+//
+//        while (true) {
+//            Set<Boolean> statesSet = new HashSet<>();
+//
+//            field.test(0).lock.lock();
+//            try {
+//                for (int row = 0; row < maxRow; row++) {
+//                    for (int column = 0; column < maxColumn; column++) {
+//                        statesSet.add(field.getCell(new CellPosition(row, column)).isChecked());
+//                    }
+//                }
+//            } finally {
+//                field.test(0).lock.unlock();
+//            }
+//
+//            if (statesSet.size() == 1) {
+//                System.out.println("ok");
+//            } else {
+//                System.out.println("sync issue");
+//            }
+//
+//            TimeUnit.SECONDS.sleep(1);
+//        }
+
+        //
+
+//        TimeUnit.SECONDS.sleep(10); // 1395k, 1400k
+//
+//        CancelableTask.cancel();
+//        exec.shutdown();
+//
+//        if (!exec.awaitTermination(250, TimeUnit.MILLISECONDS))
+//            System.out.println("not terminated");
+//
+//        System.out.println("entry count = " + EntryLockCounterTask.counter);
     }
 }

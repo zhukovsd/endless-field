@@ -3,8 +3,7 @@ package com.zhukovsd.endlessfield.field;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.endlessfield.fielddatasource.StoreChunkTask;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,15 +22,15 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     // TODO: 23.03.2016 consider optimal thread pool size
     private ExecutorService chunkStoreExec = Executors.newFixedThreadPool(5);
 
+    private ThreadLocal<EndlessFieldChunk<T>> lockedChunk = new ThreadLocal<>();
+
     public EndlessField(ChunkSize chunkSize, EndlessFieldDataSource<T> dataSource, EndlessFieldCellFactory<T> cellFactory) {
         this.chunkSize = chunkSize;
         this.dataSource = dataSource;
         this.cellFactory = cellFactory;
     }
 
-    public T getCell(CellPosition position) {
-        // TODO: 21.03.2016 check if cell position is correct
-        Integer chunkId = ChunkIdGenerator.generateID(chunkSize, position);
+    private EndlessFieldChunk<T> getChunk(Integer chunkId) {
         EndlessFieldChunk<T> chunk;
 
         // get already loaded chunk
@@ -44,21 +43,53 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
             chunk.setStored(true);
 
             chunkMap.put(chunkId, chunk);
-        // create new chunk and store it
+        // generate new chunk and store it
         } else {
             chunk = generateChunk(chunkId);
             chunkMap.put(chunkId, chunk);
 
-            // TODO: 21.03.2016 store chunk
 //            dataSource.storeChunk(chunk, chunkId);
-            chunkStoreExec.submit(new StoreChunkTask<T>(dataSource, chunk, chunkId));
+//            chunkStoreExec.submit(new StoreChunkTask<T>(dataSource, chunk, chunkId));
         }
+
+        return chunk;
+    }
+
+    public T getCell(CellPosition position) {
+        // TODO: 21.03.2016 check if cell position is correct (within bounds)
+        Integer chunkId = ChunkIdGenerator.generateID(chunkSize, position);
+        EndlessFieldChunk<T> chunk = getChunk(chunkId);
 
         return chunk.get(position);
     }
 
     public CellEntry<T> getEntry(CellPosition position) {
         return new CellEntry<>(position, getCell(position));
+    }
+
+    public Iterable<T> getCells(Iterable<CellPosition> positions) {
+        // sorts ids in ascending order (0 -> n)
+        TreeSet<Integer> chunkIds = new TreeSet<>();
+        for (CellPosition position : positions) {
+            chunkIds.add(ChunkIdGenerator.generateID(chunkSize, position));
+        }
+
+        // provide chunk presence
+        for (Integer chunkId : chunkIds) getChunk(chunkId);
+
+        ArrayList<T> result = new ArrayList<>();
+        // lock exactly before reading
+        for (Integer chunkId : chunkIds) chunkMap.get(chunkId).lock.lock();
+
+        try {
+            for (CellPosition position : positions) {
+                chunkMap.get(ChunkIdGenerator.generateID(chunkSize, position)).get(position);
+            }
+        } finally {
+            for (Integer chunkId : chunkIds) chunkMap.get(chunkId).lock.unlock();
+        }
+
+        return result;
     }
 
     private EndlessFieldChunk<T> generateChunk(int chunkId) {
@@ -76,6 +107,28 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 
     public Set<Map.Entry<Integer, EndlessFieldChunk<T>>> chunkSet() {
         return chunkMap.entrySet();
+    }
+
+    public EndlessFieldChunk<T> test(Integer chunkId) {
+        return chunkMap.get(chunkId);
+    }
+
+    public void lockChunk(Integer chunkId) {
+        EndlessFieldChunk<T> chunk = getChunk(chunkId);
+
+        lockedChunk.set(chunk);
+        chunk.lock.lock();
+
+        System.out.println("chunk " + chunk + " locked by thread " + Thread.currentThread().getName());
+    }
+
+    public void unlockChunk() {
+        EndlessFieldChunk<T> chunk = lockedChunk.get();
+
+        chunk.lock.unlock();
+        lockedChunk.remove();
+
+        System.out.println("chunk " + chunk + " unlocked by thread " + Thread.currentThread().getName());
     }
 
     void commitCellsUpdate(Iterable<CellEntry<T>> cellEntries) {
