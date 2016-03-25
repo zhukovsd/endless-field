@@ -6,7 +6,6 @@ import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
 import com.zhukovsd.simplefield.SimpleFieldCellFactory;
-import com.zhukovsd.simplefield.SimpleFieldDataSource;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -17,7 +16,7 @@ import java.util.concurrent.*;
  */
 public class ConcurrentChunkProvidingCounter {
     public static void main(String[] args) throws InterruptedException, ExecutionException {
-        // Run N threads proving N different chunks and measure.
+        // Run N threads providing N different chunks and measure.
         // Chunks (small as possible) always generated on the fly, datasource.containsChunk always returns false
 
         // 6-8s w/o any synchronization
@@ -57,7 +56,7 @@ public class ConcurrentChunkProvidingCounter {
 
                         @Override
                         public EndlessFieldChunk<SimpleFieldCell> call() throws Exception {
-                            return field.getChunk(anonVar);
+                            return field.provideChunk(anonVar);
                         }
 
                         private Callable<EndlessFieldChunk<SimpleFieldCell>> init(int var){

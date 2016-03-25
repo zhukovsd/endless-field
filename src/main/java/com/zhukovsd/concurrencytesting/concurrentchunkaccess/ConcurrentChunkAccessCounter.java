@@ -18,22 +18,22 @@ class ReadTask implements Runnable {
     static AtomicInteger counter = new AtomicInteger(0);
 
     SimpleField field;
-    int chunkId;
+    Iterable<CellPosition> positions;
 
-    ReadTask(SimpleField field, Integer chunkId) {
+    ReadTask(SimpleField field, Iterable<CellPosition> positions) {
         this.field = field;
-        this.chunkId = chunkId;
+        this.positions = positions;
     }
 
     @Override
     public void run() {
         try {
             while (true) {
-                field.lockChunk(chunkId);
+                field.lockChunks(positions);
                 try {
                     counter.incrementAndGet();
                 } finally {
-                    field.unlockChunk();
+                    field.unlockChunks();
                 }
             }
         } catch (Exception e) {
@@ -47,6 +47,9 @@ class ReadTask implements Runnable {
  */
 public class ConcurrentChunkAccessCounter {
     public static void main(String[] args) throws InterruptedException {
+        // Run N threads which modifies cells in the same chunk and N threads which reads cells from it
+        // Measure reads/writes count. Synchronization strategy affects read/write performance
+
         SimpleField field = new SimpleField(
                 new ChunkSize(50, 50),
                 new EndlessFieldDataSource<SimpleFieldCell>() {
@@ -71,22 +74,21 @@ public class ConcurrentChunkAccessCounter {
         ExecutorService exec = Executors.newCachedThreadPool();
 
         int maxRow = 3, maxColumn = 3;
-        ArrayList<SimpleFieldCell> cells = new ArrayList<>();
+        ArrayList<CellPosition> positions = new ArrayList<>();
 
         for (int row = 0; row < maxRow; row++) {
             for (int column = 0; column < maxColumn; column++) {
-                cells.add(field.getCell(new CellPosition(row, column)));
+                positions.add(new CellPosition(row, column));
             }
         }
-
 
         int count = 20;
 
         // writers
-        for (int i = 0; i < count; i++) exec.execute(new WriteTask(field, cells));
+        for (int i = 0; i < count; i++) exec.execute(new WriteTask(field, positions));
 
         // readers
-        for (int i = 0; i < count; i++) exec.execute(new ReadTask(field, 0));
+        for (int i = 0; i < count; i++) exec.execute(new ReadTask(field, positions));
 
         TimeUnit.SECONDS.sleep(10);
         exec.shutdownNow();

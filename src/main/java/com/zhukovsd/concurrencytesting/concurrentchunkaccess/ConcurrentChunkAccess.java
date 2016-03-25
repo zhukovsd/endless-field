@@ -22,26 +22,33 @@ class WriteTask implements Runnable {
     static AtomicInteger counter = new AtomicInteger();
 
     SimpleField field;
-    Iterable<SimpleFieldCell> cells;
+    Iterable<CellPosition> positions;
 
-    WriteTask(SimpleField field, Iterable<SimpleFieldCell> cells) {
+    WriteTask(SimpleField field, Iterable<CellPosition> positions) {
         this.field = field;
-        this.cells = cells;
+        this.positions = positions;
     }
 
     @Override
     public void run() {
         try {
             while (true) {
-                field.lockChunk(0);
+                ArrayList<SimpleFieldCell> cells = new ArrayList<>();
+
+                field.lockChunks(positions);
                 try {
                     counter.incrementAndGet();
 
+                    // reading
+                    for (CellPosition position : positions)
+                        cells.add(field.getCell(position));
+
+                    // modifying
                     for (SimpleFieldCell cell : cells) {
                         cell.setChecked(!cell.isChecked());
                     }
                 } finally {
-                    field.unlockChunk();
+                    field.unlockChunks();
                 }
             }
         } catch (Exception e) {
@@ -55,8 +62,8 @@ class WriteTask implements Runnable {
  */
 public class ConcurrentChunkAccess {
     public static void main(String[] args) throws InterruptedException {
-        // Run N threads modifies cells in chunk with same ID simultaneously.
-        // One thread checks if cells state are correct.
+        // Run N threads modifies positions in chunk with same ID simultaneously.
+        // One thread checks if positions state are correct.
         // If no locking provided on chunk, data may be overwritten during reading, or vice versa
         // Locking on chunk level ensures that read/write of another chunks are not blocked
 
@@ -84,11 +91,11 @@ public class ConcurrentChunkAccess {
         );
 
         int maxRow = 3, maxColumn = 3;
-        ArrayList<SimpleFieldCell> cells = new ArrayList<>();
+        ArrayList<CellPosition> positions = new ArrayList<>();
 
         for (int row = 0; row < maxRow; row++) {
             for (int column = 0; column < maxColumn; column++) {
-                cells.add(field.getCell(new CellPosition(row, column)));
+                positions.add(new CellPosition(row, column));
             }
         }
 
@@ -96,7 +103,7 @@ public class ConcurrentChunkAccess {
 
         // writers
         for (int i = 0; i < count; i++) {
-            exec.execute(new WriteTask(field, cells));
+            exec.execute(new WriteTask(field, positions));
         }
 
         // reader
@@ -106,7 +113,7 @@ public class ConcurrentChunkAccess {
                         while (true) {
                             Set<Boolean> statesSet = new HashSet<>();
 
-                            field.lockChunk(0);
+                            field.lockChunks(positions);
                             try {
                                 for (int row = 0; row < maxRow; row++) {
                                     for (int column = 0; column < maxColumn; column++) {
@@ -114,7 +121,7 @@ public class ConcurrentChunkAccess {
                                     }
                                 }
                             } finally {
-                                field.unlockChunk();
+                                field.unlockChunks();
                             }
 
                             if (statesSet.size() == 1) {

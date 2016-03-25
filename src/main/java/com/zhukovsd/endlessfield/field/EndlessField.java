@@ -1,7 +1,6 @@
 package com.zhukovsd.endlessfield.field;
 
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
-import com.zhukovsd.endlessfield.fielddatasource.StoreChunkTask;
 import de.jkeylockmanager.manager.KeyLockManager;
 import de.jkeylockmanager.manager.KeyLockManagers;
 
@@ -19,14 +18,21 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     private EndlessFieldCellFactory<T> cellFactory;
     // TODO: 21.03.2016 add field size constraints
 
-    private ConcurrentHashMap<Integer, EndlessFieldChunk<T>> chunkMap = new ConcurrentHashMap<>();
+    // TODO: 25.03.2016 hide to private
+    public ConcurrentHashMap<Integer, EndlessFieldChunk<T>> chunkMap = new ConcurrentHashMap<>();
     // TODO: 22.03.2016 proper shutdown
     // TODO: 23.03.2016 consider optimal thread pool size
     private ExecutorService chunkStoreExec = Executors.newFixedThreadPool(5);
 
+    // TODO: 25.03.2016 test deletion with KLM locking
     private final KeyLockManager lockManager = KeyLockManagers.newLock();
 
-    private ThreadLocal<EndlessFieldChunk<T>> lockedChunk = new ThreadLocal<>();
+    private ThreadLocal<TreeSet<Integer>> lockedChunkIds = new ThreadLocal<TreeSet<Integer>>() {
+        @Override
+        protected TreeSet<Integer> initialValue() {
+            return new TreeSet<>(); // TODO: 25.03.2016 provide explicit comparator
+        }
+    };
 
     public EndlessField(ChunkSize chunkSize, EndlessFieldDataSource<T> dataSource, EndlessFieldCellFactory<T> cellFactory) {
         this.chunkSize = chunkSize;
@@ -34,8 +40,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         this.cellFactory = cellFactory;
     }
 
-    // TODO: 24.03.2016 rename to provideChunk?
-    public EndlessFieldChunk<T> getChunk(Integer chunkId) {
+    public EndlessFieldChunk<T> provideChunk(Integer chunkId) {
         EndlessFieldChunk<T> chunk = lockManager.executeLocked(chunkId, () -> {
             // get already loaded chunk
             if (chunkMap.containsKey(chunkId))
@@ -60,10 +65,16 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return chunk;
     }
 
+    // TODO: 25.03.2016 chunk(s) has to be already locked!
     public T getCell(CellPosition position) {
+        if (!(lockedChunkIds.get().contains(ChunkIdGenerator.generateID(chunkSize, position)))) {
+            // TODO: 25.03.2016 provide proper exception type
+//            throw new RuntimeException("chunk for requested position is not locked!");
+        }
+
         // TODO: 21.03.2016 check if cell position is correct (within bounds)
         Integer chunkId = ChunkIdGenerator.generateID(chunkSize, position);
-        EndlessFieldChunk<T> chunk = getChunk(chunkId);
+        EndlessFieldChunk<T> chunk = chunkMap.get(chunkId);
 
         return chunk.get(position);
     }
@@ -73,26 +84,8 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     }
 
     public Iterable<T> getCells(Iterable<CellPosition> positions) {
-        // sorts ids in ascending order (0 -> n)
-        TreeSet<Integer> chunkIds = new TreeSet<>();
-        for (CellPosition position : positions) {
-            chunkIds.add(ChunkIdGenerator.generateID(chunkSize, position));
-        }
-
-        // provide chunk presence
-        for (Integer chunkId : chunkIds) getChunk(chunkId);
-
         ArrayList<T> result = new ArrayList<>();
-        // lock exactly before reading
-        for (Integer chunkId : chunkIds) chunkMap.get(chunkId).lock.lock();
-
-        try {
-            for (CellPosition position : positions) {
-                chunkMap.get(ChunkIdGenerator.generateID(chunkSize, position)).get(position);
-            }
-        } finally {
-            for (Integer chunkId : chunkIds) chunkMap.get(chunkId).lock.unlock();
-        }
+        for (CellPosition position : positions) result.add(getCell(position));
 
         return result;
     }
@@ -110,26 +103,38 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return chunk;
     }
 
-    public Set<Map.Entry<Integer, EndlessFieldChunk<T>>> chunkSet() {
-        return chunkMap.entrySet();
+//    public Set<Map.Entry<Integer, EndlessFieldChunk<T>>> chunkSet() {
+//        return chunkMap.entrySet();
+//    }
+
+    // TODO: 25.03.2016 lock chunk(s) by cell positions
+    public void lockChunks(Iterable<CellPosition> positions) {
+//        EndlessFieldChunk<T> chunk = provideChunk(chunkId);
+
+        Set<Integer> lockSet = lockedChunkIds.get();
+        // TODO: 25.03.2016 provide proper exception type
+        if (lockSet.size() > 0) throw new RuntimeException("lock set has to be empty before locking!");
+
+        for (CellPosition position : positions) lockSet.add(ChunkIdGenerator.generateID(chunkSize, position));
+
+        // TODO: 25.03.2016 test if 2 loops better than one
+        for (Integer id : lockSet) provideChunk(id);
+        for (Integer id : lockSet) chunkMap.get(id).lock.lock();
+
+//        for (EndlessFieldChunk<T> chunk : lockSet)
+//        chunk.lock.lock();
     }
 
-    public void lockChunk(Integer chunkId) {
-        EndlessFieldChunk<T> chunk = getChunk(chunkId);
+    public void unlockChunks() {
+        Set<Integer> lockSet = lockedChunkIds.get();
 
-        lockedChunk.set(chunk);
-        chunk.lock.lock();
+        // TODO: 25.03.2016 provide proper exception type
+        if (lockSet.size() == 0) throw new RuntimeException("lock can't be empty before unlocking!");
 
-//        System.out.println("chunk " + chunk + " locked by thread " + Thread.currentThread().getName());
-    }
+        // we assume that all chunks exists due to being provided by lockChunks() call
+        for (Integer id : lockSet) chunkMap.get(id).lock.unlock();
 
-    public void unlockChunk() {
-        EndlessFieldChunk<T> chunk = lockedChunk.get();
-
-        chunk.lock.unlock();
-        lockedChunk.remove();
-
-//        System.out.println("chunk " + chunk + " unlocked by thread " + Thread.currentThread().getName());
+        lockedChunkIds.remove();
     }
 
     void commitCellsUpdate(Iterable<CellEntry<T>> cellEntries) {

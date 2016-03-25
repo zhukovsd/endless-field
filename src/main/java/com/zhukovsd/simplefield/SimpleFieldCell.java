@@ -12,6 +12,7 @@ public class SimpleFieldCell extends EndlessFieldCell {
 
     private boolean isChecked;
 
+    // TODO: 25.03.2016 consider single cell synchronization
     public synchronized boolean isChecked() {
         return isChecked;
     }
