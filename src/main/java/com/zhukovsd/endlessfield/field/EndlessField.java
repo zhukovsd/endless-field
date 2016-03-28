@@ -8,12 +8,13 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by ZhukovSD on 13.03.2016.
  */
 public abstract class EndlessField<T extends EndlessFieldCell> {
-    private ChunkSize chunkSize;
+    public ChunkSize chunkSize;
     private EndlessFieldDataSource<T> dataSource;
     private EndlessFieldCellFactory<T> cellFactory;
     // TODO: 21.03.2016 add field size constraints
@@ -69,7 +70,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     public T getCell(CellPosition position) {
         if (!(lockedChunkIds.get().contains(ChunkIdGenerator.generateID(chunkSize, position)))) {
             // TODO: 25.03.2016 provide proper exception type
-//            throw new RuntimeException("chunk for requested position is not locked!");
+            throw new RuntimeException("chunk for requested position is not locked!");
         }
 
         // TODO: 21.03.2016 check if cell position is correct (within bounds)

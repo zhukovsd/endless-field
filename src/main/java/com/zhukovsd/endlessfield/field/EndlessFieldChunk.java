@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.StampedLock;
 
 /**
  * Created by ZhukovSD on 13.03.2016.
@@ -17,6 +18,7 @@ public class EndlessFieldChunk<T extends EndlessFieldCell> {
 
     public ReentrantLock lock = new ReentrantLock(); // TODO: 23.03.2016 remove public
     public ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
+    public StampedLock stampedLock = new StampedLock();
 
     public EndlessFieldChunk(int capacity) {
         cellsMap = new ConcurrentHashMap<>(capacity);

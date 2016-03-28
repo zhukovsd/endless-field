@@ -3,7 +3,7 @@ package com.zhukovsd.simplefield;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 
 /**
- * Created by ZhukovSD on 20.03.2016.
+ * Thread-safe only within locked chunk, not by itself.
  */
 public class SimpleFieldCell extends EndlessFieldCell {
     public SimpleFieldCell(boolean isChecked) {
@@ -13,11 +13,11 @@ public class SimpleFieldCell extends EndlessFieldCell {
     private boolean isChecked;
 
     // TODO: 25.03.2016 consider single cell synchronization
-    public synchronized boolean isChecked() {
+    public boolean isChecked() {
         return isChecked;
     }
 
-    public synchronized void setChecked(boolean checked) {
+    public void setChecked(boolean checked) {
         isChecked = checked;
     }
 

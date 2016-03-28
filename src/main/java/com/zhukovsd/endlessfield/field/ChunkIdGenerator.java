@@ -6,7 +6,7 @@ package com.zhukovsd.endlessfield.field;
 public class ChunkIdGenerator {
     static int idFactor = 40000;
 
-    static int generateID(ChunkSize chunkSize, CellPosition position) {
+    public static int generateID(ChunkSize chunkSize, CellPosition position) {
 //        return 0;
         return (position.row / chunkSize.rowCount) * idFactor + (position.column / chunkSize.columnCount);
     }

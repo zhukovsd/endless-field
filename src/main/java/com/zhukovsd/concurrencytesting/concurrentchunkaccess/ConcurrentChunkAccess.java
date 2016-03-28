@@ -1,5 +1,14 @@
 package com.zhukovsd.concurrencytesting.concurrentchunkaccess;
 
+import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockCheckTask;
+import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockReadTask;
+import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockWriteTask;
+import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantreadwritelocks.ReentrantReadWriteLockCheckTask;
+import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantreadwritelocks.ReentrantReadWriteLockReadTask;
+import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantreadwritelocks.ReentrantReadWriteLockWriteTask;
+import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.stampedlocks.StampedLockCheckTask;
+import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.stampedlocks.StampedLockReadTask;
+import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.stampedlocks.StampedLockWriteTask;
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
@@ -9,65 +18,18 @@ import com.zhukovsd.simplefield.SimpleFieldCell;
 import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.zhukovsd.concurrencytesting.concurrentchunkaccess.WriteTask.counter;
-
-class WriteTask implements Runnable {
-    static AtomicInteger counter = new AtomicInteger();
-
-    SimpleField field;
-    Iterable<CellPosition> positions;
-
-    WriteTask(SimpleField field, Iterable<CellPosition> positions) {
-        this.field = field;
-        this.positions = positions;
-    }
-
-    @Override
-    public void run() {
-        try {
-            while (true) {
-                ArrayList<SimpleFieldCell> cells = new ArrayList<>();
-
-                field.lockChunks(positions);
-                try {
-                    counter.incrementAndGet();
-
-                    // reading
-                    for (CellPosition position : positions)
-                        cells.add(field.getCell(position));
-
-                    // modifying
-                    for (SimpleFieldCell cell : cells) {
-                        cell.setChecked(!cell.isChecked());
-                    }
-                } finally {
-                    field.unlockChunks();
-                }
-            }
-        } catch (Exception e) {
-            //
-        }
-    }
-}
 
 /**
  * Created by ZhukovSD on 24.03.2016.
  */
 public class ConcurrentChunkAccess {
     public static void main(String[] args) throws InterruptedException {
-        // Run N threads modifies positions in chunk with same ID simultaneously.
-        // One thread checks if positions state are correct.
-        // If no locking provided on chunk, data may be overwritten during reading, or vice versa
-        // Locking on chunk level ensures that read/write of another chunks are not blocked
-
-        ExecutorService exec = Executors.newCachedThreadPool();
+        // Run N threads which modifies cells in the same chunk and N threads which reads cells from it
+        // Measure reads/writes count. Synchronization strategy affects read/write performance
+        // Check if no race condition occurred and cell states are consistent
 
         SimpleField field = new SimpleField(
                 new ChunkSize(50, 50),
@@ -90,57 +52,44 @@ public class ConcurrentChunkAccess {
                 new SimpleFieldCellFactory()
         );
 
-        int maxRow = 3, maxColumn = 3;
-        ArrayList<CellPosition> positions = new ArrayList<>();
+        ExecutorService exec = Executors.newCachedThreadPool();
 
-        for (int row = 0; row < maxRow; row++) {
-            for (int column = 0; column < maxColumn; column++) {
-                positions.add(new CellPosition(row, column));
-            }
-        }
+        int maxPosition = 3, range = 3;
 
-        int count = 20;
+        field.provideChunk(0);
+
+        int writersCount = 20, readersCount = 20;
 
         // writers
-        for (int i = 0; i < count; i++) {
-            exec.execute(new WriteTask(field, positions));
-        }
+        for (int i = 0; i < writersCount; i++) exec.execute(new ReentrantLockWriteTask(field, range, maxPosition));
+//        for (int i = 0; i < writersCount; i++) exec.execute(new ReentrantReadWriteLockWriteTask(field, range, maxPosition));
+//        for (int i = 0; i < writersCount; i++) exec.execute(new StampedLockWriteTask(field, range, maxPosition));
 
-        // reader
-        exec.execute(
-                () -> {
-                    try {
-                        while (true) {
-                            Set<Boolean> statesSet = new HashSet<>();
+        // readers
+        for (int i = 0; i < readersCount; i++) exec.execute(new ReentrantLockReadTask(field, range, maxPosition));
+//        for (int i = 0; i < readersCount; i++) exec.execute(new ReentrantReadWriteLockReadTask(field, range, maxPosition));
+//        for (int i = 0; i < readersCount; i++) exec.execute(new StampedLockReadTask(field, range, maxPosition));
 
-                            field.lockChunks(positions);
-                            try {
-                                for (int row = 0; row < maxRow; row++) {
-                                    for (int column = 0; column < maxColumn; column++) {
-                                        statesSet.add(field.getCell(new CellPosition(row, column)).isChecked());
-                                    }
-                                }
-                            } finally {
-                                field.unlockChunks();
-                            }
-
-                            if (statesSet.size() == 1) {
-                                System.out.println("ok");
-                            } else {
-                                System.out.println("sync issue");
-                            }
-
-                            TimeUnit.SECONDS.sleep(1);
-                        }
-                    } catch (InterruptedException e) {
-                        System.out.println("checked exit");
-                    }
-                }
-        );
+        // checker
+        exec.execute(new ReentrantLockCheckTask(field, range, maxPosition));
+//        exec.execute(new ReentrantReadWriteLockCheckTask(field, range, maxPosition));
+//        exec.execute(new StampedLockCheckTask(field, range, maxPosition));
 
         TimeUnit.SECONDS.sleep(10);
         exec.shutdownNow();
 
-        System.out.println(counter);
+        int readCount = ReentrantLockReadTask.counter.get();
+        int writeCount = ReentrantLockWriteTask.counter.get();
+//        int readCount = ReentrantReadWriteLockReadTask.counter.get();
+//        int writeCount = ReentrantReadWriteLockWriteTask.counter.get();
+//        int readCount = StampedLockReadTask.counter.get();
+//        int writeCount = StampedLockWriteTask.counter.get();
+
+        System.out.format(
+                "read counter = %s, write counter = %s, overall = %s\n", readCount, writeCount, readCount + writeCount
+        );
+
+//        System.out.println("optimistic read = " + StampedLockReadTask.optimisticCounter.get());
+//        System.out.println("optimistic read before modify = " + StampedLockWriteTask.optimisticCounter.get());
     }
 }
