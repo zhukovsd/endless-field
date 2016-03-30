@@ -34,66 +34,66 @@ public class StampedLockReadTask extends LockTestTask {
     @Override
     public void run() {
         try {
-            StampedLock lock = field.chunkMap.get(0).stampedLock;
-//            ArrayList<StampedLockData> locks = new ArrayList<>();
+//            StampedLock lock = field.chunkMap.get(0).stampedLock;
+            ArrayList<StampedLockData> locks = new ArrayList<>();
 
             while (true) {
                 counter.incrementAndGet();
 
                 ArrayList<CellPosition> positions = getCellPositions();
                 Iterable<Integer> chunkIds = getChunkIdsToLock(positions);
-//
-//                locks.clear();
-//                for (Integer chunkId : chunkIds)
-//                    locks.add(new StampedLockData(field.chunkMap.get(chunkId).stampedLock));
-//
-//                for (StampedLockData lockData : locks) lockData.stamp = lockData.lock.tryOptimisticRead();
-//                // optimistic reading
-//                Iterable<SimpleFieldCell> cells = field.getCells(positions);
-//
-//                boolean isValid = true;
-//
-//                for (StampedLockData lockData : locks) {
-//                    if (!lockData.lock.validate(lockData.stamp)) {
-//                        isValid = false;
-//                        break;
-//                    }
-//                }
-//
-//                if (!isValid) {
-//                    for (StampedLockData lockData : locks) lockData.stamp = lockData.lock.readLock();
-//                    try {
-//                        // reading
-//                        cells = field.getCells(positions);
-//
-//                        // check states
-//                    } finally {
-//                        for (StampedLockData lockData : locks) lockData.lock.unlockRead(lockData.stamp);
-//                    }
-//                }
 
-                long stamp = lock.tryOptimisticRead();
+                locks.clear();
+                for (Integer chunkId : chunkIds)
+                    locks.add(new StampedLockData(field.chunkMap.get(chunkId).stampedLock));
+
+                for (StampedLockData lockData : locks) lockData.stamp = lockData.lock.tryOptimisticRead();
                 // optimistic reading
                 Iterable<SimpleFieldCell> cells = field.getCells(positions);
 
-                if (!lock.validate(stamp)) {
-                    stamp = lock.readLock();
+                boolean isValid = true;
+
+                for (StampedLockData lockData : locks) {
+                    if (!lockData.lock.validate(lockData.stamp)) {
+                        isValid = false;
+                        break;
+                    }
+                }
+
+                if (!isValid) {
+                    for (StampedLockData lockData : locks) lockData.stamp = lockData.lock.readLock();
                     try {
                         // reading
                         cells = field.getCells(positions);
 
-                        // check is states are consistent
-                        HashSet<Boolean> states = new HashSet<>();
-                        for (SimpleFieldCell cell : cells) states.add(cell.isChecked());
-                        if (states.size() > 1)
-                            System.out.println("hi there");
-                        boolean state = (states.contains(true));
+                        // check states
                     } finally {
-                        lock.unlockRead(stamp);
+                        for (StampedLockData lockData : locks) lockData.lock.unlockRead(lockData.stamp);
                     }
-                } else {
-                    optimisticCounter.incrementAndGet();
                 }
+
+//                long stamp = lock.tryOptimisticRead();
+//                // optimistic reading
+//                Iterable<SimpleFieldCell> cells = field.getCells(positions);
+//
+//                if (!lock.validate(stamp)) {
+//                    stamp = lock.readLock();
+//                    try {
+//                        // reading
+//                        cells = field.getCells(positions);
+//
+////                        // check is states are consistent
+////                        HashSet<Boolean> states = new HashSet<>();
+////                        for (SimpleFieldCell cell : cells) states.add(cell.isChecked());
+////                        if (states.size() > 1)
+////                            System.out.println("hi there");
+////                        boolean state = (states.contains(true));
+//                    } finally {
+//                        lock.unlockRead(stamp);
+//                    }
+//                } else {
+//                    optimisticCounter.incrementAndGet();
+//                }
             }
         } catch (Exception e) {
 //          System.out.println(e.getMessage());

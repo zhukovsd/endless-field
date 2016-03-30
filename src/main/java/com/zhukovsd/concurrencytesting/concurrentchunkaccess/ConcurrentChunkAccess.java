@@ -31,6 +31,31 @@ public class ConcurrentChunkAccess {
         // Measure reads/writes count. Synchronization strategy affects read/write performance
         // Check if no race condition occurred and cell states are consistent
 
+        // Locking tested on 1000x1000 field of 50x50 chunks with 20 writers (read + modify data) / 20 readers (only read)
+        // threads. Threads accessed same or random chunks and performed its actions on given amount of cells.
+        // Reads and modifies count were recorded for given time (10 seconds). Bigger count is better,
+        // performance varies from locking strategy.
+
+        //                                  amount of cells to process / results - (read count / modify count / overall count)
+        // ACCESS TO SINGLE CHUNK      1x1                  3x3              50x50              100x100
+        // reentrant lock       | 10kk/10kk/20kk    | 5kk/5kk/10kk      | 44k/44k/88k   | 9.5k/9.5/19k
+        // !reentrant readwrite | 21kk/3.5kk/24.5kk | 7kk/2.5kk/9.5kk   | 350k/6k/356k  | 65k/4k/69k
+        // !stamped             | 15kk/15kk/30kk    | 11kk/3kk/14kk     | 341k/10k/351k |
+
+        //                                  amount of cells to process / results - (read count / modify count / overall count)
+        // ACCESS TO MULTIPLE CHUNKS    1x1             3x3                  50x50         100x100
+        // reentrant lock       | 24kk/24kk/48kk | 12kk/12kk/24kk      | 88k/88k/176k  | 21.5k/20.7k/42.3k
+        // !reentrant readwrite | 24kk/24kk/48kk | 12kk/12kk/24kk      | 117k/68k/185k | 30k/15k/45k
+        // !stamped             |                MULTIPLE CHUNKS LOCKING NOT IMPLEMENTED
+
+        // Readwrite and stamped lock tests not entirely correct. While using this locks data may be changed between
+        // read unlock and write lock, which needs additional data verification. In real life write performance
+        // will be even worse.
+
+        // Conclusions: in situation, where reads/writes amounts roughly equals, no reason to implement
+        // more sophisticated locking using ReentrantReadWriteLock / StampedLock. Tests, which uses those locks,
+        // in not entirely correct.
+
         SimpleField field = new SimpleField(
                 new ChunkSize(50, 50),
                 new EndlessFieldDataSource<SimpleFieldCell>() {
@@ -54,7 +79,7 @@ public class ConcurrentChunkAccess {
 
         ExecutorService exec = Executors.newCachedThreadPool();
 
-        int maxPosition = 3, range = 3;
+        int maxPosition = 50, range = 50;
 
         field.provideChunk(0);
 

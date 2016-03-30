@@ -31,7 +31,6 @@ public class StampedLockWriteTask extends LockTestTask {
 
         try {
             while (true) {
-                ArrayList<String> log = new ArrayList<>();
                 boolean readLocked = false;
 
                 ArrayList<CellPosition> positions = getCellPositions();
@@ -137,11 +136,11 @@ public class StampedLockWriteTask extends LockTestTask {
                     Iterable<SimpleFieldCell> cells = field.getCells(positions);
 
                     //region check is states are consistent
-                    HashSet<Boolean> states = new HashSet<>();
-                    for (SimpleFieldCell cell : cells) states.add(cell.isChecked());
-                    if (states.size() > 1)
-                        System.out.println("hi there");
-                    boolean state = (states.contains(true));
+//                    HashSet<Boolean> states = new HashSet<>();
+//                    for (SimpleFieldCell cell : cells) states.add(cell.isChecked());
+//                    if (states.size() > 1)
+//                        System.out.println("hi there");
+//                    boolean state = (states.contains(true));
                     //endregion
 
                     boolean isRead = false;
@@ -153,12 +152,11 @@ public class StampedLockWriteTask extends LockTestTask {
                             counter.incrementAndGet();
 
                             // region 123
-                            HashSet<Boolean> states2 = new HashSet<>();
-                            for (SimpleFieldCell cell : cells) states2.add(cell.isChecked());
-                            boolean state2 = (states2.contains(true));
-
-                            if (state != state2)
-                                System.out.println("data has been overwritten between read.unlock() and write.lock()");
+//                            HashSet<Boolean> states2 = new HashSet<>();
+//                            for (SimpleFieldCell cell : cells) states2.add(cell.isChecked());
+//                            boolean state2 = (states2.contains(true));
+//                            if (state != state2)
+//                                System.out.println("data has been overwritten between read.unlock() and write.lock()");
                             // endregion
 
                             for (SimpleFieldCell cell : cells)
@@ -166,7 +164,6 @@ public class StampedLockWriteTask extends LockTestTask {
 
                             isRead = true;
                         } else {
-                            log.add("123");
                             lock.unlockRead(stamp);
 
                             // this is the place where data may be overwritten!
