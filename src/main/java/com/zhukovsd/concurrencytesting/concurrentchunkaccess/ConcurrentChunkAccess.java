@@ -73,6 +73,11 @@ public class ConcurrentChunkAccess {
                     public void storeChunk(EndlessFieldChunk<SimpleFieldCell> chunk, int chunkId) {
                         //
                     }
+
+                    @Override
+                    public void modifyCell(CellPosition position, SimpleFieldCell cell) {
+                        //
+                    }
                 },
                 new SimpleFieldCellFactory()
         );

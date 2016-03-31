@@ -19,6 +19,8 @@ public class UpdateCellTask<T extends EndlessFieldCell> implements Runnable {
 
     @Override
     public void run() {
-
+        // TODO: 23.03.2016 handle store exceptions / errors
+        dataSource.modifyCell(position, cell);
+        // commit stored state
     }
 }

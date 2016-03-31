@@ -1,5 +1,6 @@
 package com.zhukovsd.concurrencytesting.concurrentchunkproviding;
 
+import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
@@ -39,6 +40,11 @@ public class ConcurrentChunkProvidingCounter {
 
                 @Override
                 public void storeChunk(EndlessFieldChunk<SimpleFieldCell> chunk, int chunkId) {
+                    //
+                }
+
+                @Override
+                public void modifyCell(CellPosition position, SimpleFieldCell cell) {
                     //
                 }
             },

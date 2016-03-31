@@ -2,6 +2,7 @@ package com.zhukovsd.endlessfield.field;
 
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.endlessfield.fielddatasource.StoreChunkTask;
+import com.zhukovsd.endlessfield.fielddatasource.UpdateCellTask;
 import de.jkeylockmanager.manager.KeyLockManager;
 import de.jkeylockmanager.manager.KeyLockManagers;
 
@@ -29,7 +30,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     private ExecutorService chunkStoreExec = Executors.newFixedThreadPool(5);
 
     // TODO: 29.03.2016 proper shutdown
-    private ExecutorService cellUpdateExec;
+    public ExecutorService cellUpdateExec = Executors.newCachedThreadPool();
 
     // TODO: 25.03.2016 test deletion with KLM locking
     private final KeyLockManager lockManager = KeyLockManagers.newLock();
@@ -64,7 +65,6 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
                 EndlessFieldChunk<T> c = generateChunk(chunkId);
                 chunkMap.put(chunkId, c);
 
-                dataSource.storeChunk(c, chunkId);
                 chunkStoreExec.submit(new StoreChunkTask<T>(dataSource, c, chunkId));
 
                 return c;
@@ -87,13 +87,13 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return chunk.get(position);
     }
 
-    public void updateCell(CellPosition position) {
+    public void updateCell(CellPosition position, T cell) {
         if (!(lockedChunkIds.get().contains(ChunkIdGenerator.generateID(chunkSize, position)))) {
             // TODO: 25.03.2016 provide proper exception type
             throw new RuntimeException("chunk for updating cell is not locked!");
         }
 
-
+        cellUpdateExec.submit(new UpdateCellTask<T>(dataSource, position, cell));
     }
 
     public CellEntry<T> getEntry(CellPosition position) {
@@ -152,9 +152,5 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         for (Integer id : lockSet) chunkMap.get(id).lock.unlock();
 
         lockedChunkIds.remove();
-    }
-
-    void commitCellsUpdate(Iterable<CellEntry<T>> cellEntries) {
-
     }
 }

@@ -2,6 +2,8 @@ package com.zhukovsd.simplefield;
 
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * Thread-safe only within locked chunk, not by itself.
  */
@@ -11,6 +13,7 @@ public class SimpleFieldCell extends EndlessFieldCell {
     }
 
     private boolean isChecked;
+    private int a = 0, b = 0;
 
     // TODO: 25.03.2016 consider single cell synchronization
     public boolean isChecked() {
@@ -19,6 +22,22 @@ public class SimpleFieldCell extends EndlessFieldCell {
 
     public void setChecked(boolean checked) {
         isChecked = checked;
+    }
+
+    public void incA() {
+        a++;
+    }
+
+    public void incB() {
+        b++;
+    }
+
+    public int a() {
+        return a;
+    }
+
+    public int b() {
+        return a;
     }
 
     @Override
