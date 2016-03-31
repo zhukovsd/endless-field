@@ -10,6 +10,7 @@ import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -44,7 +45,7 @@ public class ConcurrentChunkProvidingCounter {
                 }
 
                 @Override
-                public void modifyCell(CellPosition position, SimpleFieldCell cell) {
+                public void modifyEntries(Map<CellPosition, SimpleFieldCell> entries) {
                     //
                 }
             },

@@ -6,9 +6,7 @@ import com.zhukovsd.endlessfield.fielddatasource.UpdateCellTask;
 import de.jkeylockmanager.manager.KeyLockManager;
 import de.jkeylockmanager.manager.KeyLockManagers;
 
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,13 +85,13 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return chunk.get(position);
     }
 
-    public void updateCell(CellPosition position, T cell) {
-        if (!(lockedChunkIds.get().contains(ChunkIdGenerator.generateID(chunkSize, position)))) {
-            // TODO: 25.03.2016 provide proper exception type
-            throw new RuntimeException("chunk for updating cell is not locked!");
-        }
+    public void updateEntries(Map<CellPosition, T> entries) {
+//        if (!(lockedChunkIds.get().contains(ChunkIdGenerator.generateID(chunkSize, position)))) {
+//            // TODO: 25.03.2016 provide proper exception type
+//            throw new RuntimeException("chunk for updating cell is not locked!");
+//        }
 
-        cellUpdateExec.submit(new UpdateCellTask<T>(dataSource, position, cell));
+        cellUpdateExec.submit(new UpdateCellTask<T>(dataSource, entries));
     }
 
     public CellEntry<T> getEntry(CellPosition position) {
@@ -103,6 +101,13 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     public Iterable<T> getCells(Iterable<CellPosition> positions) {
         ArrayList<T> result = new ArrayList<>();
         for (CellPosition position : positions) result.add(getCell(position));
+
+        return result;
+    }
+
+    public LinkedHashMap<CellPosition, T> getEntries(Iterable<CellPosition> positions) {
+        LinkedHashMap<CellPosition, T> result = new LinkedHashMap<>();
+        for (CellPosition position : positions) result.put(position, getCell(position));
 
         return result;
     }

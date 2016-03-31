@@ -18,6 +18,7 @@ import com.zhukovsd.simplefield.SimpleFieldCell;
 import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -75,8 +76,8 @@ public class ConcurrentChunkAccess {
                     }
 
                     @Override
-                    public void modifyCell(CellPosition position, SimpleFieldCell cell) {
-                        //
+                    public void modifyEntries(Map<CellPosition, SimpleFieldCell> entries) {
+
                     }
                 },
                 new SimpleFieldCellFactory()

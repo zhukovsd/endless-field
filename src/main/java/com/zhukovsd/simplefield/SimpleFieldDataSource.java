@@ -79,22 +79,26 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
     }
 
     @Override
-    public void modifyCell(CellPosition position, SimpleFieldCell cell) {
-        boolean isChecked = false;
-        int a = 0, b = 0;
-
+    public void modifyEntries(Map<CellPosition, SimpleFieldCell> entries) {
         runCounter.incrementAndGet();
 
-        synchronized (cell) {
-            isChecked = cell.isChecked();
-            a = cell.a();
-            b = cell.b();
-        }
+        for (Map.Entry<CellPosition, SimpleFieldCell> entry : entries.entrySet()) {
+            SimpleFieldCell cell = entry.getValue();
+            CellPosition position = entry.getKey();
 
-        // TODO: 30.03.2016 handle mongo exceptions
-        collection.updateOne(
-                and(eq("row_index", position.row), eq("column_index", position.column)),
-                set("checked", isChecked)
-        );
+            boolean isChecked = false;
+
+            synchronized (cell) {
+                isChecked = cell.isChecked();
+//                a = cell.a();
+//                b = cell.b();
+            }
+
+            // TODO: 30.03.2016 handle mongo exceptions
+            collection.updateOne(
+                    and(eq("row_index", position.row), eq("column_index", position.column)),
+                    set("checked", isChecked)
+            );
+        }
     }
 }
