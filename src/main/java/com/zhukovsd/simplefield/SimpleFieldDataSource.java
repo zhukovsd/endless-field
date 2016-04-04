@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.mongodb.client.model.Filters.and;
@@ -64,15 +65,11 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
     public void storeChunk(EndlessFieldChunk<SimpleFieldCell> chunk, int chunkId) {
         ArrayList<Document> cells = new ArrayList<>();
 
-        Set<Boolean> checkedSet = new HashSet<>();
-
         chunk.lock.lock();
         try {
             for (Map.Entry<CellPosition, SimpleFieldCell> entry : chunk.entrySet()) {
                 CellPosition position = entry.getKey();
                 SimpleFieldCell cell = entry.getValue();
-
-                checkedSet.add(cell.isChecked());
 
                 // TODO: 23.03.2016 row & column indexes calculated from chunk index to be unique
                 cells.add(new Document("row_index", position.row)
@@ -84,9 +81,6 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
         } finally {
             chunk.lock.unlock();
         }
-
-        if (checkedSet.size() > 1)
-            System.out.println("hi there");
 
         // TODO: 21.03.2016 handle mongo exceptions
         try {
@@ -114,11 +108,15 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
 //                b = cell.b();
             }
 
-            // TODO: 30.03.2016 handle mongo exceptions
-            collection.updateOne(
-                    and(eq("row_index", position.row), eq("column_index", position.column)),
-                    set("checked", isChecked)
-            );
+            try {
+                // TODO: 30.03.2016 handle mongo exceptions
+                collection.updateOne(
+                        and(eq("row_index", position.row), eq("column_index", position.column)),
+                        set("checked", isChecked)
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

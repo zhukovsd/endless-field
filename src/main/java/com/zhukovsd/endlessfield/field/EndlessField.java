@@ -23,11 +23,12 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 
     // TODO: 22.03.2016 proper shutdown
     // TODO: 23.03.2016 consider optimal thread pool size, queue class, queue size
-    public ExecutorService chunkStoreExec = Executors.newFixedThreadPool(10);
+    public ExecutorService chunkStoreExec = new ThreadPoolExecutor(10, 10,
+            0L,TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(100), new ThreadPoolExecutor.CallerRunsPolicy());//Executors.newFixedThreadPool(10);
 
     // TODO: 29.03.2016 proper shutdown
     public ExecutorService cellUpdateExec = new ThreadPoolExecutor(10, 10,
-            0L,TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(1000000), new ThreadPoolExecutor.CallerRunsPolicy());//Executors.newFixedThreadPool(10);
+            0L,TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(100), new ThreadPoolExecutor.CallerRunsPolicy());//Executors.newFixedThreadPool(10);
 
     // TODO: 25.03.2016 test deletion with KLM locking
     private final KeyLockManager lockManager = KeyLockManagers.newLock();
@@ -89,6 +90,8 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return chunk.get(position);
     }
 
+    // It is possible that some of entries to update belongs to currently storing, or queued to store chunk.
+    // In that case update actions will have no effect and actual cell stored will be stored with entire chunk.
     public void updateEntries(Map<CellPosition, T> entries) {
         // get chunk ids for updating cells
         Set<Integer> chunkIds = new HashSet<>();
@@ -104,10 +107,9 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
             }
         }
 
-        // if all chunks are locked, increase update task count for that chunks
         for (Integer chunkId : chunkIds) chunkMap.get(chunkId).updateTaskCount.incrementAndGet();
 
-        cellUpdateExec.submit(new UpdateCellTask<T>(dataSource, entries));
+        cellUpdateExec.submit(new UpdateCellTask<T>(this, dataSource, entries, chunkIds));
     }
 
     public CellEntry<T> getEntry(CellPosition position) {

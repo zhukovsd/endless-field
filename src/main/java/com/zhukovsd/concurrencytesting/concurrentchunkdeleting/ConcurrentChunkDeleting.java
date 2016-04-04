@@ -2,7 +2,6 @@ package com.zhukovsd.concurrencytesting.concurrentchunkdeleting;
 
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.ChunkSize;
-import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 import com.zhukovsd.endlessfield.fielddatasource.StoreChunkTask;
 import com.zhukovsd.endlessfield.fielddatasource.UpdateCellTask;
 import com.zhukovsd.simplefield.SimpleField;
@@ -49,13 +48,13 @@ public class ConcurrentChunkDeleting {
         ExecutorService remover = Executors.newSingleThreadExecutor();
 
         int chunkCount = 40;
-        int maxAllowedCount = 0; // 1590;
+        int maxAllowedCount = 1500;
         int maxRow = chunkCount * chunkSize.rowCount;
         int maxColumn = chunkCount * chunkSize.columnCount;
 //        int maxRow = 1;
 //        int maxColumn = 1;
 
-        int readersCount = 1;
+        int readersCount = 5;
 
         // 0 - remover state, 1 - remove count, 2 - write count
         final AtomicInteger[] a = new AtomicInteger[]{new AtomicInteger(0), new AtomicInteger(0)};
@@ -66,14 +65,14 @@ public class ConcurrentChunkDeleting {
 
                 try {
                     while (true) {
-//                        List<CellPosition> positions = Arrays.asList(new CellPosition(rand.nextInt(maxRow), rand.nextInt(maxColumn)));
+                        List<CellPosition> positions = Arrays.asList(new CellPosition(rand.nextInt(maxRow), rand.nextInt(maxColumn)));
 
-                        List<CellPosition> positions = new ArrayList<>();
-                        for (int row = 0; row < 50; row++) {
-                            for (int column = 0; column < 50; column++) {
-                                positions.add(new CellPosition(row, column));
-                            }
-                        }
+//                        List<CellPosition> positions = new ArrayList<>();
+//                        for (int row = 0; row < 50; row++) {
+//                            for (int column = 0; column < 50; column++) {
+//                                positions.add(new CellPosition(row, column));
+//                            }
+//                        }
 
                         field.lockChunks(positions);
                         try {
@@ -82,11 +81,13 @@ public class ConcurrentChunkDeleting {
                             LinkedHashMap<CellPosition, SimpleFieldCell> entries = field.getEntries(positions);
                             for (Map.Entry<CellPosition, SimpleFieldCell> entry : entries.entrySet()) {
                                 SimpleFieldCell cell = entry.getValue();
+
+                                if (cell == null)
+                                    System.out.println("123456");
+
                                 synchronized (cell) {
                                     cell.setChecked(!cell.isChecked());
                                 }
-
-                                Thread.yield();
                             }
 
                             field.updateEntries(entries);
@@ -101,7 +102,7 @@ public class ConcurrentChunkDeleting {
                         }
 
 //                        try {
-//                            TimeUnit.MILLISECONDS.sleep(100);
+//                            TimeUnit.MILLISECONDS.sleep(5);
 //                        } catch (InterruptedException e) {
 //                            e.printStackTrace();
 //                        }
@@ -132,25 +133,25 @@ public class ConcurrentChunkDeleting {
         });
 
         remover.submit((Runnable)  () -> {
-           while (true) {
-               try {
+            while (true) {
+                try {
 //                   int c = 0;
 
 //                   if (field.chunkMap.size() > 0) {
-                   while (field.chunkMap.size() > maxAllowedCount) {
-                       Random rand = new Random();
+                    while (field.chunkMap.size() > maxAllowedCount) {
+                        Random rand = new Random();
 
-                       ArrayList<Integer> keys = new ArrayList<>(field.chunkMap.keySet());
+                        ArrayList<Integer> keys = new ArrayList<>(field.chunkMap.keySet());
 
-                       Integer key = keys.get(rand.nextInt(keys.size()));
+                        Integer key = keys.get(rand.nextInt(keys.size()));
 
-                       if (field.chunkMap.get(key).isStored())
-                           field.removeChunk(key);
+                        if (field.chunkMap.get(key).isStored() && (field.chunkMap.get(key).updateTaskCount.get() == 0)) {
+                            field.removeChunk(key);
+                            a[0].incrementAndGet();
+                        }
 
-                       a[0].incrementAndGet();
-
-                       Thread.yield();
-                   }
+                        Thread.yield();
+                    }
 //                   }
 
 
@@ -167,11 +168,11 @@ public class ConcurrentChunkDeleting {
 //
 //                   System.out.printf("--> iterated count = %s, chunks count = %s\n", c, field.chunkMap.size());
 //
-                   TimeUnit.MILLISECONDS.sleep(10);
-               } catch (Exception e) {
-                   e.printStackTrace();
-               }
-           }
+                    TimeUnit.MILLISECONDS.sleep(10);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         });
 
 //        readers.submit((Runnable) () -> {
