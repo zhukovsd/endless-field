@@ -3,12 +3,6 @@ package com.zhukovsd.concurrencytesting.concurrentchunkaccess;
 import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockCheckTask;
 import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockReadTask;
 import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockWriteTask;
-import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantreadwritelocks.ReentrantReadWriteLockCheckTask;
-import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantreadwritelocks.ReentrantReadWriteLockReadTask;
-import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantreadwritelocks.ReentrantReadWriteLockWriteTask;
-import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.stampedlocks.StampedLockCheckTask;
-import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.stampedlocks.StampedLockReadTask;
-import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.stampedlocks.StampedLockWriteTask;
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
@@ -17,7 +11,6 @@ import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
 import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,7 +80,8 @@ public class ConcurrentChunkAccess {
 
         int maxPosition = 50, range = 50;
 
-        field.provideChunk(0);
+        field.provideAndLockChunk(0);
+//        field.unlockChunks();
 
         int writersCount = 20, readersCount = 20;
 

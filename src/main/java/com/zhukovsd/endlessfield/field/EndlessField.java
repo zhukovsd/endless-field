@@ -7,9 +7,7 @@ import de.jkeylockmanager.manager.KeyLockManager;
 import de.jkeylockmanager.manager.KeyLockManagers;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * Created by ZhukovSD on 13.03.2016.
@@ -24,11 +22,12 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     public ConcurrentHashMap<Integer, EndlessFieldChunk<T>> chunkMap = new ConcurrentHashMap<>();
 
     // TODO: 22.03.2016 proper shutdown
-    // TODO: 23.03.2016 consider optimal thread pool size
-    private ExecutorService chunkStoreExec = Executors.newFixedThreadPool(5);
+    // TODO: 23.03.2016 consider optimal thread pool size, queue class, queue size
+    public ExecutorService chunkStoreExec = Executors.newFixedThreadPool(10);
 
     // TODO: 29.03.2016 proper shutdown
-    public ExecutorService cellUpdateExec = Executors.newCachedThreadPool();
+    public ExecutorService cellUpdateExec = new ThreadPoolExecutor(10, 10,
+            0L,TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(1000000), new ThreadPoolExecutor.CallerRunsPolicy());//Executors.newFixedThreadPool(10);
 
     // TODO: 25.03.2016 test deletion with KLM locking
     private final KeyLockManager lockManager = KeyLockManagers.newLock();
@@ -46,30 +45,35 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         this.cellFactory = cellFactory;
     }
 
-    public EndlessFieldChunk<T> provideChunk(Integer chunkId) {
-        EndlessFieldChunk<T> chunk = lockManager.executeLocked(chunkId, () -> {
-            // get already loaded chunk
-            if (chunkMap.containsKey(chunkId))
-                return chunkMap.get(chunkId);
-            // get stored, but not loaded chunk
-            else if (dataSource.containsChunk(chunkId)) {
-                EndlessFieldChunk<T> c = dataSource.getChunk(chunkId, chunkSize);
-                // TODO: 21.03.2016 check if chunk has correct size
-                c.setStored(true);
-                chunkMap.put(chunkId, c);
-                return c;
-            // generate new chunk and store it
-            } else {
-                EndlessFieldChunk<T> c = generateChunk(chunkId);
-                chunkMap.put(chunkId, c);
+    public EndlessFieldChunk<T> provideAndLockChunk(Integer chunkId) {
+        return lockManager.executeLocked(chunkId, () -> {
+            EndlessFieldChunk<T> chunk = null;
 
-                chunkStoreExec.submit(new StoreChunkTask<T>(dataSource, c, chunkId));
+            try {
+                // get already loaded chunk
+                if (chunkMap.containsKey(chunkId))
+                    chunk = chunkMap.get(chunkId);
+                // get stored, but not loaded chunk
+                else if (dataSource.containsChunk(chunkId)) {
+                    chunk = dataSource.getChunk(chunkId, chunkSize);
+                    // TODO: 21.03.2016 check if chunk has correct size
+                    chunk.setStored(true);
+                    chunkMap.put(chunkId, chunk);
+                // generate new chunk and store it
+                } else {
+                    chunk = generateChunk(chunkId);
+                    chunkMap.put(chunkId, chunk);
 
-                return c;
+                    chunkStoreExec.submit(new StoreChunkTask<T>(dataSource, chunk, chunkId));
+                }
+
+                chunk.lock.lock();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        });
 
-        return chunk;
+            return chunk;
+        });
     }
 
     public T getCell(CellPosition position) {
@@ -86,10 +90,22 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     }
 
     public void updateEntries(Map<CellPosition, T> entries) {
-//        if (!(lockedChunkIds.get().contains(ChunkIdGenerator.generateID(chunkSize, position)))) {
-//            // TODO: 25.03.2016 provide proper exception type
-//            throw new RuntimeException("chunk for updating cell is not locked!");
-//        }
+        // get chunk ids for updating cells
+        Set<Integer> chunkIds = new HashSet<>();
+        for (Map.Entry<CellPosition, T> entry : entries.entrySet()) {
+            chunkIds.add(ChunkIdGenerator.generateID(chunkSize, entry.getKey()));
+        }
+
+        // check is all chunk which owns updating cells are locked
+        for (Integer chunkId : chunkIds) {
+            if (!lockedChunkIds.get().contains(chunkId)) {
+                // TODO: 25.03.2016 provide proper exception type
+                throw new RuntimeException("chunk for updating cell is not locked!");
+            }
+        }
+
+        // if all chunks are locked, increase update task count for that chunks
+        for (Integer chunkId : chunkIds) chunkMap.get(chunkId).updateTaskCount.incrementAndGet();
 
         cellUpdateExec.submit(new UpdateCellTask<T>(dataSource, entries));
     }
@@ -129,9 +145,8 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 //        return chunkMap.entrySet();
 //    }
 
-    // TODO: 25.03.2016 lock chunk(s) by cell positions
     public void lockChunks(Iterable<CellPosition> positions) {
-//        EndlessFieldChunk<T> chunk = provideChunk(chunkId);
+//        EndlessFieldChunk<T> chunk = provideAndLockChunk(chunkId);
 
         Set<Integer> lockSet = lockedChunkIds.get();
         // TODO: 25.03.2016 provide proper exception type
@@ -139,12 +154,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 
         for (CellPosition position : positions) lockSet.add(ChunkIdGenerator.generateID(chunkSize, position));
 
-        // TODO: 25.03.2016 test if 2 loops better than one
-        for (Integer id : lockSet) provideChunk(id);
-        for (Integer id : lockSet) chunkMap.get(id).lock.lock();
-
-//        for (EndlessFieldChunk<T> chunk : lockSet)
-//        chunk.lock.lock();
+        for (Integer id : lockSet) provideAndLockChunk(id);
     }
 
     public void unlockChunks() {
@@ -153,9 +163,38 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         // TODO: 25.03.2016 provide proper exception type
         if (lockSet.size() == 0) throw new RuntimeException("lock can't be empty before unlocking!");
 
-        // we assume that all chunks exists due to being provided by lockChunks() call
-        for (Integer id : lockSet) chunkMap.get(id).lock.unlock();
+        // chunk might be removed, so check for existence
+        for (Integer chunkId : lockSet) {
+//            lockManager.executeLocked(chunkId, () -> {
+                try {
+                    if (chunkMap.containsKey(chunkId))
+                        chunkMap.get(chunkId).lock.unlock();
+//                    else
+//                        System.out.println(431);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+//            });
+        }
 
         lockedChunkIds.remove();
+    }
+
+    public void removeChunk(Integer chunkId) {
+        lockManager.executeLocked(chunkId, () -> {
+            try {
+                EndlessFieldChunk<T> chunk = provideAndLockChunk(chunkId);
+                try {
+//                    if (!chunk.isStored())
+//                        System.out.println("chunk not stored yet!");
+
+                    chunkMap.remove(chunkId);
+                } finally {
+                    chunk.lock.unlock();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

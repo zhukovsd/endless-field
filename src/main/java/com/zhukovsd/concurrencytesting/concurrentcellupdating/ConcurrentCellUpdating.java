@@ -27,9 +27,9 @@ public class ConcurrentCellUpdating {
         ExecutorService updateExec = Executors.newCachedThreadPool();
         ExecutorService watcherExec = Executors.newSingleThreadExecutor();
 
-        int count = 999;
+        int count = 10;
 
-        AtomicInteger c = new AtomicInteger(0);
+        AtomicInteger c = new AtomicInteger(0), countBySeconds = new AtomicInteger(0);
 
         for (int i = 0; i < count; i++) {
             updateExec.submit((Runnable) () -> {
@@ -46,6 +46,7 @@ public class ConcurrentCellUpdating {
                             for (Map.Entry<CellPosition, SimpleFieldCell> entry : entries.entrySet()) {
                                 SimpleFieldCell cell = entry.getValue();
 
+
                                 synchronized (cell) {
                                     cell.setChecked(!cell.isChecked());
 
@@ -54,31 +55,32 @@ public class ConcurrentCellUpdating {
                                 }
 
                                 updateEntries.put(entry.getKey(), cell);
-//                                    field.updateCell(entry.getKey(), cell);
+                                field.updateEntries(updateEntries);
                             }
                         } finally {
                             c.incrementAndGet();
+                            countBySeconds.incrementAndGet();
 
                             field.unlockChunks();
                         }
                     }
                 } catch (Exception e) {
-                    //
+                    e.printStackTrace();
                 }
             });
         }
 
         watcherExec.submit((Runnable) () -> {
             while (true) {
-                System.out.println(
-                        "queue size = " + ((ThreadPoolExecutor) field.cellUpdateExec).getQueue().size()
-                                + ", pool size = " + ((ThreadPoolExecutor) field.cellUpdateExec).getPoolSize()
-                                + ", counters = "
-                                + SimpleFieldDataSource.runCounter.get() + ", " + c.get()
+                System.out.printf(
+                        "queue size =  %s, pool size = %s, update thread run count = %s, update request count = %s" +
+                                ", count by seconds = %s\n",
+                        ((ThreadPoolExecutor) field.cellUpdateExec).getQueue().size(),
+                        ((ThreadPoolExecutor) field.cellUpdateExec).getPoolSize(),
+                        SimpleFieldDataSource.runCounter, c, countBySeconds
                 );
-//                System.out.println(((double) SimpleFieldDataSource.loopCounter.get()) / ((double) SimpleFieldDataSource.runCounter.get())
-//                        + ", " + ((double) SimpleFieldDataSource.obsoleteCounter.get()) / ((double) SimpleFieldDataSource.runCounter.get())
-//                );
+
+                countBySeconds.set(0);
 
                 try {
                     TimeUnit.SECONDS.sleep(1);
@@ -88,7 +90,7 @@ public class ConcurrentCellUpdating {
             }
         });
 
-        TimeUnit.SECONDS.sleep(10);
+        TimeUnit.SECONDS.sleep(100);
 
 //        System.out.println(SimpleFieldDataSource.runCounter.get() + ", " + c.get());
 

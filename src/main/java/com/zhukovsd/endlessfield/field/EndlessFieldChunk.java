@@ -3,6 +3,7 @@ package com.zhukovsd.endlessfield.field;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.StampedLock;
@@ -17,6 +18,7 @@ public class EndlessFieldChunk<T extends EndlessFieldCell> {
     private boolean isStored = false;
 
     public ReentrantLock lock = new ReentrantLock(); // TODO: 23.03.2016 remove public
+    // TODO: 04.04.2016 remove unused locks
     public ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
     public StampedLock stampedLock = new StampedLock();
 
@@ -43,4 +45,6 @@ public class EndlessFieldChunk<T extends EndlessFieldCell> {
     public synchronized void setStored(boolean stored) {
         isStored = stored;
     }
+
+    public AtomicInteger updateTaskCount = new AtomicInteger(0);
 }

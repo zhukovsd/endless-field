@@ -42,6 +42,6 @@ public class SimpleFieldCell extends EndlessFieldCell {
 
     @Override
     public String toString() {
-        return "isChecked = " + isChecked();
+        return super.toString() + ", isChecked = " + isChecked();
     }
 }

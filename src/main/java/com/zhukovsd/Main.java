@@ -15,38 +15,32 @@ public class Main {
 
 //        int count = 1000000;
 
-        ArrayList<CellPosition> positions = new ArrayList<>();
-        for (int row = 0; row < 3; row++) {
-            for (int column = 0; column < 3; column++) {
-                positions.add(new CellPosition(row, column));
-            }
-        }
+//        ArrayList<CellPosition> positions = new ArrayList<>();
+//        for (int row = 0; row < 3; row++) {
+//            for (int column = 0; column < 3; column++) {
+//                positions.add(new CellPosition(row, column));
+//            }
+//        }
 
         // 550ms w/o storing, 10000ms w/ sync storing, 1000ms w/ async storing with 5 threads
         // full reading - 3000ms
         long time = System.nanoTime();
 
-        field.lockChunks(positions);
-        try {
-//            for (CellPosition position : positions)
-//                field.getCell(position);
-            Map<CellPosition, SimpleFieldCell> cells = field.getEntries(positions),
-                updateEntries = new LinkedHashMap<>(cells.size());
+        // 15k 50x50 chunks on 4GB RAM
+        for (int chunkRow = 0; chunkRow < 200; chunkRow ++) {
+            for (int chunkColumn = 0; chunkColumn < 200; chunkColumn ++) {
+                List<CellPosition> positions = Arrays.asList(new CellPosition(chunkRow * 50, chunkColumn * 50));
 
-            for (Map.Entry<CellPosition, SimpleFieldCell> entry : cells.entrySet()) {
-                CellPosition position = entry.getKey();
-                SimpleFieldCell cell = entry.getValue();
+                field.lockChunks(positions);
+                try {
 
-                synchronized (cell) {
-                    if (!((position.row == 1) && (position.column == 1)))
-                        cell.setChecked(!cell.isChecked());
+                } finally {
+                    field.unlockChunks();
                 }
 
-                updateEntries.put(position, cell);
-                field.updateEntries(updateEntries);
+                if (chunkColumn == 99)
+                    System.out.println("chunk count = " + field.chunkMap.size());
             }
-        } finally {
-            field.unlockChunks();
         }
 //        field.getCells(positions);
         time = (System.nanoTime() - time) / 1000000;

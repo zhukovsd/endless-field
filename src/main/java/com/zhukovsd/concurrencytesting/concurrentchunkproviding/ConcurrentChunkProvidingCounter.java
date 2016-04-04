@@ -63,7 +63,7 @@ public class ConcurrentChunkProvidingCounter {
 
                         @Override
                         public EndlessFieldChunk<SimpleFieldCell> call() throws Exception {
-                            return field.provideChunk(anonVar);
+                            return field.provideAndLockChunk(anonVar);
                         }
 
                         private Callable<EndlessFieldChunk<SimpleFieldCell>> init(int var){

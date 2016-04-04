@@ -32,7 +32,7 @@ public class ConcurrentChunkProviding {
         ArrayList<Future<EndlessFieldChunk<SimpleFieldCell>>> futures = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             futures.add(completionService.submit(
-                    () -> field.provideChunk(0)
+                    () -> field.provideAndLockChunk(0)
             ));
         }
 
