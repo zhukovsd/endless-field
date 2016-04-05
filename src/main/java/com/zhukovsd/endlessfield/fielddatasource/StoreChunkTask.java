@@ -33,7 +33,7 @@ public class StoreChunkTask<T extends EndlessFieldCell> implements Runnable {
         // TODO: 23.03.2016 handle store exceptions / errors
         dataSource.storeChunk(chunk, chunkId);
 
-        // we assume that chunk is guaranteed to exist
+        // we assume that chunk is guaranteed to exists, and we can get it directly from chunkMap
         chunk.setStored(true);
 
         storeCount.incrementAndGet();

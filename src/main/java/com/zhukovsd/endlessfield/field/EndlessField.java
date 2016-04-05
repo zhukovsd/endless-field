@@ -47,6 +47,8 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     }
 
     public EndlessFieldChunk<T> provideAndLockChunk(Integer chunkId) {
+        // lock on chunkId to prevent simultaneous creating / removing of chunk with same id by different threads.
+        // if one thread entered this lambda, another thread, requesting chunk with same id will have to wait.
         return lockManager.executeLocked(chunkId, () -> {
             EndlessFieldChunk<T> chunk = null;
 
@@ -68,6 +70,8 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
                     chunkStoreExec.submit(new StoreChunkTask<T>(dataSource, chunk, chunkId));
                 }
 
+                // lock on chunk's lock object to protect it from being deleted after exiting from locked lambda,
+                // but before locking on lock object, which will cause exception in reader thread
                 chunk.lock.lock();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -107,6 +111,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
             }
         }
 
+        // increment update task counts used to prevent chunk removing before all its tasks are finished
         for (Integer chunkId : chunkIds) chunkMap.get(chunkId).updateTaskCount.incrementAndGet();
 
         cellUpdateExec.submit(new UpdateCellTask<T>(this, dataSource, entries, chunkIds));
@@ -148,14 +153,13 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 //    }
 
     public void lockChunks(Iterable<CellPosition> positions) {
-//        EndlessFieldChunk<T> chunk = provideAndLockChunk(chunkId);
-
         Set<Integer> lockSet = lockedChunkIds.get();
         // TODO: 25.03.2016 provide proper exception type
         if (lockSet.size() > 0) throw new RuntimeException("lock set has to be empty before locking!");
 
         for (CellPosition position : positions) lockSet.add(ChunkIdGenerator.generateID(chunkSize, position));
 
+        // lock chunks to lock access by another readers and forbid it's removing
         for (Integer id : lockSet) provideAndLockChunk(id);
     }
 
@@ -165,31 +169,28 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         // TODO: 25.03.2016 provide proper exception type
         if (lockSet.size() == 0) throw new RuntimeException("lock can't be empty before unlocking!");
 
-        // chunk might be removed, so check for existence
         for (Integer chunkId : lockSet) {
-//            lockManager.executeLocked(chunkId, () -> {
-                try {
-                    if (chunkMap.containsKey(chunkId))
-                        chunkMap.get(chunkId).lock.unlock();
-//                    else
-//                        System.out.println(431);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-//            });
+            // unlock chunk to provide access to another readers and to allow this chunk to be removed.
+            // chunk guaranteed to exists, because removeChunk() methods locks on removing chunk lock object
+            if (chunkMap.containsKey(chunkId))
+                chunkMap.get(chunkId).lock.unlock();
+            else
+                System.out.println("123456789");
         }
 
         lockedChunkIds.remove();
     }
 
     public void removeChunk(Integer chunkId) {
+        // lock on chunkId to prevent access to this chunk in provideAndLockChunk() during its deletion.
+        // otherwise, it is possible that reader thread will enter provideAndLockChunk(), chunk will be provided,
+        // but before reader locks chunk's lock object, removing thread will be resumed and chunk will be removed
+        // by the time reader thread will request it's cells
         lockManager.executeLocked(chunkId, () -> {
             try {
+                // lock on chunk.lock to prevent its removing while being locked by another thread
                 EndlessFieldChunk<T> chunk = provideAndLockChunk(chunkId);
                 try {
-//                    if (!chunk.isStored())
-//                        System.out.println("chunk not stored yet!");
-
                     chunkMap.remove(chunkId);
                 } finally {
                     chunk.lock.unlock();

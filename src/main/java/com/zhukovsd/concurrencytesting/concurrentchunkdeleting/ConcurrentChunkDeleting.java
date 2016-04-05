@@ -47,12 +47,12 @@ public class ConcurrentChunkDeleting {
 
         ExecutorService remover = Executors.newSingleThreadExecutor();
 
-        int chunkCount = 40;
-        int maxAllowedCount = 1500;
+        int chunkCount = 2;
+        int maxAllowedCount = 0; //1500;
+
         int maxRow = chunkCount * chunkSize.rowCount;
         int maxColumn = chunkCount * chunkSize.columnCount;
-//        int maxRow = 1;
-//        int maxColumn = 1;
+        int cellCount = 1;
 
         int readersCount = 5;
 
@@ -65,7 +65,7 @@ public class ConcurrentChunkDeleting {
 
                 try {
                     while (true) {
-                        List<CellPosition> positions = Arrays.asList(new CellPosition(rand.nextInt(maxRow), rand.nextInt(maxColumn)));
+//                        List<CellPosition> positions = Arrays.asList(new CellPosition(rand.nextInt(maxRow), rand.nextInt(maxColumn)));
 
 //                        List<CellPosition> positions = new ArrayList<>();
 //                        for (int row = 0; row < 50; row++) {
@@ -73,6 +73,11 @@ public class ConcurrentChunkDeleting {
 //                                positions.add(new CellPosition(row, column));
 //                            }
 //                        }
+
+                        List<CellPosition> positions = new ArrayList<>();
+                        for (int j = 0; j < cellCount; j++) {
+                            positions.add(new CellPosition(rand.nextInt(maxRow), rand.nextInt(maxColumn)));
+                        }
 
                         field.lockChunks(positions);
                         try {
@@ -85,12 +90,12 @@ public class ConcurrentChunkDeleting {
                                 if (cell == null)
                                     System.out.println("123456");
 
-                                synchronized (cell) {
-                                    cell.setChecked(!cell.isChecked());
-                                }
+//                                synchronized (cell) {
+//                                    cell.setChecked(!cell.isChecked());
+//                                }
                             }
 
-                            field.updateEntries(entries);
+//                            field.updateEntries(entries);
                         } catch (Exception e) {
                             e.printStackTrace();
                         } finally {
@@ -134,12 +139,12 @@ public class ConcurrentChunkDeleting {
 
         remover.submit((Runnable)  () -> {
             while (true) {
+                Random rand = new Random();
                 try {
 //                   int c = 0;
 
 //                   if (field.chunkMap.size() > 0) {
                     while (field.chunkMap.size() > maxAllowedCount) {
-                        Random rand = new Random();
 
                         ArrayList<Integer> keys = new ArrayList<>(field.chunkMap.keySet());
 
@@ -168,7 +173,7 @@ public class ConcurrentChunkDeleting {
 //
 //                   System.out.printf("--> iterated count = %s, chunks count = %s\n", c, field.chunkMap.size());
 //
-                    TimeUnit.MILLISECONDS.sleep(10);
+//                    TimeUnit.MILLISECONDS.sleep(10);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

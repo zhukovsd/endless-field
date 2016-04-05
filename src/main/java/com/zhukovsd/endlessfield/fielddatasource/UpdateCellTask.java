@@ -36,6 +36,7 @@ public class UpdateCellTask<T extends EndlessFieldCell> implements Runnable {
 
         // commit stored state
         for (Integer chunkId : chunkIds) {
+            // we assume that chunk is guaranteed to exists, and we can get it directly from chunkMap
             field.chunkMap.get(chunkId).updateTaskCount.decrementAndGet();
         }
 
