@@ -1,8 +1,8 @@
 package com.zhukovsd;
 
 import com.google.gson.Gson;
-import com.sun.deploy.util.SessionState;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -10,12 +10,22 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
 class ClientScope {
     // TODO: 07.12.2015 add isEmpty method
     int originRow = -1, originColumn, rowCount, columnCount;
+
+    public ClientScope() { }
+
+    public ClientScope(int originRow, int originColumn, int rowCount, int columnCount) {
+        this.originRow = originRow;
+        this.originColumn = originColumn;
+        this.rowCount = rowCount;
+        this.columnCount = columnCount;
+    }
 
     Set<CellPosition> toSet() {
         Set<CellPosition> result = new HashSet<>();
@@ -40,6 +50,18 @@ class ClientScope {
         return (row >= originRow) && (row < originRow + rowCount)
                 && (column >= originColumn) && (column < originColumn + columnCount);
     }
+
+    public static void main(String[] args) {
+        ClientScope before = new ClientScope(0, 0, 50, 50), after = new ClientScope(10, 10, 60, 60);
+        Set<CellPosition> rslt;
+
+        long time = System.nanoTime();
+        for (int i = 0; i < 99999; i++) {
+            rslt = after.difference(before);
+        }
+        time = (System.nanoTime() - time) / 1000000;
+        System.out.println(time + "ms");
+    }
 }
 
 class FieldServletRequest {
@@ -53,12 +75,31 @@ class FieldServletRequest {
     }
 }
 
-@WebServlet("/field")
+// @WebServlet("/field")
+@WebServlet(name="online-minesweeper", urlPatterns = {"/field", "/asfsdfasdf"})
 public class FieldServlet extends HttpServlet {
     static final Field field = new Field();
 
     @Override
+    public void init() throws ServletException {
+        Enumeration<String> initParams = getServletConfig().getInitParameterNames();
+        System.out.println(initParams + " initParams");
+
+        while (initParams.hasMoreElements()) {
+
+            String initParamName = initParams.nextElement();
+            System.out.println(initParamName + " initParamName");
+            String initParamValue = getServletConfig().getInitParameter(initParamName);
+
+//            initParamsMap.put(initParamName, initParamValue);
+        }
+    }
+
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String s = req.getServerName();
+        s = req.getServletContext().getVirtualServerName();
+
         FieldServletRequest request = FieldServletRequest.createFromJSON(URLDecoder.decode(req.getParameter("data"), "UTF-8"));
 
         // identify client, save it's scope

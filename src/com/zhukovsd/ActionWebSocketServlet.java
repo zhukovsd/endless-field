@@ -1,18 +1,14 @@
 package com.zhukovsd;
 
 import com.google.gson.Gson;
-import com.sun.deploy.util.SessionState;
-import sun.security.pkcs11.wrapper.CK_SESSION_INFO;
 
-import java.io.IOException;
-import java.net.URLDecoder;
-import java.util.*;
-
-import javax.websocket.OnClose;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.Session;
+import javax.naming.Context;
+import javax.servlet.ServletContext;
+import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 class CellPosition {
     private static Gson gson = new Gson();
@@ -105,6 +101,11 @@ public class ActionWebSocketServlet {
         userSessions.remove(userSession.getId());
 
         System.out.println("session with id = " + userSession.getId() + " closed, client count = " + userSessions.size());
+    }
+
+    @OnError
+    public void onError(Session session, Throwable thr) {
+//        System.out.println(thr.getMessage());
     }
 
     /**
