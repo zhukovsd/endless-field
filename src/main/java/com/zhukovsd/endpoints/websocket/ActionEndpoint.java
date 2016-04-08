@@ -22,4 +22,6 @@ public class ActionEndpoint {
 
         System.out.printf("http session id = %s, websocket session id = %s\n", httpSession.getId(), wsSession.getId());
     }
+
+    // TODO: 08.04.2016 disconnect event, error event
 }
