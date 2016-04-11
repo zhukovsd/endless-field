@@ -1,4 +1,4 @@
-package com.zhukovsd.concurrencytesting.concurrentcellupdating;
+package com.zhukovsd.experiments.concurrency.concurrentcellupdating;
 
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.ChunkSize;

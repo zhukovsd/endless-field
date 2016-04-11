@@ -1,4 +1,4 @@
-package com.zhukovsd.concurrencytesting.concurrentchunkproviding;
+package com.zhukovsd.experiments.concurrency.concurrentchunkproviding;
 
 import com.zhukovsd.endlessfield.field.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;

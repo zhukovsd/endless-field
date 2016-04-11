@@ -1,4 +1,4 @@
-package com.zhukovsd.concurrencytesting.concurrentchunkdeleting;
+package com.zhukovsd.experiments.concurrency.concurrentchunkdeleting;
 
 import java.util.Iterator;
 import java.util.Map;

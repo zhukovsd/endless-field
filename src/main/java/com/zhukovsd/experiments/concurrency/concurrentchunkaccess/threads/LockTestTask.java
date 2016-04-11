@@ -1,4 +1,4 @@
-package com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads;
+package com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads;
 
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.ChunkIdGenerator;

@@ -1,13 +1,12 @@
-package com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantreadwritelocks;
+package com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.reentrantreadwritelocks;
 
-import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.LockTestTask;
+import com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.LockTestTask;
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * Created by ZhukovSD on 26.03.2016.

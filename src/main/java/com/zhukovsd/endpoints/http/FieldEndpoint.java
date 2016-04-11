@@ -12,7 +12,6 @@ import java.io.IOException;
  * Created by ZhukovSD on 07.04.2016.
  */
 @WebServlet(urlPatterns = {"/field"})
-//@WebServlet("/field")
 public class FieldEndpoint extends HttpServlet {
     @Override
     public void init() throws ServletException {
@@ -21,10 +20,8 @@ public class FieldEndpoint extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // TODO: 11.04.2016 do not create new session on this request!
         HttpSession session = request.getSession();
-
-        if (session.isNew())
-            session.setMaxInactiveInterval(60*60*24);
 
         response.getOutputStream().print("session = " + session.getId());
     }

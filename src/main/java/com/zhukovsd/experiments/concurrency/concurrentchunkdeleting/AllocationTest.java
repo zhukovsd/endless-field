@@ -1,4 +1,4 @@
-package com.zhukovsd.concurrencytesting.concurrentchunkdeleting;
+package com.zhukovsd.experiments.concurrency.concurrentchunkdeleting;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;

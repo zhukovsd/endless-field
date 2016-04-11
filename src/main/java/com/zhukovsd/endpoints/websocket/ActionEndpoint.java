@@ -9,10 +9,11 @@ import javax.websocket.server.ServerEndpoint;
 /**
  * Created by ZhukovSD on 07.04.2016.
  */
+// Web container creates ServerEndpoint instance for every websocket connection
 @ServerEndpoint(value = "/action", configurator = ActionEndpointConfigurator.class)
 public class ActionEndpoint {
     private Session wsSession;
-    private HttpSession httpSession;
+    private HttpSession httpSession; // thread safe due to individual server endpoint instance for each websocket connection
 
     @OnOpen
     public void open(Session session, EndpointConfig config) {

@@ -1,7 +1,4 @@
-package com.zhukovsd.concurrencytesting.concurrentcellupdating;
-
-import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
-import com.zhukovsd.simplefield.SimpleFieldCell;
+package com.zhukovsd.experiments.concurrency.concurrentcellupdating;
 
 import java.util.concurrent.*;
 

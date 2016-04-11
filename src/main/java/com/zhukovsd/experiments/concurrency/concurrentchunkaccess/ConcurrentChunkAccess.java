@@ -1,8 +1,8 @@
-package com.zhukovsd.concurrencytesting.concurrentchunkaccess;
+package com.zhukovsd.experiments.concurrency.concurrentchunkaccess;
 
-import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockCheckTask;
-import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockReadTask;
-import com.zhukovsd.concurrencytesting.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockWriteTask;
+import com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockCheckTask;
+import com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockReadTask;
+import com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockWriteTask;
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;

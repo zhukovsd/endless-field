@@ -1,4 +1,4 @@
-package com.zhukovsd.concurrencytesting.concurrentchunkdeleting;
+package com.zhukovsd.experiments.concurrency.concurrentchunkdeleting;
 
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.ChunkSize;
