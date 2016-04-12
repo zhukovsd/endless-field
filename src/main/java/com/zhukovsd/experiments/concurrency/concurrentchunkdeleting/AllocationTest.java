@@ -38,7 +38,7 @@ class AllocationTest {
 
                             TimeUnit.SECONDS.sleep(1);
                         } catch (Exception e) {
-                            System.out.println(e);
+//                            System.out.println(e);
                         }
                     }
                 }

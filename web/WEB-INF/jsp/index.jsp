@@ -12,10 +12,16 @@
     <title>Title</title>
     <script>
         var webSocket = new WebSocket("ws://" + location.host + "/online-minesweeper/action");
+
+        webSocket.onmessage = function(message) {
+            document.getElementById("web_socket_ids").innerHTML = message.data;
+        };
+
+        // TODO websocket close/error events
     </script>
 </head>
 <body>
 <h1>Hi! Your session Id = <%= request.getSession().getId() %></h1>
-Your websocket session ids = [<span id="web_socket_ids">]</span>
+Your websocket session ids = [<span id="web_socket_ids"></span>]
 </body>
-</html></html>
+</html>

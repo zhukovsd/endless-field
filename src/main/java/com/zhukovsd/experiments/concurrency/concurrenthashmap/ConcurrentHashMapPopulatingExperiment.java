@@ -33,68 +33,73 @@ public class ConcurrentHashMapPopulatingExperiment {
         // removers count = 2  |                     |                      |
         // time = 5            |                     |                      |
 
-        // Thus, key lock manager loses in performance to vanilla approaches
+        // However, this experiment does not provide idiom for using ConcurrentHashMap item, only for multithreaded
+        // map populating, because item may be removed right after creation and no locking provided to protect it during usage.
 
         ConcurrentHashMap<Integer, Object> map = new ConcurrentHashMap<>();
 
         ExecutorService exec = Executors.newCachedThreadPool();
 
-        int readThreadCount = 10, removeThreadCount = 2, range = 100000, execTime = 5;
+        int readThreadCount = 100, removeThreadCount = 2, range = 100, execTime = 5;
 
         AtomicInteger putCount = new AtomicInteger(0), readCount = new AtomicInteger(0), removeCount = new AtomicInteger(0);
 
         //region vanilla concurrent hash map populating
-//        for (int i = 0; i < readThreadCount; i++) {
-//            exec.submit((Runnable) () -> {
-//                Random rand = new Random();
-//
-//                try {
-//                    while (!Thread.currentThread().isInterrupted()) {
-//                        Integer key = rand.nextInt(range);
-//
-//                        if (!map.containsKey(key)) {
-//                            if (map.putIfAbsent(key, new Object()) == null)
-//                                putCount.incrementAndGet();
-//                        }
-//
-//                        Object getResult = map.get(key);
-//                        readCount.incrementAndGet();
-//
-////                    System.out.format("#%s get = %s\n", index, getResult);
-//                    }
-//                } catch (Exception e) {
-//                    System.out.println("interrupted");
-//                }
-//            });
-//        }
-//
-//        for (int i = 0; i < removeThreadCount; i++) {
-//            exec.submit((Runnable) () -> {
-//                Random rand = new Random();
-//
-//                try {
-//                    while (!Thread.currentThread().isInterrupted()) {
-//                        Integer key = rand.nextInt(range);
-//
-//                        Object value = map.get(key);
-//                        if (value != null) {
-//                            boolean removed = false;
-//
-//                            while (!removed) {
-//                                if (map.remove(key, value)) {
-//                                    removeCount.incrementAndGet();
-//                                    removed = true;
-//                                } else {
-//                                    value = map.get(key);
-//                                }
-//                            }
-//                        }
-//                    }
-//                } catch (Exception e) {
-//                    System.out.println("interrupted");
-//                }
-//            });
-//        }
+        for (int i = 0; i < readThreadCount; i++) {
+            exec.submit((Runnable) () -> {
+                Random rand = new Random();
+
+                try {
+                    while (!Thread.currentThread().isInterrupted()) {
+                        Integer key = rand.nextInt(range);
+
+                        if (!map.containsKey(key)) {
+                            if (map.putIfAbsent(key, new Object()) == null)
+                                putCount.incrementAndGet();
+                        }
+
+                        Object getResult = map.get(key); // may be null!
+
+//                        if (getResult == null)
+//                            System.out.println("null");
+
+                        readCount.incrementAndGet();
+
+//                    System.out.format("#%s get = %s\n", index, getResult);
+                    }
+                } catch (Exception e) {
+                    System.out.println("interrupted");
+                }
+            });
+        }
+
+        for (int i = 0; i < removeThreadCount; i++) {
+            exec.submit((Runnable) () -> {
+                Random rand = new Random();
+
+                try {
+                    while (!Thread.currentThread().isInterrupted()) {
+                        Integer key = rand.nextInt(range);
+
+                        Object value = map.get(key);
+                        if (value != null) {
+                            boolean removed = false;
+
+                            while (!removed) {
+                                if (map.remove(key, value)) {
+                                    removeCount.incrementAndGet();
+                                    removed = true;
+                                } else {
+                                    value = map.get(key);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("interrupted");
+                }
+            });
+        }
         //endregion
 
         //region key lock manager
@@ -154,54 +159,56 @@ public class ConcurrentHashMapPopulatingExperiment {
 //        }
         //endregion
 
-        for (int i = 0; i < readThreadCount; i++) {
-            exec.submit((Runnable) () -> {
-                Random rand = new Random();
-
-                try {
-                    while (!Thread.currentThread().isInterrupted()) {
-                        Integer key = rand.nextInt(range);
-
-                        map.computeIfAbsent(key, (k) -> {
-                            putCount.incrementAndGet();
-                            return new Object();
-                        });
-
-                        readCount.incrementAndGet();
-                    }
-                } catch (Exception e) {
+        //region Java 8
+//        for (int i = 0; i < readThreadCount; i++) {
+//            exec.submit((Runnable) () -> {
+//                Random rand = new Random();
+//
+//                try {
+//                    while (!Thread.currentThread().isInterrupted()) {
+//                        Integer key = rand.nextInt(range);
+//
+//                        map.computeIfAbsent(key, (k) -> {
+//                            putCount.incrementAndGet();
+//                            return new Object();
+//                        });
+//
+//                        readCount.incrementAndGet();
+//                    }
+//                } catch (Exception e) {
+////                    System.out.println("interrupted");
+//                }
+//            });
+//        }
+//
+//        for (int i = 0; i < removeThreadCount; i++) {
+//            exec.submit((Runnable) () -> {
+//                Random rand = new Random();
+//
+//                try {
+//                    while (!Thread.currentThread().isInterrupted()) {
+//                        Integer key = rand.nextInt(range);
+//
+//                        Object value = map.get(key);
+//                        if (value != null) {
+//                            boolean removed = false;
+//
+//                            while (!removed) {
+//                                if (map.remove(key, value)) {
+//                                    removeCount.incrementAndGet();
+//                                    removed = true;
+//                                } else {
+//                                    value = map.get(key);
+//                                }
+//                            }
+//                        }
+//                    }
+//                } catch (Exception e) {
 //                    System.out.println("interrupted");
-                }
-            });
-        }
-
-        for (int i = 0; i < removeThreadCount; i++) {
-            exec.submit((Runnable) () -> {
-                Random rand = new Random();
-
-                try {
-                    while (!Thread.currentThread().isInterrupted()) {
-                        Integer key = rand.nextInt(range);
-
-                        Object value = map.get(key);
-                        if (value != null) {
-                            boolean removed = false;
-
-                            while (!removed) {
-                                if (map.remove(key, value)) {
-                                    removeCount.incrementAndGet();
-                                    removed = true;
-                                } else {
-                                    value = map.get(key);
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    System.out.println("interrupted");
-                }
-            });
-        }
+//                }
+//            });
+//        }
+        //endregion
 
         TimeUnit.SECONDS.sleep(5);
         exec.shutdownNow();

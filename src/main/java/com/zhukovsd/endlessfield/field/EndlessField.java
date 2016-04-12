@@ -67,7 +67,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
                     chunk = generateChunk(chunkId);
                     chunkMap.put(chunkId, chunk);
 
-                    chunkStoreExec.submit(new StoreChunkTask<T>(dataSource, chunk, chunkId));
+                    chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunk, chunkId));
                 }
 
                 // lock on chunk's lock object to protect it from being deleted after exiting from locked lambda,
@@ -114,7 +114,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         // increment update task counts used to prevent chunk removing before all its tasks are finished
         for (Integer chunkId : chunkIds) chunkMap.get(chunkId).updateTaskCount.incrementAndGet();
 
-        cellUpdateExec.submit(new UpdateCellTask<T>(this, dataSource, entries, chunkIds));
+        cellUpdateExec.submit(new UpdateCellTask<>(this, dataSource, entries, chunkIds));
     }
 
     public CellEntry<T> getEntry(CellPosition position) {

@@ -5,7 +5,11 @@
          version="3.1">
 
     <listener>
-        <listener-class>com.zhukovsd.endpoints.http.HttpSessionInterceptor</listener-class>
+        <listener-class>com.zhukovsd.serverapp.endpoints.http.HttpSessionInterceptor</listener-class>
+    </listener>
+
+    <listener>
+        <listener-class>com.zhukovsd.serverapp.ContextListener</listener-class>
     </listener>
 
 </web-app>

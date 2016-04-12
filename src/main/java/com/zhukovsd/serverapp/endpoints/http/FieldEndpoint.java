@@ -1,4 +1,4 @@
-package com.zhukovsd.endpoints.http;
+package com.zhukovsd.serverapp.endpoints.http;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;

@@ -21,7 +21,7 @@ public class UpdateCellTask<T extends EndlessFieldCell> implements Runnable {
     Map<CellPosition, T> entries;
     Set<Integer> chunkIds;
 
-    public UpdateCellTask(EndlessField field, EndlessFieldDataSource<T> dataSource, Map<CellPosition, T> entries,
+    public UpdateCellTask(EndlessField<T> field, EndlessFieldDataSource<T> dataSource, Map<CellPosition, T> entries,
                           Set<Integer> chunkIds) {
         this.field = field;
         this.dataSource = dataSource;

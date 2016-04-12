@@ -1,4 +1,4 @@
-package com.zhukovsd.endpoints.websocket;
+package com.zhukovsd.serverapp.endpoints.websocket;
 
 import javax.servlet.http.HttpSession;
 import javax.websocket.HandshakeResponse;
