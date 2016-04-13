@@ -22,6 +22,7 @@
 </head>
 <body>
 <h1>Hi! Your session Id = <%= request.getSession().getId() %></h1>
-Your websocket session ids = [<span id="web_socket_ids"></span>]
+Your websocket session ids = [<span id="web_socket_ids"></span>]<br/>
+Scope for this client = 123
 </body>
 </html>

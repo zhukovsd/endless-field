@@ -20,9 +20,13 @@ public class FieldEndpoint extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // TODO: 11.04.2016 do not create new session on this request!
-        HttpSession session = request.getSession();
+        // don't create new session on this request. if now session found, report error to the client
+        HttpSession session = request.getSession(false);
 
-        response.getOutputStream().print("session = " + session.getId());
+        if (session != null) {
+            response.getOutputStream().print("session = " + session.getId());
+        } else {
+            // TODO: 12.04.2016 report no session error
+        }
     }
 }
