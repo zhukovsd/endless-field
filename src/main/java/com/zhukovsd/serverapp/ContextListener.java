@@ -2,8 +2,7 @@ package com.zhukovsd.serverapp;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-
-import com.zhukovsd.serverapp.UserCacheMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by ZhukovSD on 12.04.2016.
@@ -11,16 +10,10 @@ import com.zhukovsd.serverapp.UserCacheMap;
 // TODO: 12.04.2016 move to more appropriate package
 public class ContextListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent event) {
-        try {
-            event.getServletContext().setAttribute("usercache", new UserCacheMap());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-//        System.out.println("123");
+        event.getServletContext().setAttribute("sessions_cache", new SessionsCacheConcurrentHashMap());
     }
 
     public void contextDestroyed(ServletContextEvent event) {
-
+        // TODO: 13.04.2016 handle context destruction
     }
 }

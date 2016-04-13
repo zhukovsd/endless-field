@@ -36,11 +36,11 @@ public class ConcurrentHashMapPopulatingExperiment {
         // However, this experiment does not provide idiom for using ConcurrentHashMap item, only for multithreaded
         // map populating, because item may be removed right after creation and no locking provided to protect it during usage.
 
-        ConcurrentHashMap<Integer, Object> map = new ConcurrentHashMap<>();
+        ConcurrentHashMap<Integer, AtomicInteger> map = new ConcurrentHashMap<>();
 
         ExecutorService exec = Executors.newCachedThreadPool();
 
-        int readThreadCount = 100, removeThreadCount = 2, range = 100, execTime = 5;
+        int readThreadCount = 20, removeThreadCount = 0, range = 100, execTime = 5;
 
         AtomicInteger putCount = new AtomicInteger(0), readCount = new AtomicInteger(0), removeCount = new AtomicInteger(0);
 
@@ -53,19 +53,20 @@ public class ConcurrentHashMapPopulatingExperiment {
                     while (!Thread.currentThread().isInterrupted()) {
                         Integer key = rand.nextInt(range);
 
-                        if (!map.containsKey(key)) {
-                            if (map.putIfAbsent(key, new Object()) == null)
-                                putCount.incrementAndGet();
-                        }
+                        if (map.putIfAbsent(key, new AtomicInteger()) == null)
+                            putCount.incrementAndGet();
 
-                        Object getResult = map.get(key); // may be null!
+                        AtomicInteger getResult = map.get(key); // may be null!
+                        if (getResult != null)
+                            getResult.incrementAndGet();
 
 //                        if (getResult == null)
 //                            System.out.println("null");
 
                         readCount.incrementAndGet();
 
-//                    System.out.format("#%s get = %s\n", index, getResult);
+//                        System.out.println(getResult);
+//                        break;
                     }
                 } catch (Exception e) {
                     System.out.println("interrupted");
@@ -85,14 +86,17 @@ public class ConcurrentHashMapPopulatingExperiment {
                         if (value != null) {
                             boolean removed = false;
 
-                            while (!removed) {
-                                if (map.remove(key, value)) {
-                                    removeCount.incrementAndGet();
-                                    removed = true;
-                                } else {
-                                    value = map.get(key);
-                                }
-                            }
+                            if (map.remove(key, value))
+                                removeCount.incrementAndGet();
+
+//                            while (!removed) {
+//                                if (map.remove(key, value)) {
+//                                    removeCount.incrementAndGet();
+//                                    removed = true;
+//                                } else {
+//                                    value = map.get(key);
+//                                }
+//                            }
                         }
                     }
                 } catch (Exception e) {
@@ -215,5 +219,11 @@ public class ConcurrentHashMapPopulatingExperiment {
 
         System.out.printf("read count = %s, put count = %s, remove count = %s\n", readCount, putCount, removeCount);
         System.out.printf("map size = put count - remove count, %s = %s - %s - %s\n", map.size(), putCount, removeCount, (map.size() == putCount.get() - removeCount.get()));
+
+//        int c = 0;
+//        for (AtomicInteger atomicInteger : map.values()) {
+//            c += atomicInteger.get();
+//        }
+//        System.out.println("c = " + c);
     }
 }
