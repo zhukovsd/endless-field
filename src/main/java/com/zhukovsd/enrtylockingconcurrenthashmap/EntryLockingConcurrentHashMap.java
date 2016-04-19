@@ -7,12 +7,13 @@ import de.jkeylockmanager.manager.exception.KeyLockManagerInterruptedException;
 import java.lang.ref.Reference;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /**
  * Created by ZhukovSD on 12.04.2016.
  */
 public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
-    public ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>();
     private KeyLockManager lockManager = KeyLockManagers.newLock();
 
     private ThreadLocal<TreeSet<K>> lockedKeys = new ThreadLocal<TreeSet<K>>() {
@@ -22,19 +23,23 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
         }
     };
 
+    private void rethrowLambdaException(RuntimeException e) throws InterruptedException {
+        if ((e.getCause() != null) && (e.getCause() instanceof InterruptedException))
+            throw ((InterruptedException) e.getCause());
+        else if (e instanceof KeyLockManagerInterruptedException)
+            throw new InterruptedException();
+        else
+            throw e;
+    }
+
     protected abstract V instantiateValue(K key);
 
     private V provideAndLock(K key) throws InterruptedException {
-        Object[] lockedValue = new Object[1];
-        ArrayList<String> l = new ArrayList<>();
+        Lockable[] lockedValue = new Lockable[1];
 
         try {
-            l.add("1");
-
             return lockManager.executeLocked(key, () -> {
                 V value;
-
-                l.add("2");
 
                 if (map.containsKey(key))
                     value = map.get(key);
@@ -43,46 +48,26 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
                     map.put(key, value);
                 }
 
-                l.add("3");
-
                 // lock on chunk's lock object to protect it from being deleted after exiting from locked lambda,
                 // but before locking on lock object, which will cause exception in reader thread
                 lockedValue[0] = value;
                 try {
-                    l.add("4");
-                    value.lockInterruptibly();
-                    l.add("5");
+                    value.getLock().lockInterruptibly();
+                    Lockable.lockCount.incrementAndGet();
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
-                }
-
-                try {
-                    l.add("6");
-                } catch (Exception e) {
-                    e.printStackTrace();
-
-                    return value;
                 }
 
                 return value;
             });
         } catch (RuntimeException e) {
-            if ((lockedValue[0] != null) && (((Lockable) lockedValue[0]).isLocked())) {
-                if (l.size() == 6) {
-                    System.out.println("manually unlocked");
-                    ((Lockable) lockedValue[0]).unlock();
-                } else {
-                    System.out.println("not sure");
-//                    ((Lockable) a[0]).unlock();
-                }
+            if ((lockedValue[0] != null) && (lockedValue[0].getLock().isHeldByCurrentThread())) {
+                System.out.println("manually unlocked");
+                lockedValue[0].getLock().unlock();
             }
 
-            if ((e.getCause() != null) && (e.getCause() instanceof InterruptedException))
-                throw ((InterruptedException) e.getCause());
-            else if (e instanceof KeyLockManagerInterruptedException)
-                throw new InterruptedException();
-            else
-                throw e;
+            rethrowLambdaException(e);
+            return null; // will never be reached, but compiler forces to return from catch statement
         }
     }
 
@@ -122,10 +107,11 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
             // chunk guaranteed to exists, because removeChunk() methods locks on removing chunk lock object
             if (map.containsKey(key)) {
                 // TODO: 19.04.2016 describe why lock might be unlocked (interrupted exception during provide and lock)
-                if (map.get(key).isLocked())
-                    map.get(key).unlock();
-                else
-                    System.out.println(6543);;
+//                if (map.get(key).getLock().isHeldByCurrentThread())
+                    map.get(key).getLock().unlock();
+                    Lockable.unlockCount.incrementAndGet();
+//                else
+//                    System.out.println(6543);
             } else
                 System.out.println("123456789");
         }
@@ -139,7 +125,11 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
         });
     }
 
-    public boolean remove(K key) throws InterruptedException {
+    public V getNonLocked(K key) {
+        return map.get(key);
+    }
+
+    public boolean removeIf(K key, Function<V, Boolean> condition) throws InterruptedException {
         try {
             return lockManager.executeLocked(key, () -> {
                 if (!map.containsKey(key))
@@ -148,24 +138,34 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
                 try {
                     V value = provideAndLock(key);
                     try {
-                        map.remove(key);
+                        boolean isRemove = true;
+                        if (condition != null)
+                            isRemove = condition.apply(value);
+
+                        if (isRemove)
+                            map.remove(key, value);
+
+                        lockedKeys.get().remove(key);
+
+                        return isRemove;
                     } finally {
-                        value.unlock();
+                        value.getLock().unlock();
+                        Lockable.unlockCount.incrementAndGet();
                     }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
 
-                return true;
+//                return true;
             });
-        } catch (Exception e) {
-            if ((e.getCause() != null) && (e.getCause() instanceof InterruptedException))
-                throw ((InterruptedException) e.getCause());
-            else if (e instanceof KeyLockManagerInterruptedException)
-                throw new InterruptedException();
-            else
-                throw e;
+        } catch (RuntimeException e) {
+            rethrowLambdaException(e);
+            return false; // will never be reached, but compiler forces to return from catch statement
         }
+    }
+
+    public boolean remove(K key) throws InterruptedException {
+        return removeIf(key, null);
     }
 
     public Set<Map.Entry<K, V>> entrySet() {

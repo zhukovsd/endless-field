@@ -10,37 +10,102 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 
 /**
  * Created by ZhukovSD on 18.04.2016.
  */
 public class ConcurrentUserScopesExperiment {
-    static class LockableHashSetAdapter<E> extends HashSet<E> implements Lockable {
-        static AtomicInteger lockCount = new AtomicInteger(), unlockCount = new AtomicInteger();
-
+//    static class LockableHashSetAdapter<E> extends HashSet<E> implements Lockable {
+    static class LockableHashSetAdapter<E> implements Lockable, Set<E> {
+        Set<E> set = ConcurrentHashMap.newKeySet();
         ReentrantLock lock = new ReentrantLock();
 
         @Override
-        public void lockInterruptibly() throws InterruptedException {
-            lock.lockInterruptibly();
+        public ReentrantLock getLock() {
+            return lock;
 
-            lockCount.incrementAndGet();
+//            Set<Integer> a = ConcurrentHashMap.newKeySet()
         }
 
         @Override
-        public void unlock() {
-            lock.unlock();
-            unlockCount.incrementAndGet();
+        public int size() {
+            return set.size();
         }
 
         @Override
-        public String test() {
-            return lock.toString();
+        public boolean isEmpty() {
+            return set.isEmpty();
         }
 
         @Override
-        public boolean isLocked() {
-            return lock.isLocked();
+        public boolean contains(Object o) {
+            return set.contains(o);
+        }
+
+        @Override
+        public Iterator<E> iterator() {
+            return set.iterator();
+        }
+
+        @Override
+        public Object[] toArray() {
+            return set.toArray();
+        }
+
+        @Override
+        public <T> T[] toArray(T[] a) {
+            return set.toArray(a);
+        }
+
+        @Override
+        public boolean add(E e) {
+            return set.add(e);
+        }
+
+        @Override
+        public boolean remove(Object o) {
+            return set.remove(o);
+        }
+
+        @Override
+        public boolean containsAll(Collection<?> c) {
+            return set.containsAll(c);
+        }
+
+        @Override
+        public boolean addAll(Collection<? extends E> c) {
+            return set.addAll(c);
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> c) {
+            return set.retainAll(c);
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> c) {
+            return set.removeAll(c);
+        }
+
+        @Override
+        public void clear() {
+            set.clear();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return set.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            return set.hashCode();
+        }
+
+        @Override
+        public Spliterator<E> spliterator() {
+            return set.spliterator();
         }
     }
 
@@ -57,13 +122,12 @@ public class ConcurrentUserScopesExperiment {
         };
 
         ExecutorService exec = Executors.newCachedThreadPool();
+        long startTime = System.nanoTime();
 
         // default concurrent hash maps (20, 5, 10, 100, 3) -> count = 4.6kk, iterCount = 90kk
-        int threadCount = 20, iteratorThreadCount = 0, userCount = 10, range = 10, maxScopeSize = 3;
-        AtomicInteger count = new AtomicInteger(), iterCount = new AtomicInteger(), doneCount = new AtomicInteger(),
-                removeLockCount = new AtomicInteger(), addLockCount = new AtomicInteger();
-
-        Object checkLock = new Object();
+        int threadCount = 20, iteratorThreadCount = 5, userCount = 10, range = 10, maxScopeSize = 3, time = 3;
+        AtomicInteger count = new AtomicInteger(), removeCount = new AtomicInteger(), iterCount = new AtomicInteger(),
+                doneCount = new AtomicInteger(), removeLockCount = new AtomicInteger(), addLockCount = new AtomicInteger();
 
         for (int i = 0; i < userCount; i++)
             scopes.put(i, new HashSet<>());
@@ -74,6 +138,11 @@ public class ConcurrentUserScopesExperiment {
 
                 while (!Thread.currentThread().isInterrupted()) {
                     try {
+//                        long msFromStart = (System.nanoTime() - startTime) / 1000000;
+//                        long msLeft = time * 1000 - msFromStart;
+//                        if (msLeft < 100)
+//                            TimeUnit.SECONDS.sleep(1);
+
                         Integer userId = rand.nextInt(userCount);
 
                         Set<Integer> scope = scopes.get(userId);
@@ -105,11 +174,23 @@ public class ConcurrentUserScopesExperiment {
                                 Set<Integer> users = usersScopeMap.lockKey(key);
                                 try {
                                     users.remove(userId);
-                                    Thread.yield();
+
+
+//                                    if (users.size() == 0) {
+//                                        isRemoved = usersScopeMap.removeLocked(key);
+//                                    }
+//                                      Thread.yield();
                                 } finally {
                                     usersScopeMap.unlock();
                                 }
                                 removeLockCount.incrementAndGet();
+
+                                final Function<LockableHashSetAdapter<Integer>, Boolean> function = (integers ->
+                                    integers.size() == 0
+                                );
+
+                                if (usersScopeMap.removeIf(key, function))
+                                    removeCount.incrementAndGet();
                             }
 
                             // update scope
@@ -131,7 +212,7 @@ public class ConcurrentUserScopesExperiment {
                                 Set<Integer> users = usersScopeMap.lockKey(key);
                                 try {
                                     users.add(userId);
-                                    Thread.yield();
+//                                    Thread.yield();
                                 } finally {
                                     usersScopeMap.unlock();
                                 }
@@ -161,15 +242,14 @@ public class ConcurrentUserScopesExperiment {
                     try {
                         Integer chunkId = rand.nextInt(range);
 
-//                        Set<Integer> users = usersScopeMap.get(chunkId);
-//
-//                        if (users != null) {
-//                            for (Integer user : users) {
-//                                int a = user + 1; // do nothing
-//                            }
-//
-//                            iterCount.incrementAndGet();
-//                        }
+                        Set<Integer> users = usersScopeMap.getNonLocked(chunkId);
+                        if (users != null) {
+                            for (Integer user : users) {
+                                int a = user + 1; // do nothing
+                            }
+
+                            iterCount.incrementAndGet();
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -177,7 +257,7 @@ public class ConcurrentUserScopesExperiment {
             });
         }
 
-        TimeUnit.SECONDS.sleep(3);
+        TimeUnit.SECONDS.sleep(time);
         exec.shutdownNow();
         TimeUnit.SECONDS.sleep(1); // ! have to wait for all threads to complete
 
@@ -208,14 +288,14 @@ public class ConcurrentUserScopesExperiment {
         }
 
         // TODO: 18.04.2016 proper iteration
-        for (Set<Integer> users : usersScopeMap.map.values()) {
-            if (users.size() != 0)
+        for (Map.Entry<Integer, LockableHashSetAdapter<Integer>> entry : usersScopeMap.entrySet()) {
+            if (entry.getValue().size() != 0)
                 isCorrect = false;
         }
 
         System.out.println("isCorrect = " + isCorrect);
 
-        System.out.println("count = " + count);
+        System.out.println("count = " + count + ", remove count = " + removeCount);
         System.out.println("iterCount = " + iterCount);
     }
 }

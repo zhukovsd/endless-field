@@ -10,22 +10,7 @@ public class AbstractLockable implements Lockable {
     private ReentrantLock lock = new ReentrantLock();
 
     @Override
-    public void lockInterruptibly() throws InterruptedException {
-        lock.lockInterruptibly();
-    }
-
-    @Override
-    public void unlock() {
-        lock.unlock();
-    }
-
-    @Override
-    public boolean isLocked() {
-        return lock.isLocked();
-    }
-
-    @Override
-    public String test() {
-        return lock.toString();
+    public ReentrantLock getLock() {
+        return lock;
     }
 }
