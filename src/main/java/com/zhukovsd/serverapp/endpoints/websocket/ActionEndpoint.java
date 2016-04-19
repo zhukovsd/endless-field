@@ -8,6 +8,8 @@ import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
@@ -20,7 +22,8 @@ public class ActionEndpoint {
     private HttpSession httpSession;
 
     private SessionsCacheConcurrentHashMap sessionsCacheMap;
-    //    private UserCacheMap userCacheMap;
+
+    public final Set<Integer> scope = ConcurrentHashMap.newKeySet();
 
     @OnOpen
     public void onOpen(Session session, EndpointConfig config) {
@@ -85,6 +88,7 @@ public class ActionEndpoint {
 
             // TODO: 13.04.2016 check if session is invalidated
 
+            // TODO: 18.04.2016 check if attribute exists
             String userId = ((String) httpSession.getAttribute("user_id"));
 
             WebSocketSessionsConcurrentHashMap webSocketSessionsMap = sessionsCacheMap.get(userId);

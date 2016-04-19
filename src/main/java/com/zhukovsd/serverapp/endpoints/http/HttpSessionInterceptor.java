@@ -16,7 +16,7 @@ public class HttpSessionInterceptor implements HttpSessionListener {
 
     @Override
     public void sessionCreated(HttpSessionEvent event) {
-        // every call is separate thread, same object reused during servlet lifecycle
+        // every call from separate thread, same object reused during servlet lifecycle
 
         HttpSession session = event.getSession();
         session.setMaxInactiveInterval(60*60*24); // one day
@@ -38,6 +38,10 @@ public class HttpSessionInterceptor implements HttpSessionListener {
     @Override
     public void sessionDestroyed(HttpSessionEvent event) {
 //        sessions.remove(event.getSession().getId());
-        // TODO: 13.04.2016 remove entry from sessions cache
+        HttpSession session = event.getSession();
+        SessionsCacheConcurrentHashMap sessionsCacheMap = (SessionsCacheConcurrentHashMap) session.getServletContext().getAttribute("sessions_cache");
+
+        String userId = ((String) session.getAttribute("user_id"));
+        sessionsCacheMap.remove(userId);
     }
 }

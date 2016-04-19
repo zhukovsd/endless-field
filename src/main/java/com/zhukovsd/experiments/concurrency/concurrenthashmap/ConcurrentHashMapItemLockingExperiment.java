@@ -1,6 +1,6 @@
 package com.zhukovsd.experiments.concurrency.concurrenthashmap;
 
-import com.zhukovsd.enrtylockingconcurrenthashmap.Lockable;
+import com.zhukovsd.enrtylockingconcurrenthashmap.AbstractLockable;
 import com.zhukovsd.enrtylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 
 import java.util.*;
@@ -9,7 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-class LockableString extends Lockable {
+class LockableString extends AbstractLockable {
     // protected by lock
     String s;
 
