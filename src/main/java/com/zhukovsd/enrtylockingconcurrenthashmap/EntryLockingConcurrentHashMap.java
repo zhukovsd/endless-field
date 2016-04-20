@@ -12,7 +12,7 @@ import java.util.function.Function;
 /**
  * Created by ZhukovSD on 12.04.2016.
  */
-public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
+public class EntryLockingConcurrentHashMap<K, V extends Lockable> {
     private ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>();
     private KeyLockManager lockManager = KeyLockManagers.newLock();
 
@@ -32,31 +32,35 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
             throw e;
     }
 
-    protected abstract V instantiateValue(K key);
-
-    private V provideAndLock(K key) throws InterruptedException {
+    private V provideAndLock(K key, Function<K, V> instaniator) throws InterruptedException {
         Lockable[] lockedValue = new Lockable[1];
 
         try {
             return lockManager.executeLocked(key, () -> {
-                V value;
+                V value = null;
 
                 if (map.containsKey(key))
                     value = map.get(key);
                 else {
-                    value = instantiateValue(key);
-                    map.put(key, value);
+                    if (instaniator != null) {
+                        value = instaniator.apply(key);
+
+                        if (value != null)
+                            map.put(key, value);
+                    }
                 }
 
                 // lock on chunk's lock object to protect it from being deleted after exiting from locked lambda,
                 // but before locking on lock object, which will cause exception in reader thread
                 lockedValue[0] = value;
-                try {
-                    value.getLock().lockInterruptibly();
-                    Lockable.lockCount.incrementAndGet();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                if (value != null) {
+                    try {
+                        value.getLock().lockInterruptibly();
+                        Lockable.lockCount.incrementAndGet();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                };
 
                 return value;
             });
@@ -82,21 +86,27 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
         for (K key : keys) {
             lockSet.add(key);
 
-            rslt.put(key, provideAndLock(key));
+            rslt.put(key, provideAndLock(key, null));
         }
 
         return rslt;
     }
 
-    public V lockKey(K key, Function<K, V> instaniator) throws InterruptedException {
-        instaniator.apply(key);
-
+    public boolean lockKey(K key, Function<K, V> instaniator) throws InterruptedException {
         Set<K> lockSet = lockedKeys.get();
         // TODO: 25.03.2016 provide proper exception type
         if (lockSet.size() > 0) throw new RuntimeException("lock set has to be empty before locking!");
 
-        lockSet.add(key);
-        return provideAndLock(key);
+        V value = provideAndLock(key, instaniator);
+        if (value != null) {
+            lockSet.add(key);
+            return true;
+        } else
+            return false;
+    }
+
+    public boolean lockKey(K key) throws InterruptedException {
+        return lockKey(key, null);
     }
 
     public void unlock() {
@@ -111,8 +121,8 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
             if (map.containsKey(key)) {
                 // TODO: 19.04.2016 describe why lock might be unlocked (interrupted exception during provide and lock)
 //                if (map.get(key).getLock().isHeldByCurrentThread())
-                    map.get(key).getLock().unlock();
-                    Lockable.unlockCount.incrementAndGet();
+                map.get(key).getLock().unlock();
+                Lockable.unlockCount.incrementAndGet();
 //                else
 //                    System.out.println(6543);
             } else
@@ -122,7 +132,15 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
         lockedKeys.remove();
     }
 
-    public V getNonLocked(K key) {
+    public V getValue(K key) {
+        if (!(lockedKeys.get().contains(key)))
+            // TODO: 25.03.2016 provide proper exception type
+            throw new RuntimeException("value for requested key has to be locked!");
+
+        return map.get(key);
+    }
+
+    public V getValueNonLocked(K key) {
         return map.get(key);
     }
 
@@ -139,7 +157,7 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
                     return false;
 
                 try {
-                    V value = provideAndLock(key);
+                    V value = provideAndLock(key, null);
                     try {
                         boolean isRemove = true;
                         if (condition != null)
@@ -178,5 +196,9 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
     @Override
     public String toString() {
         return map.toString();
+    }
+
+    public int size() {
+        return map.size();
     }
 }

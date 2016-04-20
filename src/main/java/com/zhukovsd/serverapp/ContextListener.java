@@ -1,8 +1,9 @@
 package com.zhukovsd.serverapp;
 
+import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
+
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by ZhukovSD on 12.04.2016.

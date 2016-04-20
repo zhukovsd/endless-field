@@ -1,12 +1,12 @@
 package com.zhukovsd.serverapp.endpoints.websocket;
 
-import com.zhukovsd.serverapp.SessionsCacheConcurrentHashMap;
-import com.zhukovsd.serverapp.WebSocketSessionsConcurrentHashMap;
+import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
+import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
 
 import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
-import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,12 +18,17 @@ import java.util.concurrent.ConcurrentHashMap;
 @ServerEndpoint(value = "/action", configurator = ActionEndpointConfigurator.class)
 public class ActionEndpoint {
     // this variables are thread safe due to individual server endpoint instance for each websocket connection
+
     private Session wsSession;
     private HttpSession httpSession;
 
     private SessionsCacheConcurrentHashMap sessionsCacheMap;
 
-    public final Set<Integer> scope = ConcurrentHashMap.newKeySet();
+    // This set stores chunks, which was requested with last request to /field HTTP servlet.
+    // Set modifies in UserScopeConcurrentCollection methods with synchronization on this set.
+    // No iteration allowed, because set is not concurrent, and modifies in HTTP request thread,
+    // not in ws request thread.
+    public final Set<Integer> scope = new HashSet<>();
 
     @OnOpen
     public void onOpen(Session session, EndpointConfig config) {

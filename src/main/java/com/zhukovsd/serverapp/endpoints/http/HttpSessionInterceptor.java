@@ -1,7 +1,7 @@
 package com.zhukovsd.serverapp.endpoints.http;
 
-import com.zhukovsd.serverapp.SessionsCacheConcurrentHashMap;
-import com.zhukovsd.serverapp.WebSocketSessionsConcurrentHashMap;
+import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
+import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;

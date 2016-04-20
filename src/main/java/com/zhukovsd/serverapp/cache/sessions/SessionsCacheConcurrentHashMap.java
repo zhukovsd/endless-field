@@ -1,4 +1,4 @@
-package com.zhukovsd.serverapp;
+package com.zhukovsd.serverapp.cache.sessions;
 
 import java.util.concurrent.ConcurrentHashMap;
 

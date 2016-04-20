@@ -3,11 +3,13 @@ package com.zhukovsd.experiments.concurrency.concurrenthashmap;
 import com.zhukovsd.enrtylockingconcurrenthashmap.AbstractLockable;
 import com.zhukovsd.enrtylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 
+import java.security.KeyStore;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 class LockableString extends AbstractLockable {
     // protected by lock
@@ -26,20 +28,17 @@ class LockableString extends AbstractLockable {
     }
 }
 
-class TestEntryLockingConcurrentHashMap extends EntryLockingConcurrentHashMap<Integer, LockableString> {
-    @Override
-    protected LockableString instantiateValue(Integer key) {
-        return new LockableString("value = " + key);
-    }
-}
+class TestEntryLockingConcurrentHashMap extends EntryLockingConcurrentHashMap<Integer, LockableString> { }
 
 public class ConcurrentHashMapItemLockingExperiment {
     public static void main(String[] args) throws InterruptedException {
         TestEntryLockingConcurrentHashMap map = new TestEntryLockingConcurrentHashMap();
         ExecutorService exec = Executors.newCachedThreadPool();
 
-        int readersCount = 20, removersCount = 2, range = 100;
+        int readersCount = 20, removersCount = 0, range = 100;
         AtomicInteger readCount = new AtomicInteger(), removeCount = new AtomicInteger();
+
+        final Function<Integer, LockableString> producer = integer -> new LockableString("value = " + integer);
 
         for (int i = 0; i < readersCount; i++) {
             exec.submit((Runnable) () -> {
@@ -47,15 +46,16 @@ public class ConcurrentHashMapItemLockingExperiment {
                     Random rand = new Random();
 
                     while (!Thread.currentThread().isInterrupted()) {
-                        LinkedHashMap<Integer, LockableString> entries = map.lockEntries(Collections.singletonList(rand.nextInt(range)));
-                        try {
-                            for (Map.Entry<Integer, LockableString> entry : entries.entrySet()) {
-                                entry.getValue().c++;
-                            }
+//                        LinkedHashMap<Integer, LockableString> entries = map.lockEntries(Collections.singletonList(rand.nextInt(range)));
+                        int key = rand.nextInt(range);
+                        if (map.lockKey(key, producer)) {
+                            try {
+                                map.getValue(key).c++;
 
-                            readCount.incrementAndGet();
-                        } finally {
-                            map.unlock();
+                                readCount.incrementAndGet();
+                            } finally {
+                                map.unlock();
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -94,14 +94,11 @@ public class ConcurrentHashMapItemLockingExperiment {
 
         System.out.printf("read count = %s, remove count = %s\n", readCount, removeCount);
 
-//        int sum = 0;
-//        Iterator<Map.Entry<Integer, LockableString>> iterator = map.entrySet().iterator();
-//        while (iterator.hasNext()) {
-//            Map.Entry<Integer, LockableString> entry = iterator.next();
-//
-//            sum += entry.getValue().c;
-//        }
-//
-//        System.out.println("c = " + sum);
+        int sum = 0;
+        for (Map.Entry<Integer, LockableString> entry : map.getEntriesNonLocked()) {
+            sum += entry.getValue().c;
+        }
+
+        System.out.println("c = " + sum);
     }
 }

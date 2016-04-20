@@ -1,7 +1,7 @@
 package com.zhukovsd.serverapp.endpoints.http;
 
-import com.zhukovsd.serverapp.SessionsCacheConcurrentHashMap;
-import com.zhukovsd.serverapp.WebSocketSessionsConcurrentHashMap;
+import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
+import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
 import com.zhukovsd.serverapp.endpoints.websocket.ActionEndpoint;
 
 import javax.servlet.ServletException;
@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.Set;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
@@ -55,8 +54,6 @@ public class FieldEndpoint extends HttpServlet {
 
             if (wsEndpoint != null) {
                 // idiom of thread-safe working with scopes map showed in experiments/concurrency/ConcurrentUserScopesExperiment.java
-
-
 
                 wsEndpoint.scope.clear();
                 // set wsEndpoint.scope from request param
