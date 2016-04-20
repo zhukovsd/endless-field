@@ -71,6 +71,7 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
         }
     }
 
+    // TODO: 20.04.2016 return boolean, not entries
     public LinkedHashMap<K, V> lockEntries(Iterable<K> keys) throws InterruptedException {
         Set<K> lockSet = lockedKeys.get();
         // TODO: 25.03.2016 provide proper exception type
@@ -87,7 +88,9 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
         return rslt;
     }
 
-    public V lockKey(K key) throws InterruptedException {
+    public V lockKey(K key, Function<K, V> instaniator) throws InterruptedException {
+        instaniator.apply(key);
+
         Set<K> lockSet = lockedKeys.get();
         // TODO: 25.03.2016 provide proper exception type
         if (lockSet.size() > 0) throw new RuntimeException("lock set has to be empty before locking!");
@@ -119,14 +122,14 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
         lockedKeys.remove();
     }
 
+    public V getNonLocked(K key) {
+        return map.get(key);
+    }
+
     public void put(K key, V value) {
         lockManager.executeLocked(key, () -> {
             map.put(key, value);
         });
-    }
-
-    public V getNonLocked(K key) {
-        return map.get(key);
     }
 
     public boolean removeIf(K key, Function<V, Boolean> condition) throws InterruptedException {
@@ -168,7 +171,7 @@ public abstract class EntryLockingConcurrentHashMap<K, V extends Lockable> {
         return removeIf(key, null);
     }
 
-    public Set<Map.Entry<K, V>> entrySet() {
+    public Set<Map.Entry<K, V>> getEntriesNonLocked() {
         return map.entrySet();
     }
 

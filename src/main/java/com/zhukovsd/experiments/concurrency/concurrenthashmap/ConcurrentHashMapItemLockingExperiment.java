@@ -70,7 +70,7 @@ public class ConcurrentHashMapItemLockingExperiment {
                     Random rand = new Random();
 
                     while (!Thread.currentThread().isInterrupted()) {
-                        Set<Map.Entry<Integer, LockableString>> set = map.entrySet();
+                        Set<Map.Entry<Integer, LockableString>> set = map.getEntriesNonLocked();
 
                         if (set.size() > 0) {
                             ArrayList<Map.Entry<Integer, LockableString>> randomizedList = new ArrayList<>(set);

@@ -16,7 +16,13 @@ import java.util.function.Function;
  * Created by ZhukovSD on 18.04.2016.
  */
 public class ConcurrentUserScopesExperiment {
-//    static class LockableHashSetAdapter<E> extends HashSet<E> implements Lockable {
+    int a;
+
+    public ConcurrentUserScopesExperiment(int a) {
+        this.a = a;
+    }
+
+    //    static class LockableHashSetAdapter<E> extends HashSet<E> implements Lockable {
     static class LockableHashSetAdapter<E> implements Lockable, Set<E> {
         Set<E> set = ConcurrentHashMap.newKeySet();
         ReentrantLock lock = new ReentrantLock();
@@ -109,6 +115,10 @@ public class ConcurrentUserScopesExperiment {
         }
     }
 
+    LockableHashSetAdapter<Integer> test(Integer key) {
+        return new LockableHashSetAdapter<>();
+    }
+
     public static void main(String[] args) throws InterruptedException {
         // Map<userId, scope>
         final ConcurrentHashMap<Integer, Set<Integer>> scopes = new ConcurrentHashMap<>();
@@ -124,8 +134,9 @@ public class ConcurrentUserScopesExperiment {
         ExecutorService exec = Executors.newCachedThreadPool();
         long startTime = System.nanoTime();
 
-        // default concurrent hash maps (20, 5, 10, 100, 3) -> count = 4.6kk, iterCount = 90kk
-        int threadCount = 20, iteratorThreadCount = 5, userCount = 10, range = 10, maxScopeSize = 3, time = 3;
+        // default concurrent hash maps (20, 5, 10, 100, 3, 5) -> count = 4.6kk, iterCount = 90kk
+        // entry locking concurrent hash map (20, 5, 10, 100, 3, 5) -> count = 1kk, iterCount = 40-60kk, 3kk removes
+        int threadCount = 20, iteratorThreadCount = 5, userCount = 10, range = 100, maxScopeSize = 3, time = 5;
         AtomicInteger count = new AtomicInteger(), removeCount = new AtomicInteger(), iterCount = new AtomicInteger(),
                 doneCount = new AtomicInteger(), removeLockCount = new AtomicInteger(), addLockCount = new AtomicInteger();
 
@@ -153,6 +164,8 @@ public class ConcurrentUserScopesExperiment {
                             newScope.add(rand.nextInt(range));
                         }
 
+                        Function<Integer, LockableHashSetAdapter<Integer>> inst = integer -> new LockableHashSetAdapter<Integer>();
+
                         synchronized (scope) {
                             // remove current scope keys from chunk id set
                             int a = scope.size();
@@ -161,25 +174,9 @@ public class ConcurrentUserScopesExperiment {
                                 if (a != b)
                                     System.out.println("hi there");
 
-//                                Set<Integer> users = usersScopeMap.putIfAbsent(key, ConcurrentHashMap.newKeySet());
-//                                if (users == null)
-//                                    users = usersScopeMap.get(key);
-
-//                                if (users != null) {
-//                                    users.remove(userId);
-//                                } else {
-//                                    System.out.println(1);
-//                                }
-
-                                Set<Integer> users = usersScopeMap.lockKey(key);
+                                Set<Integer> users = usersScopeMap.lockKey(key, new ConcurrentUserScopesExperiment(rand.nextInt(100))::test);
                                 try {
                                     users.remove(userId);
-
-
-//                                    if (users.size() == 0) {
-//                                        isRemoved = usersScopeMap.removeLocked(key);
-//                                    }
-//                                      Thread.yield();
                                 } finally {
                                     usersScopeMap.unlock();
                                 }
@@ -189,6 +186,8 @@ public class ConcurrentUserScopesExperiment {
                                     integers.size() == 0
                                 );
 
+                                // item removal possible only after unlocking
+                                // remove if, only is value set is empty
                                 if (usersScopeMap.removeIf(key, function))
                                     removeCount.incrementAndGet();
                             }
@@ -199,20 +198,9 @@ public class ConcurrentUserScopesExperiment {
 
                             // put updated scope keys to chunk id set
                             for (Integer key : scope) {
-//                                Set<Integer> users = usersScopeMap.putIfAbsent(key, ConcurrentHashMap.newKeySet());
-//                                if (users == null)
-//                                    users = usersScopeMap.get(key);
-//
-//                                if (users != null) {
-//                                    users.add(userId);
-//                                } else {
-//                                    System.out.println(1);
-//                                }
-
-                                Set<Integer> users = usersScopeMap.lockKey(key);
+                                Set<Integer> users = usersScopeMap.lockKey(key, null);
                                 try {
                                     users.add(userId);
-//                                    Thread.yield();
                                 } finally {
                                     usersScopeMap.unlock();
                                 }
@@ -273,7 +261,7 @@ public class ConcurrentUserScopesExperiment {
             Set<Integer> chunks = scopeEntry.getValue();
 
             for (Integer chunk : chunks) {
-                Set<Integer> users = usersScopeMap.lockKey(chunk);
+                Set<Integer> users = usersScopeMap.lockKey(chunk, null);
                 try {
                     if (users != null) {
                         if (users.contains(userId))
@@ -287,8 +275,7 @@ public class ConcurrentUserScopesExperiment {
             }
         }
 
-        // TODO: 18.04.2016 proper iteration
-        for (Map.Entry<Integer, LockableHashSetAdapter<Integer>> entry : usersScopeMap.entrySet()) {
+        for (Map.Entry<Integer, LockableHashSetAdapter<Integer>> entry : usersScopeMap.getEntriesNonLocked()) {
             if (entry.getValue().size() != 0)
                 isCorrect = false;
         }
