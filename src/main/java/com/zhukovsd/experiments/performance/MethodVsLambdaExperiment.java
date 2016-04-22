@@ -24,7 +24,7 @@ public class MethodVsLambdaExperiment {
 
         time = System.nanoTime();
         for (int i = 0; i < count; i++) {
-            lambdaOperator.calculate(i, function);
+            lambdaOperator.calculate(i, integer -> integer + 1);
         }
         time = (System.nanoTime() - time) / 1000000;
 

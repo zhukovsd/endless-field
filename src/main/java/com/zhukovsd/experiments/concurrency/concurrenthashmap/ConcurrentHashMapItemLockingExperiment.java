@@ -35,6 +35,7 @@ public class ConcurrentHashMapItemLockingExperiment {
         TestEntryLockingConcurrentHashMap map = new TestEntryLockingConcurrentHashMap();
         ExecutorService exec = Executors.newCachedThreadPool();
 
+        // (20, 0, 100) -> c = 30kk
         int readersCount = 20, removersCount = 0, range = 100;
         AtomicInteger readCount = new AtomicInteger(), removeCount = new AtomicInteger();
 

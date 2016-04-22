@@ -31,7 +31,8 @@ public class ConcurrentUserScopesExperiment {
         long startTime = System.nanoTime();
 
         // default concurrent hash maps (20, 5, 10, 100, 3, 5) -> count = 4.6kk, iterCount = 90kk
-        // entry locking concurrent hash map (20, 5, 10, 100, 3, 5) -> count = 1kk, iterCount = 40-60kk, 3kk removes
+        // entry locking concurrent hash map (20, 5, 10, 100, 3, 5) -> count = 1.2-1.5kk, iterCount = 50-70kk, 4kk removes
+        //
         int threadCount = 20, iteratorThreadCount = 5, userCount = 10, range = 100, maxScopeSize = 3, time = 5;
         AtomicInteger count = new AtomicInteger(), removeCount = new AtomicInteger(), iterCount = new AtomicInteger(),
                 doneCount = new AtomicInteger(), removeLockCount = new AtomicInteger(), addLockCount = new AtomicInteger();
@@ -45,10 +46,10 @@ public class ConcurrentUserScopesExperiment {
 
                 while (!Thread.currentThread().isInterrupted()) {
                     try {
-                        long msFromStart = (System.nanoTime() - startTime) / 1000000;
-                        long msLeft = time * 1000 - msFromStart;
-                        if (msLeft < 100)
-                            TimeUnit.SECONDS.sleep(1);
+//                        long msFromStart = (System.nanoTime() - startTime) / 1000000;
+//                        long msLeft = time * 1000 - msFromStart;
+//                        if (msLeft < 100)
+//                            TimeUnit.SECONDS.sleep(1);
 
                         Integer userId = rand.nextInt(userCount);
 

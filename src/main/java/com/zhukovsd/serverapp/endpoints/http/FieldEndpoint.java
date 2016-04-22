@@ -55,7 +55,7 @@ public class FieldEndpoint extends HttpServlet {
             if (wsEndpoint != null) {
                 // idiom of thread-safe working with scopes map showed in experiments/concurrency/ConcurrentUserScopesExperiment.java
 
-                wsEndpoint.scope.clear();
+//                wsEndpoint.scope.clear();
                 // set wsEndpoint.scope from request param
 //                wsEndpoint.scope.add()
 
