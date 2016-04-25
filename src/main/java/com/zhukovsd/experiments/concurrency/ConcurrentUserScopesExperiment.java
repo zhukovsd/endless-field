@@ -1,6 +1,8 @@
 package com.zhukovsd.experiments.concurrency;
 
 import com.zhukovsd.enrtylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
+import com.zhukovsd.enrtylockingconcurrenthashmap.KLMEntryLockingConcurrentHashMap;
+import com.zhukovsd.enrtylockingconcurrenthashmap.StripedEntryLockingConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.scopes.LockableConcurrentHashSetAdapter;
 
 import java.util.*;
@@ -9,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 /**
@@ -25,15 +28,16 @@ public class ConcurrentUserScopesExperiment {
         // Map<chunkId, users>
 //        final ConcurrentHashMap<Integer, Set<Integer>> usersScopeMap = new ConcurrentHashMap<>();
         final EntryLockingConcurrentHashMap<Integer, LockableConcurrentHashSetAdapter<Integer>> usersScopeMap
-                = new EntryLockingConcurrentHashMap<>();
+//                 = new KLMEntryLockingConcurrentHashMap<>();
+                = new StripedEntryLockingConcurrentHashMap<>(500);
 
         ExecutorService exec = Executors.newCachedThreadPool();
         long startTime = System.nanoTime();
 
         // default concurrent hash maps (20, 5, 10, 100, 3, 5) -> count = 4.6kk, iterCount = 90kk
         // entry locking concurrent hash map (20, 5, 10, 100, 3, 5) -> count = 1.2-1.5kk, iterCount = 50-70kk, 4kk removes
-        //
-        int threadCount = 20, iteratorThreadCount = 5, userCount = 10, range = 100, maxScopeSize = 3, time = 5;
+        // striped(range) locking concurrent hash map (20, 5, 10, 100, 3, 5) -> count = 3-3.5kk, iterCount = 50-60kk , remove count = 6-7kk
+        int threadCount = 200, iteratorThreadCount = 5, userCount = 1000, range = 15000, maxScopeSize = 3, time = 5;
         AtomicInteger count = new AtomicInteger(), removeCount = new AtomicInteger(), iterCount = new AtomicInteger(),
                 doneCount = new AtomicInteger(), removeLockCount = new AtomicInteger(), addLockCount = new AtomicInteger();
 

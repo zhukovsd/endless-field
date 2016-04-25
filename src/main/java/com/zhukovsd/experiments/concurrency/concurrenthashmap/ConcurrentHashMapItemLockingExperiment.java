@@ -2,8 +2,9 @@ package com.zhukovsd.experiments.concurrency.concurrenthashmap;
 
 import com.zhukovsd.enrtylockingconcurrenthashmap.AbstractLockable;
 import com.zhukovsd.enrtylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
+import com.zhukovsd.enrtylockingconcurrenthashmap.KLMEntryLockingConcurrentHashMap;
+import com.zhukovsd.enrtylockingconcurrenthashmap.StripedEntryLockingConcurrentHashMap;
 
-import java.security.KeyStore;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,14 +29,16 @@ class LockableString extends AbstractLockable {
     }
 }
 
-class TestEntryLockingConcurrentHashMap extends EntryLockingConcurrentHashMap<Integer, LockableString> { }
-
 public class ConcurrentHashMapItemLockingExperiment {
     public static void main(String[] args) throws InterruptedException {
-        TestEntryLockingConcurrentHashMap map = new TestEntryLockingConcurrentHashMap();
+//        EntryLockingConcurrentHashMap<Integer, LockableString> map = new KLMEntryLockingConcurrentHashMap<>();
+        EntryLockingConcurrentHashMap<Integer, LockableString> map = new StripedEntryLockingConcurrentHashMap<>(16);
+
         ExecutorService exec = Executors.newCachedThreadPool();
 
-        // (20, 0, 100) -> c = 30kk
+        // KLM (20, 0, 100) -> c = 30kk
+        // Striped (16 stripes) (20, 0, 100) -> c = 50kk
+        // Striped (100 stripes) (20, 0, 100) -> c = 80kk
         int readersCount = 20, removersCount = 0, range = 100;
         AtomicInteger readCount = new AtomicInteger(), removeCount = new AtomicInteger();
 

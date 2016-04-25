@@ -1,5 +1,6 @@
 package com.zhukovsd.experiments.concurrency.concurrentchunkdeleting;
 
+import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -51,5 +52,21 @@ class AllocationTest {
         new A().createLocks();
 
         System.out.println("enough");
+    }
+}
+
+class ObjectSizeFetcher {
+    private static Instrumentation instrumentation;
+
+    public static void premain(String args, Instrumentation inst) {
+        instrumentation = inst;
+    }
+
+    public static long getObjectSize(Object o) {
+        return instrumentation.getObjectSize(o);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(getObjectSize(new ReentrantLock()));
     }
 }

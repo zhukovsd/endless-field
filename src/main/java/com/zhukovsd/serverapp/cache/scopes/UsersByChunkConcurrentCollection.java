@@ -1,18 +1,13 @@
 package com.zhukovsd.serverapp.cache.scopes;
 
-import com.zhukovsd.enrtylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
-import com.zhukovsd.experiments.concurrency.ConcurrentUserScopesExperiment;
-import com.zhukovsd.serverapp.endpoints.websocket.ActionEndpoint;
+import com.zhukovsd.enrtylockingconcurrenthashmap.KLMEntryLockingConcurrentHashMap;
 
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * Created by ZhukovSD on 18.04.2016.
  */
-public class UsersByChunkConcurrentCollection extends EntryLockingConcurrentHashMap<
+public class UsersByChunkConcurrentCollection extends KLMEntryLockingConcurrentHashMap<
         Integer, LockableConcurrentHashSetAdapter<String>>
 {
     public void updateUserScope(String userId, Set<Integer> scope, Set<Integer> newScope) throws InterruptedException {
