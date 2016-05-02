@@ -1,15 +1,19 @@
 package com.zhukovsd.serverapp.cache.scopes;
 
-import com.zhukovsd.enrtylockingconcurrenthashmap.KLMEntryLockingConcurrentHashMap;
+import com.zhukovsd.enrtylockingconcurrenthashmap.StripedEntryLockingConcurrentHashMap;
 
 import java.util.Set;
 
 /**
  * Created by ZhukovSD on 18.04.2016.
  */
-public class UsersByChunkConcurrentCollection extends KLMEntryLockingConcurrentHashMap<
+public class UsersByChunkConcurrentCollection extends StripedEntryLockingConcurrentHashMap<
         Integer, LockableConcurrentHashSetAdapter<String>>
 {
+    public UsersByChunkConcurrentCollection(int stripes) {
+        super(stripes);
+    }
+
     public void updateUserScope(String userId, Set<Integer> scope, Set<Integer> newScope) throws InterruptedException {
         // lock on scope due to its changing (clear / refilling)
         synchronized (scope) {

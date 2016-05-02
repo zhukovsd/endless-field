@@ -86,9 +86,11 @@ public class StripedEntryLockingConcurrentHashMap<K, V> implements EntryLockingC
 
         boolean rslt = true;
         for (K key : keys) {
-            lockSet.add(key);
-            rslt = (provideAndLock(key, instaniator) == null);
+            rslt = (provideAndLock(key, instaniator) != null);
 
+            // add to set only on successful lock
+            if (rslt)
+                lockSet.add(key);
             if (!rslt)
                 break;
         }
@@ -110,7 +112,7 @@ public class StripedEntryLockingConcurrentHashMap<K, V> implements EntryLockingC
         Set<K> lockSet = lockedKeys.get();
 
         // TODO: 25.03.2016 provide proper exception type
-        if (lockSet.size() == 0) throw new RuntimeException("striped can't be empty before unlocking!");
+        if (lockSet.size() == 0) throw new RuntimeException("lock set can't be empty before unlocking!");
 
         for (K key : lockSet) {
             // unlock chunk to provide access to another readers and to allow this chunk to be removed.

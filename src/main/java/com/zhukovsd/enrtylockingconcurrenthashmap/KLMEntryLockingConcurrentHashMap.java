@@ -59,7 +59,7 @@ public class KLMEntryLockingConcurrentHashMap<K, V extends Lockable> implements 
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
-                };
+                }
 
                 return value;
             });
@@ -76,24 +76,24 @@ public class KLMEntryLockingConcurrentHashMap<K, V extends Lockable> implements 
 
     @Override
     public boolean lockEntries(Iterable<K> keys, Function<K, V> instaniator) throws InterruptedException {
-        Set<K> lockSet = lockedKeys.get();
-        // TODO: 25.03.2016 provide proper exception type
-        if (lockSet.size() > 0) throw new RuntimeException("striped set has to be empty before locking!");
+//        Set<K> lockSet = lockedKeys.get();
+//        // TODO: 25.03.2016 provide proper exception type
+//        if (lockSet.size() > 0) throw new RuntimeException("striped set has to be empty before locking!");
+//
+//        boolean rslt = true;
+//        for (K key : keys) {
+//            lockSet.add(key);
+//            rslt = (provideAndLock(key, instaniator) == null);
+//
+//            if (!rslt)
+//                break;
+//        }
+//
+//        // if we unable to lock all requested entries, unlock already locked ones
+//        if (!rslt)
+//            unlock();
 
-        boolean rslt = true;
-        for (K key : keys) {
-            lockSet.add(key);
-            rslt = (provideAndLock(key, instaniator) == null);
-
-            if (!rslt)
-                break;
-        }
-
-        // if we unable to lock all requested entries, unlock already locked ones
-        if (!rslt)
-            unlock();
-
-        return rslt;
+        return false;
     }
 
     @Override

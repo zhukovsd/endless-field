@@ -26,8 +26,7 @@ public class ReentrantLockWriteTask extends LockTestTask {
                 ArrayList<CellPosition> positions = getCellPositions();
                 Iterable<Integer> chunkIds = getChunkIdsToLock(positions);
 
-//                field.chunkMap.get(0).lock.lock();
-                for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).lock.lock();
+//                for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).lock.lock();
                 try {
                     counter.incrementAndGet();
 
@@ -39,8 +38,7 @@ public class ReentrantLockWriteTask extends LockTestTask {
                         cell.setChecked(!cell.isChecked());
                     }
                 } finally {
-//                    field.chunkMap.get(0).lock.unlock();
-                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).lock.unlock();
+//                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).lock.unlock();
                 }
             }
         } catch (Exception e) {

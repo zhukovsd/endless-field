@@ -22,7 +22,7 @@ public class StampedLockWriteTask extends LockTestTask {
 
     @Override
     public void run() {
-        StampedLock lock = field.chunkMap.get(0).stampedLock;
+        StampedLock lock = null; // field.chunkMap.get(0).stampedLock;
 
 
         try {

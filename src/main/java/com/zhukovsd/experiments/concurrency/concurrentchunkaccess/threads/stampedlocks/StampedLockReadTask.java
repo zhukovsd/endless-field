@@ -43,7 +43,7 @@ public class StampedLockReadTask extends LockTestTask {
 
                 locks.clear();
                 for (Integer chunkId : chunkIds)
-                    locks.add(new StampedLockData(field.chunkMap.get(chunkId).stampedLock));
+//                    locks.add(new StampedLockData(field.chunkMap.get(chunkId).stampedLock));
 
                 for (StampedLockData lockData : locks) lockData.stamp = lockData.lock.tryOptimisticRead();
                 // optimistic reading

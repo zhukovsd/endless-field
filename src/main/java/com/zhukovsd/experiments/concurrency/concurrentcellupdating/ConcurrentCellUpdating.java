@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ConcurrentCellUpdating {
     public static void main(String[] args) throws InterruptedException {
-        SimpleField field = new SimpleField(new ChunkSize(50, 50), new SimpleFieldDataSource(), new SimpleFieldCellFactory());
+        SimpleField field = new SimpleField(16, new ChunkSize(50, 50), new SimpleFieldDataSource(), new SimpleFieldCellFactory());
 
         ExecutorService updateExec = Executors.newCachedThreadPool();
         ExecutorService watcherExec = Executors.newSingleThreadExecutor();
@@ -38,7 +38,7 @@ public class ConcurrentCellUpdating {
                              new CellPosition(0, 0), new CellPosition(20, 20)));
 
                     while (true) {
-                        field.lockChunks(positions);
+                        field.lockChunksByPositions(positions);
                         try {
                             Map<CellPosition, SimpleFieldCell> entries = field.getEntries(positions),
                                 updateEntries = new LinkedHashMap<>();

@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ConcurrentChunkDeleting {
     public static void main(String[] args) throws InterruptedException {
         ChunkSize chunkSize = new ChunkSize(50, 50);
-        final SimpleField field = new SimpleField(chunkSize, new SimpleFieldDataSource(), new SimpleFieldCellFactory());
+        final SimpleField field = new SimpleField(16, chunkSize, new SimpleFieldDataSource(), new SimpleFieldCellFactory());
 
         ThreadPoolExecutor chunkStoreExec = ((ThreadPoolExecutor) field.chunkStoreExec);
         ThreadPoolExecutor cellUpdateExec = ((ThreadPoolExecutor) field.cellUpdateExec);
@@ -79,7 +79,7 @@ public class ConcurrentChunkDeleting {
                             positions.add(new CellPosition(rand.nextInt(maxRow), rand.nextInt(maxColumn)));
                         }
 
-                        field.lockChunks(positions);
+                        field.lockChunksByPositions(positions);
                         try {
                             a[1].incrementAndGet();
 
@@ -124,7 +124,7 @@ public class ConcurrentChunkDeleting {
                 try {
                     System.out.format("#%s chunk count = %s/%s, read count = %s, remove count = %s, store queue size = %s, chunk store count = %s" +
                             ", update queue size = %s, update count = %s\n",
-                            counter, field.chunkMap.size(), chunkCount * chunkCount, a[1], a[0],
+                            counter, field.size(), chunkCount * chunkCount, a[1], a[0],
                             chunkStoreExec.getQueue().size(), StoreChunkTask.storeCount,
                             cellUpdateExec.getQueue().size(), UpdateCellTask.updateCount
                     );
@@ -137,48 +137,48 @@ public class ConcurrentChunkDeleting {
             }
         });
 
-        remover.submit((Runnable)  () -> {
-            while (true) {
-                Random rand = new Random();
-                try {
-//                   int c = 0;
-
-//                   if (field.chunkMap.size() > 0) {
-                    while (field.chunkMap.size() > maxAllowedCount) {
-
-                        ArrayList<Integer> keys = new ArrayList<>(field.chunkMap.keySet());
-
-                        Integer key = keys.get(rand.nextInt(keys.size()));
-
-                        if (field.chunkMap.get(key).isStored() && (field.chunkMap.get(key).updateTaskCount.get() == 0)) {
-                            field.removeChunk(key);
-                            a[0].incrementAndGet();
-                        }
-
-                        Thread.yield();
-                    }
-//                   }
-
-
-//                   if (field.chunkMap.size() > maxAllowedCount) {
-//                       Iterator<Map.Entry<Integer, EndlessFieldChunk<SimpleFieldCell>>> iterator = field.chunkMap.entrySet().iterator();
+//        remover.submit((Runnable)  () -> {
+//            while (true) {
+//                Random rand = new Random();
+//                try {
+////                   int c = 0;
 //
-//                       while (iterator.hasNext()) {
-//                           iterator.next();
-//                           c++;
+////                   if (field.chunkMap.size() > 0) {
+//                    while (field.chunkMap.size() > maxAllowedCount) {
 //
-//                           Thread.yield();
-//                       }
+//                        ArrayList<Integer> keys = new ArrayList<>(field.chunkMap.keySet());
+//
+//                        Integer key = keys.get(rand.nextInt(keys.size()));
+//
+//                        if (field.chunkMap.get(key).isStored() && (field.chunkMap.get(key).updateTaskCount.get() == 0)) {
+//                            field.removeChunk(key);
+//                            a[0].incrementAndGet();
+//                        }
+//
+//                        Thread.yield();
+//                    }
 ////                   }
 //
-//                   System.out.printf("--> iterated count = %s, chunks count = %s\n", c, field.chunkMap.size());
 //
-//                    TimeUnit.MILLISECONDS.sleep(10);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+////                   if (field.chunkMap.size() > maxAllowedCount) {
+////                       Iterator<Map.Entry<Integer, EndlessFieldChunk<SimpleFieldCell>>> iterator = field.chunkMap.entrySet().iterator();
+////
+////                       while (iterator.hasNext()) {
+////                           iterator.next();
+////                           c++;
+////
+////                           Thread.yield();
+////                       }
+//////                   }
+////
+////                   System.out.printf("--> iterated count = %s, chunks count = %s\n", c, field.chunkMap.size());
+////
+////                    TimeUnit.MILLISECONDS.sleep(10);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
 
 //        readers.submit((Runnable) () -> {
 //            field.removeChunk(0);

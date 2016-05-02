@@ -26,14 +26,13 @@ public class ReentrantLockCheckTask extends LockTestTask {
                 ArrayList<CellPosition> positions = getCellPositions();
                 Iterable<Integer> chunkIds = getChunkIdsToLock(positions);
 
-//                field.chunkMap.get(0).lock.lock();
-                for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).lock.lock();
+//                for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).lock.lock();
                 try {
                     for (CellPosition position : positions)
                         statesSet.add(field.getCell(position).isChecked());
                 } finally {
 //                    field.chunkMap.get(0).lock.unlock();
-                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).lock.unlock();
+//                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).lock.unlock();
                 }
 
                 if (statesSet.size() == 1) {

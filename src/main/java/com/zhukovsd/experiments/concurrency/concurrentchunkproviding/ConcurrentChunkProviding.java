@@ -1,14 +1,19 @@
 package com.zhukovsd.experiments.concurrency.concurrentchunkproviding;
 
+import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
+import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
+import com.zhukovsd.enrtylockingconcurrenthashmap.StripedEntryLockingConcurrentHashMap;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
 import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 import com.zhukovsd.simplefield.SimpleFieldDataSource;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -23,35 +28,64 @@ public class ConcurrentChunkProviding {
 
         ExecutorService exec = Executors.newCachedThreadPool();
 
-        SimpleField field = new SimpleField(new ChunkSize(50, 50), new SimpleFieldDataSource(), new SimpleFieldCellFactory());
+        SimpleField field = new SimpleField(
+                16, new ChunkSize(50, 50),
+                new EndlessFieldDataSource<SimpleFieldCell>() {
+                    @Override
+                    public boolean containsChunk(Integer chunkId) {
+                        return false;
+                    }
 
-        CompletionService<EndlessFieldChunk<SimpleFieldCell>> completionService = new ExecutorCompletionService<>(exec);
+                    @Override
+                    public EndlessFieldChunk<SimpleFieldCell> getChunk(Integer chunkId, ChunkSize chunkSize) {
+                        return null;
+                    }
+
+                    @Override
+                    public void storeChunk(StripedEntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<SimpleFieldCell>> chunkMap, int chunkId) throws InterruptedException {
+
+                    }
+
+                    @Override
+                    public void modifyEntries(Map<CellPosition, SimpleFieldCell> entries) {
+
+                    }
+                },
+                new SimpleFieldCellFactory()
+        );
+
+        CompletionService<SimpleFieldCell> completionService = new ExecutorCompletionService<>(exec);
 
         int count = 5;
 
-        ArrayList<Future<EndlessFieldChunk<SimpleFieldCell>>> futures = new ArrayList<>();
+        ArrayList<Future<SimpleFieldCell>> futures = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            futures.add(completionService.submit(
-                    () -> field.provideAndLockChunk(0)
-            ));
+            futures.add(completionService.submit(() -> {
+                field.lockChunksByIds(Collections.singletonList(0));
+                try {
+                    return field.getCell(new CellPosition(0, 0));
+                } finally {
+                    field.unlockChunks();
+                }
+            }));
         }
 
-        HashSet<EndlessFieldChunk<SimpleFieldCell>> chunkSet = new HashSet<>();
+        HashSet<SimpleFieldCell> cellSet = new HashSet<>();
 
         int received = 0;
         while (received < count) {
-            Future<EndlessFieldChunk<SimpleFieldCell>> resultFuture = completionService.take(); //blocks if none available
-            chunkSet.add(resultFuture.get());
+            Future<SimpleFieldCell> resultFuture = completionService.take(); //blocks if none available
+            cellSet.add(resultFuture.get());
             received ++;
         }
 
-        for (Future<EndlessFieldChunk<SimpleFieldCell>> future : futures) System.out.println(future.get());
+        for (Future<SimpleFieldCell> future : futures) System.out.println(future.get());
 
-        if (chunkSet.size() == 1)
+        if (cellSet.size() == 1)
             System.out.println("correct behavior");
         else
             System.out.println("incorrect behavior");
 
-        exec.shutdown();
+        exec.shutdownNow();
     }
 }

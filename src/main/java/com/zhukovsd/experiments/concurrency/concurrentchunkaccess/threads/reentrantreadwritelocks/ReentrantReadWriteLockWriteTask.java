@@ -25,8 +25,7 @@ public class ReentrantReadWriteLockWriteTask extends LockTestTask {
                 ArrayList<CellPosition> positions = getCellPositions();
                 Iterable<Integer> chunkIds = getChunkIdsToLock(positions);
 
-//                rwl.readLock().lock();
-                for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().lock();
+//                for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().lock();
                 try {
                     counter.incrementAndGet();
 
@@ -39,13 +38,11 @@ public class ReentrantReadWriteLockWriteTask extends LockTestTask {
 //                        System.out.println("hi there");
 //                    boolean state = (states.contains(true));
 
-//                    rwl.readLock().unlock();
-                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().unlock();
+//                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().unlock();
 
                     // ! some thread may acquire write lock before we did, in this case read data may already be overwritten
 
-//                    rwl.writeLock().lock();
-                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.writeLock().lock();
+//                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.writeLock().lock();
                     try {
 //                        HashSet<Boolean> states2 = new HashSet<>();
 //                        for (SimpleFieldCell cell : cells) states2.add(cell.isChecked());
@@ -59,15 +56,12 @@ public class ReentrantReadWriteLockWriteTask extends LockTestTask {
                             cell.setChecked(!cell.isChecked());
                         }
 
-//                        rwl.readLock().lock();
-                        for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().lock();
+//                        for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().lock();
                     } finally {
-//                        rwl.writeLock().unlock();
-                        for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.writeLock().unlock();
+//                        for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.writeLock().unlock();
                     }
                 } finally {
-//                    rwl.readLock().unlock();
-                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().unlock();
+//                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().unlock();
                 }
             }
         } catch (Exception e) {

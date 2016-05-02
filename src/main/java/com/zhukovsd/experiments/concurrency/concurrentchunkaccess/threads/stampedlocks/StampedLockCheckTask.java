@@ -40,9 +40,8 @@ public class StampedLockCheckTask extends LockTestTask {
 
                 locks.clear();
                 for (Integer chunkId : chunkIds)
-                    locks.add(new StampedLockData(field.chunkMap.get(chunkId).stampedLock));
+//                    locks.add(new StampedLockData(field.chunkMap.get(chunkId).stampedLock));
 
-//                long stamp = lock.readLock();
                 for (StampedLockData lockData : locks) lockData.stamp = lockData.lock.readLock();
                 try {
                     for (CellPosition position : positions)

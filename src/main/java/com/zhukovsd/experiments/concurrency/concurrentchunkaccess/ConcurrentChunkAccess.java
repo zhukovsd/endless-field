@@ -1,5 +1,6 @@
 package com.zhukovsd.experiments.concurrency.concurrentchunkaccess;
 
+import com.zhukovsd.enrtylockingconcurrenthashmap.StripedEntryLockingConcurrentHashMap;
 import com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockCheckTask;
 import com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockReadTask;
 import com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockWriteTask;
@@ -51,6 +52,7 @@ public class ConcurrentChunkAccess {
         // in not entirely correct.
 
         SimpleField field = new SimpleField(
+                16,
                 new ChunkSize(50, 50),
                 new EndlessFieldDataSource<SimpleFieldCell>() {
                     @Override
@@ -64,8 +66,8 @@ public class ConcurrentChunkAccess {
                     }
 
                     @Override
-                    public void storeChunk(EndlessFieldChunk<SimpleFieldCell> chunk, int chunkId) {
-                        //
+                    public void storeChunk(StripedEntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<SimpleFieldCell>> chunkMap, int chunkId) throws InterruptedException {
+
                     }
 
                     @Override
@@ -80,7 +82,7 @@ public class ConcurrentChunkAccess {
 
         int maxPosition = 50, range = 50;
 
-        field.provideAndLockChunk(0);
+//        field.provideAndLockChunk(0);
 //        field.unlockChunks();
 
         int writersCount = 20, readersCount = 20;

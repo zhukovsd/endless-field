@@ -26,14 +26,12 @@ public class ReentrantReadWriteLockCheckTask extends LockTestTask {
                 ArrayList<CellPosition> positions = getCellPositions();
                 Iterable<Integer> chunkIds = getChunkIdsToLock(positions);
 
-//                rwl.readLock().lock();
-                for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().lock();
+//                for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().lock();
                 try {
                     for (CellPosition position : positions)
                         statesSet.add(field.getCell(position).isChecked());
                 } finally {
-//                    rwl.readLock().unlock();
-                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().unlock();
+//                    for (Integer chunkId : chunkIds) field.chunkMap.get(chunkId).rwLock.readLock().unlock();
                 }
 
                 if (statesSet.size() == 1) {

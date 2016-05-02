@@ -8,13 +8,11 @@ import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
+import com.zhukovsd.enrtylockingconcurrenthashmap.StripedEntryLockingConcurrentHashMap;
 import org.bson.Document;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.mongodb.client.model.Filters.and;
@@ -33,6 +31,7 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
     private MongoCollection<Document> collection;
 
     public SimpleFieldDataSource() {
+        // TODO: 01.05.2016 move settings to web app configuration
         mongoClient = new MongoClient("localhost", 27017);
         database = mongoClient.getDatabase("simple");
         collection = database.getCollection("field");
@@ -62,12 +61,17 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
     }
 
     @Override
-    public void storeChunk(EndlessFieldChunk<SimpleFieldCell> chunk, int chunkId) {
+    public void storeChunk(StripedEntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<SimpleFieldCell>> chunkMap,
+                           int chunkId) throws InterruptedException
+    {
         ArrayList<Document> cells = new ArrayList<>();
 
-        chunk.lock.lock();
+        // TODO: 25.04.2016 handle unsuccessful locking
+        chunkMap.lockKey(chunkId);
         try {
-            for (Map.Entry<CellPosition, SimpleFieldCell> entry : chunk.entrySet()) {
+            EndlessFieldChunk<SimpleFieldCell> chunk = chunkMap.getValue(chunkId);
+
+            for (Map.Entry<CellPosition, SimpleFieldCell> entry : chunk.cellsMap().entrySet()) {
                 CellPosition position = entry.getKey();
                 SimpleFieldCell cell = entry.getValue();
 
@@ -79,7 +83,7 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
                 );
             }
         } finally {
-            chunk.lock.unlock();
+            chunkMap.unlock();
         }
 
         // TODO: 21.03.2016 handle mongo exceptions
