@@ -1,6 +1,5 @@
 package com.zhukovsd.serverapp.endpoints.http;
 
-import com.google.common.reflect.TypeToken;
 import com.zhukovsd.Gsonable;
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.EndlessField;
@@ -9,7 +8,6 @@ import com.zhukovsd.serverapp.cache.scopes.UsersByChunkConcurrentCollection;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
 import com.zhukovsd.serverapp.endpoints.websocket.ActionEndpoint;
-import com.zhukovsd.simplefield.SimpleFieldCell;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -18,10 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
@@ -62,7 +58,6 @@ public class FieldEndpoint extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // TODO: 29.04.2016 remove null
         FieldResponseData<? extends EndlessFieldCell> responseData = null;
-        Type responseType = new TypeToken<FieldResponseData<SimpleFieldCell>>() {}.getType();
 
         try {
             // don't create new session on this request. if now session found, report error to the client
@@ -94,7 +89,7 @@ public class FieldEndpoint extends HttpServlet {
                     field.lockChunksByIds(requestData.scope);
                     try {
                         LinkedHashMap<CellPosition, ? extends EndlessFieldCell> cells = field.getEntriesByChunkIds(requestData.scope);
-                        responseData = new FieldResponseData(cells);
+                        responseData = new FieldResponseData<>(cells);
                     } finally {
                         field.unlockChunks();
                     }
@@ -110,6 +105,6 @@ public class FieldEndpoint extends HttpServlet {
             // TODO: 25.04.2016 report exception
         }
 
-        Gsonable.toJson(responseData, responseType, response.getWriter());
+        Gsonable.toJson(responseData, response.getWriter());
     }
 }

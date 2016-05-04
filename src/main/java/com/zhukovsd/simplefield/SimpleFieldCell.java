@@ -13,7 +13,7 @@ public class SimpleFieldCell extends EndlessFieldCell {
     }
 
     private boolean isChecked;
-    private int a = 0, b = 0;
+    private int a = 0, b = 0, c = 123;
 
     // TODO: 25.03.2016 consider single cell synchronization
     public boolean isChecked() {
