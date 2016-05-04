@@ -15,8 +15,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URLDecoder;
+import java.nio.file.Files;
 import java.util.LinkedHashMap;
 
 /**
@@ -87,10 +90,25 @@ public class FieldEndpoint extends HttpServlet {
 
                     EndlessField<?> field = getField();
                     field.lockChunksByIds(requestData.scope);
+
+                    long time = System.nanoTime();
+
                     try {
                         LinkedHashMap<CellPosition, ? extends EndlessFieldCell> cells = field.getEntriesByChunkIds(requestData.scope);
-                        responseData = new FieldResponseData<>(cells);
+
+                        responseData = new FieldResponseData<>(response.getWriter(), cells);
+
+//                        Gsonable.toJson(responseData, response.getWriter());
+
+//                        try {
+//                            response.getOutputStream().write(responseData.buffer.toByteArray());
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
                     } finally {
+                        time = (System.nanoTime() - time) / 1000000;
+                        System.out.println(time + "ms");
+
                         field.unlockChunks();
                     }
                 } else {
@@ -105,6 +123,6 @@ public class FieldEndpoint extends HttpServlet {
             // TODO: 25.04.2016 report exception
         }
 
-        Gsonable.toJson(responseData, response.getWriter());
+//        Gsonable.toJson(responseData, response.getWriter());
     }
 }

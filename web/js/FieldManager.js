@@ -13,6 +13,8 @@ FieldManager = function() {
     // var - hidden field/function
     // this - accessible field/function
 
+    this.cells = {};
+
     this.requestField = function(scope) {
         // console.log('requesting cells...');
 
@@ -40,7 +42,7 @@ FieldManager = function() {
             }
         };
 
-        var requestData = {wsSessionId: 0, scope: [0]};
+        var requestData = {wsSessionId: 2, scope: [0]};
 
         xhr.open(
             "GET", "/online-minesweeper/field?data="+
@@ -53,9 +55,21 @@ FieldManager = function() {
         try {
             var responseCells = JSON.parse(response).cells;
 
-            alert(response);
-            alert(responseCells);
-            alert(Object.keys(responseCells).length);
+            // alert(response);
+            // alert(responseCells);
+            // alert(Object.keys(responseCells).length);
+
+            // this.cells = responseCells;
+
+            // alert("length before = " + Object.keys(this.cells).length);            
+            
+            for (var key in responseCells) {
+                this.cells[key] = responseCells[key];
+                
+                // console.log(key + " = " + responseCells[key]);
+            }
+
+            // alert("length after = " + Object.keys(this.cells).length);
 
             // for (var i = 0; i < responseCells.length; i++) {
             //     var responseCell = responseCells[i];
