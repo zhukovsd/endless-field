@@ -2,12 +2,12 @@ package com.zhukovsd;
 
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.ChunkSize;
+import com.zhukovsd.serialization.Gsonalizer;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
 import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 import com.zhukovsd.simplefield.SimpleFieldDataSource;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -32,7 +32,7 @@ public class Main {
 
             LinkedHashMap<CellPosition, SimpleFieldCell> entries = field.getEntries(positions);
 
-            System.out.println(Gsonable.toJson(entries));
+//            System.out.println(Gsonalizer.toJson(entries));
         } finally {
             field.unlockChunks();
         }

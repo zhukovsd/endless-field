@@ -1,5 +1,7 @@
 package com.zhukovsd.serverapp.endpoints.websocket;
 
+import com.zhukovsd.endlessfield.field.ChunkSize;
+import com.zhukovsd.serialization.Gsonalizer;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
 
@@ -46,41 +48,47 @@ public class ActionEndpoint {
         if (webSocketSessionsMap != null) {
             webSocketSessionsMap.put(session.getId(), this);
 
-            String s = "";
-            for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
-                if (s != "") s += ", ";
-                s += entry.getValue().wsSession.getId();
-            }
+            // TODO: 05.05.2016 get real chunk size from field in servlet context
+            ActionEndpointMessage message = new ActionEndpointInitMessage(session.getId(), new ChunkSize(50, 50));
 
-            for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
-                Session sess = entry.getValue().wsSession;
-
-                try {
-                    if (sess.isOpen())
-                        sess.getAsyncRemote().sendText(s);
-//                        else
-                    // TODO: 12.04.2016 remove closed sessions? closed sessions may remain after server restart
-//                            System.out.println(3);
-                } catch (Exception e) {
-                    // sending message on closing session (isOpen is still true) may cause exception
+            try {
+                if (wsSession.isOpen())
+                    wsSession.getAsyncRemote().sendText(Gsonalizer.toJson(message));
+            } catch (Exception e) {
+                // sending message on closing session (isOpen is still true) may cause exception
 //                        System.out.println(1);
-                }
+
+                // TODO: 05.05.2016 log smth
             }
+
+//            String s = "";
+//            for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
+//                if (s != "") s += ", ";
+//                s += entry.getValue().wsSession.getId();
+//            }
+//
+//            for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
+//                Session sess = entry.getValue().wsSession;
+//
+//                try {
+//                    if (sess.isOpen())
+//                        sess.getAsyncRemote().sendText(s);
+////                        else
+//                    // TODO: 12.04.2016 remove closed sessions? closed sessions may remain after server restart
+////                            System.out.println(3);
+//                } catch (Exception e) {
+//                    // sending message on closing session (isOpen is still true) may cause exception
+////                        System.out.println(1);
+//                }
+//            }
+        } else {
+            // TODO: 05.05.2016 send no such session error to client
         }
     }
 
     @OnError
     public void onError(Session session, Throwable throwable) {
-//        System.out.println("error");
-
         close();
-
-//        UserCache userCache = userCacheMap.lockKey(httpSession.getId());
-//        try {
-//            userCache.webSocketSessions.remove(session);
-//        } finally {
-//            userCacheMap.unlock();
-//        }
     }
 
     @OnClose
@@ -102,39 +110,37 @@ public class ActionEndpoint {
             if (webSocketSessionsMap != null) {
                 webSocketSessionsMap.remove(session.getId(), this);
 
-                String s = "";
-                for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
-                    if (s != "") s += ", ";
-                    s += entry.getValue().wsSession.getId();
-                }
-
-                for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
-                    Session sess = entry.getValue().wsSession;
-
-                    try {
-                        if (sess.isOpen())
-                            sess.getAsyncRemote().sendText(s);
-    //                        else
-                        // TODO: 12.04.2016 remove closed sessions? closed sessions may remain after server restart
-    //                            System.out.println(3);
-                    } catch (Exception e) {
-                        // sending message on closing session (isOpen is still true) may cause exception
-    //                        System.out.println(1);
-                    }
-                }
+//                String s = "";
+//                for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
+//                    if (s != "") s += ", ";
+//                    s += entry.getValue().wsSession.getId();
+//                }
+//
+//                for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
+//                    Session sess = entry.getValue().wsSession;
+//
+//                    try {
+//                        if (sess.isOpen())
+//                            sess.getAsyncRemote().sendText(s);
+//    //                        else
+//                        // TODO: 12.04.2016 remove closed sessions? closed sessions may remain after server restart
+//    //                            System.out.println(3);
+//                    } catch (Exception e) {
+//                        // sending message on closing session (isOpen is still true) may cause exception
+//    //                        System.out.println(1);
+//                    }
+//                }
             }
 //        }
     }
 
     public void close() {
-        System.out.println("sup");
-
         if (wsSession != null) {
             try {
                 if (wsSession.isOpen())
                     wsSession.close();
             } catch (Exception e) {
-                System.out.println(123);
+                // TODO: 05.05.2016 log smth
 
 //                LOGGER.warning(format("Error closing session: %s", e.getMessage()));
             }

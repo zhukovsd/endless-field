@@ -1,6 +1,6 @@
 package com.zhukovsd.serverapp.endpoints.http;
 
-import com.zhukovsd.Gsonable;
+import com.zhukovsd.serialization.Gsonalizer;
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
@@ -69,7 +69,7 @@ public class FieldEndpoint extends HttpServlet {
                 // TODO: 18.04.2016 check if user_id attribute exists
                 String userId = ((String) session.getAttribute("user_id"));
 
-                FieldRequestData requestData = Gsonable.fromJson(URLDecoder.decode(request.getParameter("data"), "UTF-8"), FieldRequestData.class);
+                FieldRequestData requestData = Gsonalizer.fromJson(URLDecoder.decode(request.getParameter("data"), "UTF-8"), FieldRequestData.class);
 
                 // TODO: 25.04.2016 validate params
                 if (requestData.wsSessionId.isEmpty())
@@ -96,7 +96,7 @@ public class FieldEndpoint extends HttpServlet {
 
                         responseData = new FieldResponseData<>(cells);
                         // serialize/write response before unlock to prevent response content being changed after unlock
-                        Gsonable.toJson(responseData, response.getWriter());
+                        Gsonalizer.toJson(responseData, response.getWriter());
                         isResponseSent = true;
                     } finally {
                         time = (System.nanoTime() - time) / 1000000;
@@ -117,6 +117,6 @@ public class FieldEndpoint extends HttpServlet {
         }
 
         if (!isResponseSent)
-           Gsonable.toJson(responseData, response.getWriter());
+           Gsonalizer.toJson(responseData, response.getWriter());
     }
 }

@@ -9,14 +9,50 @@ FieldManagerState = {
     SERVER_ERROR: 3
 };
 
+ActionMessageType = {
+    INIT_MESSAGE: 0,
+    ACTION_MESSAGE: 1
+};
+
 FieldManager = function() {
     // var - hidden field/function
     // this - accessible field/function
 
+    this.state = FieldManagerState.UNINITIALIZED;
+    this.onStateChange = null;
+
     this.cells = {};
+
+    //
+
+    var wsSessionId = "";
+    var webSocket = new WebSocket("ws://" + location.host + "/online-minesweeper/action");
+    webSocket.manager = this;
+
+    webSocket.onmessage = function(message) {
+        var msg = JSON.parse(message.data);
+
+        if (msg.type === ActionMessageType.INIT_MESSAGE) {
+            alert("hi, " + msg.type + ", " + msg.wsSessionId);
+
+            wsSessionId = msg.wsSessionId;
+        } else {
+            // alert(msg.id);
+            this.manager.id = msg.id;
+            this.manager.setState(FieldManagerState.CONNECTED);
+
+            // this.manager.onRequestResult(message.data);
+        }
+    };
+
+    // todo: handle on close and on error events
+
+    //
 
     this.requestField = function(scope) {
         // console.log('requesting cells...');
+
+        // todo: request chunks only is state is connected
 
         var manager = this;
 
@@ -42,7 +78,7 @@ FieldManager = function() {
             }
         };
 
-        var requestData = {wsSessionId: 0, scope: [0]};
+        var requestData = {wsSessionId: wsSessionId, scope: [0]};
 
         xhr.open(
             "GET", "/online-minesweeper/field?data="+
@@ -54,29 +90,12 @@ FieldManager = function() {
     this.onRequestResult = function(response) {
         try {
             var responseCells = JSON.parse(response).cells;
-
-            // alert(response);
-            // alert(responseCells);
-            // alert(Object.keys(responseCells).length);
-
-            // this.cells = responseCells;
-
-            // alert("length before = " + Object.keys(this.cells).length);            
             
             for (var key in responseCells) {
                 this.cells[key] = responseCells[key];
-                
-                // console.log(key + " = " + responseCells[key]);
             }
 
-            // alert("length after = " + Object.keys(this.cells).length);
-
-            // for (var i = 0; i < responseCells.length; i++) {
-            //     var responseCell = responseCells[i];
-            //     cells[JSON.stringify({row: responseCell.row, column: responseCell.column})] = responseCell.cell;
-            // }
-
-            // alert(JSON.stringify(cells));
+            alert(Object.keys(this.cells).length);
 
             //this.getCell(1, 1);
             //this.getCell(1, 2);
@@ -90,4 +109,6 @@ FieldManager = function() {
             this.setState(FieldManagerState.SERVER_ERROR);
         }
     };
+
+
 };

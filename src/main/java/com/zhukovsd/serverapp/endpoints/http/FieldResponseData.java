@@ -1,17 +1,15 @@
 package com.zhukovsd.serverapp.endpoints.http;
 
-import com.zhukovsd.Gsonable;
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
+import com.zhukovsd.serialization.Gsonable;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintWriter;
 import java.util.Map;
 
 /**
  * Created by ZhukovSD on 29.04.2016.
  */
-public class FieldResponseData<T extends EndlessFieldCell> {
+public class FieldResponseData<T extends EndlessFieldCell> implements Gsonable {
     private int responseCode;
     private String msg;
 
