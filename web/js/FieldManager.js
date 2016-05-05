@@ -42,7 +42,7 @@ FieldManager = function() {
             }
         };
 
-        var requestData = {wsSessionId: 2, scope: [0]};
+        var requestData = {wsSessionId: 0, scope: [0]};
 
         xhr.open(
             "GET", "/online-minesweeper/field?data="+

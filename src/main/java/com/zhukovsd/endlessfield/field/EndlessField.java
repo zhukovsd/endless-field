@@ -159,8 +159,8 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     }
 
     // TODO: 04.05.2016 linked hash map as a result makes to sense here, because chunk stores as hashmap
-    public LinkedHashMap<CellPosition, T> getEntriesByChunkIds(Iterable<Integer> chunkIds) {
-        LinkedHashMap<CellPosition, T> result = new LinkedHashMap<>();
+    public Map<CellPosition, T> getEntriesByChunkIds(Iterable<Integer> chunkIds) {
+        HashMap<CellPosition, T> result = new HashMap<>();
         for (Integer chunkId : chunkIds) {
             EndlessFieldChunk<T> chunk = chunkMap.getValue(chunkId);
             result.putAll(chunk.cellsMap());

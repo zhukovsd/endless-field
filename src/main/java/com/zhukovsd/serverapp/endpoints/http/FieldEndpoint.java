@@ -15,12 +15,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URLDecoder;
-import java.nio.file.Files;
-import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
@@ -61,6 +58,7 @@ public class FieldEndpoint extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // TODO: 29.04.2016 remove null
         FieldResponseData<? extends EndlessFieldCell> responseData = null;
+        boolean isResponseSent = false;
 
         try {
             // don't create new session on this request. if now session found, report error to the client
@@ -94,17 +92,12 @@ public class FieldEndpoint extends HttpServlet {
                     long time = System.nanoTime();
 
                     try {
-                        LinkedHashMap<CellPosition, ? extends EndlessFieldCell> cells = field.getEntriesByChunkIds(requestData.scope);
+                        Map<CellPosition, ? extends EndlessFieldCell> cells = field.getEntriesByChunkIds(requestData.scope);
 
-                        responseData = new FieldResponseData<>(response.getWriter(), cells);
-
-//                        Gsonable.toJson(responseData, response.getWriter());
-
-//                        try {
-//                            response.getOutputStream().write(responseData.buffer.toByteArray());
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
+                        responseData = new FieldResponseData<>(cells);
+                        // serialize/write response before unlock to prevent response content being changed after unlock
+                        Gsonable.toJson(responseData, response.getWriter());
+                        isResponseSent = true;
                     } finally {
                         time = (System.nanoTime() - time) / 1000000;
                         System.out.println(time + "ms");
@@ -123,6 +116,7 @@ public class FieldEndpoint extends HttpServlet {
             // TODO: 25.04.2016 report exception
         }
 
-//        Gsonable.toJson(responseData, response.getWriter());
+        if (!isResponseSent)
+           Gsonable.toJson(responseData, response.getWriter());
     }
 }
