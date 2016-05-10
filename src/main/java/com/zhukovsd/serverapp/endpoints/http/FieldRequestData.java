@@ -9,4 +9,9 @@ import java.util.Set;
 public class FieldRequestData {
     String wsSessionId = "";
     HashSet<Integer> scope = new HashSet<>();
+
+    public FieldRequestData(String wsSessionId, HashSet<Integer> scope) {
+        this.wsSessionId = wsSessionId;
+        this.scope = scope;
+    }
 }

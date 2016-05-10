@@ -1,8 +1,7 @@
 package com.zhukovsd.simplefield;
 
+import com.zhukovsd.endlessfield.field.EndlessCellCloneFactory;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Thread-safe only within locked chunk, not by itself.
@@ -12,8 +11,20 @@ public class SimpleFieldCell extends EndlessFieldCell {
         this.isChecked = isChecked;
     }
 
+    protected SimpleFieldCell(EndlessFieldCell source) {
+        SimpleFieldCell casted = ((SimpleFieldCell) source);
+        this.isChecked = casted.isChecked;
+    }
+
+    @Override
+    public EndlessCellCloneFactory getFactory() {
+        return SimpleFieldCell::new;
+    }
+
+    //@SerializedName("c")
     private boolean isChecked;
-    private int a = 0, b = 0, c = 123;
+
+    transient private int a = 0, b = 0, c = 123;
 
     // TODO: 25.03.2016 consider single cell synchronization
     public boolean isChecked() {

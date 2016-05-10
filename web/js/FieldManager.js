@@ -33,7 +33,7 @@ FieldManager = function() {
         var msg = JSON.parse(message.data);
 
         if (msg.type === ActionMessageType.INIT_MESSAGE) {
-            alert("hi, " + msg.type + ", " + msg.wsSessionId);
+            // alert("hi, " + msg.type + ", " + msg.wsSessionId);
 
             wsSessionId = msg.wsSessionId;
         } else {
@@ -95,7 +95,7 @@ FieldManager = function() {
                 this.cells[key] = responseCells[key];
             }
 
-            alert(Object.keys(this.cells).length);
+            // alert(Object.keys(this.cells).length);
 
             //this.getCell(1, 1);
             //this.getCell(1, 2);

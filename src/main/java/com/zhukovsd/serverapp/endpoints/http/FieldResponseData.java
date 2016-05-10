@@ -4,6 +4,7 @@ import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 import com.zhukovsd.serialization.Gsonable;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -13,9 +14,11 @@ public class FieldResponseData<T extends EndlessFieldCell> implements Gsonable {
     private int responseCode;
     private String msg;
 
-    private Map<CellPosition, T> cells;
+//    private Map<CellPosition, T> cells;
+    ArrayList<T> cells;
 
-    public FieldResponseData(Map<CellPosition, T> cells) {
+//    public FieldResponseData(Map<CellPosition, T> cells) {
+    public FieldResponseData(ArrayList<T> cells) {
         // TODO: 05.05.2016 specify response code
         this.cells = cells;
     }

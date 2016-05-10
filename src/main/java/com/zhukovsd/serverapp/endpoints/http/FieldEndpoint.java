@@ -1,13 +1,14 @@
 package com.zhukovsd.serverapp.endpoints.http;
 
-import com.zhukovsd.serialization.Gsonalizer;
-import com.zhukovsd.endlessfield.field.CellPosition;
+import com.zhukovsd.endlessfield.field.EndlessCellCloneFactory;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
+import com.zhukovsd.serialization.Gsonalizer;
 import com.zhukovsd.serverapp.cache.scopes.UsersByChunkConcurrentCollection;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
 import com.zhukovsd.serverapp.endpoints.websocket.ActionEndpoint;
+import com.zhukovsd.simplefield.SimpleFieldCell;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -17,7 +18,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
@@ -56,6 +60,9 @@ public class FieldEndpoint extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
         // TODO: 29.04.2016 remove null
         FieldResponseData<? extends EndlessFieldCell> responseData = null;
         boolean isResponseSent = false;
@@ -89,21 +96,82 @@ public class FieldEndpoint extends HttpServlet {
                     EndlessField<?> field = getField();
                     field.lockChunksByIds(requestData.scope);
 
-                    long time = System.nanoTime();
+//                    long time = System.nanoTime();
 
+                    StringBuilder sb = null;
+//                    String s = "";
                     try {
-                        Map<CellPosition, ? extends EndlessFieldCell> cells = field.getEntriesByChunkIds(requestData.scope);
+//                        Map<CellPosition, ? extends EndlessFieldCell> cells = field.getEntriesByChunkIds(requestData.scope);
+                        ArrayList<? extends EndlessFieldCell> cells = field.getCellsByChunksId(requestData.scope);
+                        ArrayList<EndlessFieldCell> clonedCells = new ArrayList<>(cells.size());
 
-                        responseData = new FieldResponseData<>(cells);
+                        EndlessCellCloneFactory factory = cells.get(0).getFactory();
+                        for (EndlessFieldCell cell : cells) {
+                            EndlessFieldCell clonedCell = factory.clone(cell);
+                            clonedCells.add(clonedCell);
+                        }
+
+                        responseData = new FieldResponseData<>(clonedCells);
+
+//                        response.getWriter().write("data extracted, \"responseCode\":0");
+//                        s = Gsonalizer.toJson(responseData);
+
+//                        sb = new StringBuilder(50000);
+//                        sb.append("{\"responseCode\":0,\"cells\":[");
+//                        int c = 0;
+//                        for (EndlessFieldCell cell : responseData.cells) {
+//                            if (c != 0)
+//                                sb.append(",");
+//
+//                            sb.append("{");
+//
+//                            SimpleFieldCell casted = ((SimpleFieldCell) cell);
+//                            if (casted.isChecked()) {
+//                                sb.append("\"c\":");
+//                                sb.append(String.valueOf(((SimpleFieldCell) cell).isChecked()));
+//                            }
+//
+//                            sb.append("}");
+//
+//                            c++;
+//                        }
+//                        sb.append("]}");
+
+//                        response.getWriter().append(sb);
+
                         // serialize/write response before unlock to prevent response content being changed after unlock
-                        Gsonalizer.toJson(responseData, response.getWriter());
+//                        Gsonalizer.toJson(responseData, response.getWriter());
                         isResponseSent = true;
                     } finally {
-                        time = (System.nanoTime() - time) / 1000000;
-                        System.out.println(time + "ms");
+//                        time = (System.nanoTime() - time) / 1000000;
+//                        System.out.println(time + "ms");
 
                         field.unlockChunks();
+//                        System.out.println(Thread.activeCount());
                     }
+
+                    sb = new StringBuilder(50000);
+                    sb.append("{\"responseCode\":0,\"cells\":[");
+                    int c = 0;
+                    for (EndlessFieldCell cell : responseData.cells) {
+                        if (c != 0)
+                            sb.append(",");
+
+                        sb.append("{");
+
+                        SimpleFieldCell casted = ((SimpleFieldCell) cell);
+                        if (casted.isChecked()) {
+                            sb.append("\"c\":");
+                            sb.append(String.valueOf(((SimpleFieldCell) cell).isChecked()));
+                        }
+
+                        sb.append("}");
+
+                        c++;
+                    }
+                    sb.append("]}");
+
+                    response.getWriter().append(sb);
                 } else {
                     // TODO: 18.04.2016 report no ws session error
                 }
@@ -111,6 +179,7 @@ public class FieldEndpoint extends HttpServlet {
                 // TODO: 12.04.2016 report no http session error
             }
         } catch (Exception e) {
+            e.printStackTrace(System.out);
             // Interrupted Exceptions, JsonSyntaxException (Runtime), Param Validation Exception
 
             // TODO: 25.04.2016 report exception
@@ -118,5 +187,7 @@ public class FieldEndpoint extends HttpServlet {
 
         if (!isResponseSent)
            Gsonalizer.toJson(responseData, response.getWriter());
+
+//        response.getWriter().append("hey buddy");
     }
 }

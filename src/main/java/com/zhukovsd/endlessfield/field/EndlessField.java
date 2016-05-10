@@ -133,7 +133,6 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     }
 
     public T getCell(CellPosition position) {
-        // TODO: 21.03.2016 check if cell position is correct (within bounds) ?
         Integer chunkId = ChunkIdGenerator.generateID(chunkSize, position);
         EndlessFieldChunk<T> chunk = chunkMap.getValue(chunkId);
 
@@ -143,6 +142,17 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     public Iterable<T> getCells(Iterable<CellPosition> positions) {
         ArrayList<T> result = new ArrayList<>();
         for (CellPosition position : positions) result.add(getCell(position));
+
+        return result;
+    }
+
+    public ArrayList<T> getCellsByChunksId(Iterable<Integer> chunkIds) {
+        // TODO: 07.05.2016 order cells
+        ArrayList<T> result = new ArrayList<>();
+        for (Integer chunkId : chunkIds) {
+            EndlessFieldChunk<T> chunk = chunkMap.getValue(chunkId);
+            result.addAll(chunk.cellsMap().values());
+        }
 
         return result;
     }
