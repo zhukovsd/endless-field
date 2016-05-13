@@ -15,7 +15,7 @@ public class FieldResponseData<T extends EndlessFieldCell> implements Gsonable {
     private String msg;
 
 //    private Map<CellPosition, T> cells;
-    ArrayList<T> cells;
+    public ArrayList<T> cells;
 
 //    public FieldResponseData(Map<CellPosition, T> cells) {
     public FieldResponseData(ArrayList<T> cells) {

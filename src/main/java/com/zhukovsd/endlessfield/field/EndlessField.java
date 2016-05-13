@@ -97,7 +97,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
             chunk = generateChunk(chunkId);
             chunkMap.put(chunkId, chunk);
 
-            chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunkMap, chunkId));
+            chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunkMap, chunkId, chunk));
         }
 
         return chunk;

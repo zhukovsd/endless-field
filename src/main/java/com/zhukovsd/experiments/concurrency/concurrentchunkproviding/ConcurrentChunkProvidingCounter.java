@@ -9,9 +9,7 @@ import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
 import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,7 +42,7 @@ public class ConcurrentChunkProvidingCounter {
                     }
 
                     @Override
-                    public void storeChunk(StripedEntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<SimpleFieldCell>> chunkMap, int chunkId) throws InterruptedException {
+                    public void storeChunk(StripedEntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<SimpleFieldCell>> chunkMap, int chunkId, EndlessFieldChunk<SimpleFieldCell> chunk) throws InterruptedException {
                         //
                     }
 

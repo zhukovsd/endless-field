@@ -4,9 +4,7 @@ import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 import com.zhukovsd.enrtylockingconcurrenthashmap.StripedEntryLockingConcurrentHashMap;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
 
 /**
  * Created by ZhukovSD on 22.03.2016.
@@ -18,13 +16,15 @@ public class StoreChunkTask<T extends EndlessFieldCell> implements Runnable {
     private final EndlessFieldDataSource<T> dataSource;
     private final StripedEntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<T>> chunkMap;
     private final int chunkId;
+    private final EndlessFieldChunk<T> chunk;
 
     public StoreChunkTask(EndlessFieldDataSource<T> dataSource,
-                          StripedEntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<T>> chunkMap, int chunkId)
+        StripedEntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<T>> chunkMap, int chunkId, EndlessFieldChunk<T> chunk)
     {
         this.dataSource = dataSource;
         this.chunkMap = chunkMap;
         this.chunkId = chunkId;
+        this.chunk = chunk;
     }
 
     @Override
@@ -35,17 +35,24 @@ public class StoreChunkTask<T extends EndlessFieldCell> implements Runnable {
 //            e.printStackTrace();
 //        }
 
-        // TODO: 23.03.2016 handle store exceptions / errors
         try {
-            dataSource.storeChunk(chunkMap, chunkId);
-        } catch (InterruptedException e) {
+            // TODO: 23.03.2016 handle store exceptions / errors
+            try {
+                dataSource.storeChunk(chunkMap, chunkId, chunk);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // we assume that chunk is guaranteed to exists, and we can get it directly from chunkMap
+            // TODO: 25.04.2016 log null pointer exception
+            chunk.setStored(true);
+
+            storeCount.incrementAndGet();
+
+//            if (storeCount.get() % 100 == 0)
+//                System.out.println(storeCount);
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
-        // we assume that chunk is guaranteed to exists, and we can get it directly from chunkMap
-        // TODO: 25.04.2016 log null pointer exception
-        chunkMap.getValueNonLocked(chunkId).setStored(true);
-
-        storeCount.incrementAndGet();
     }
 }

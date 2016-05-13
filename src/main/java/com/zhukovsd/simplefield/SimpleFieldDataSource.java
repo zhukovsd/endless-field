@@ -62,15 +62,17 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
 
     @Override
     public void storeChunk(StripedEntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<SimpleFieldCell>> chunkMap,
-                           int chunkId) throws InterruptedException
+                           int chunkId, EndlessFieldChunk<SimpleFieldCell> chunk) throws InterruptedException
     {
         ArrayList<Document> cells = new ArrayList<>();
 
-        // TODO: 25.04.2016 handle unsuccessful locking
-        chunkMap.lockKey(chunkId);
+        // if chunk was not locked, it's not exists in the chunk map. it is possible, when it was not yet added,
+        // because this store thread and this storeChunk() method was called in context of web container thread pool
+        // thread due to FixedExecutorService reject policy. If chunk is not exists in the map, we don't really
+        // need to lock it, because it's already locked in EndlessField.provideAndLock() which is below this method
+        // in call stack (only after rejection)
+        boolean isLocked = chunkMap.lockKey(chunkId);
         try {
-            EndlessFieldChunk<SimpleFieldCell> chunk = chunkMap.getValue(chunkId);
-
             for (Map.Entry<CellPosition, SimpleFieldCell> entry : chunk.cellsMap().entrySet()) {
                 CellPosition position = entry.getKey();
                 SimpleFieldCell cell = entry.getValue();
@@ -83,7 +85,9 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
                 );
             }
         } finally {
-            chunkMap.unlock();
+            if (isLocked) {
+                chunkMap.unlock();
+            }
         }
 
         // TODO: 21.03.2016 handle mongo exceptions

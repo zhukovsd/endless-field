@@ -8,7 +8,6 @@ import com.zhukovsd.enrtylockingconcurrenthashmap.StripedEntryLockingConcurrentH
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
 import com.zhukovsd.simplefield.SimpleFieldCellFactory;
-import com.zhukovsd.simplefield.SimpleFieldDataSource;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,7 +41,7 @@ public class ConcurrentChunkProviding {
                     }
 
                     @Override
-                    public void storeChunk(StripedEntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<SimpleFieldCell>> chunkMap, int chunkId) throws InterruptedException {
+                    public void storeChunk(StripedEntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<SimpleFieldCell>> chunkMap, int chunkId, EndlessFieldChunk<SimpleFieldCell> chunk) throws InterruptedException {
 
                     }
 

@@ -150,28 +150,30 @@ public class FieldEndpoint extends HttpServlet {
 //                        System.out.println(Thread.activeCount());
                     }
 
-                    sb = new StringBuilder(50000);
-                    sb.append("{\"responseCode\":0,\"cells\":[");
-                    int c = 0;
-                    for (EndlessFieldCell cell : responseData.cells) {
-                        if (c != 0)
-                            sb.append(",");
+//                    sb = new StringBuilder(50000);
+//                    sb.append("{\"responseCode\":0,\"cells\":[");
+//                    int c = 0;
+//                    for (EndlessFieldCell cell : responseData.cells) {
+//                        if (c != 0)
+//                            sb.append(",");
+//
+//                        sb.append("{");
+//
+//                        SimpleFieldCell casted = ((SimpleFieldCell) cell);
+//                        if (casted.isChecked()) {
+//                            sb.append("\"c\":");
+//                            sb.append(String.valueOf(((SimpleFieldCell) cell).isChecked()));
+//                        }
+//
+//                        sb.append("}");
+//
+//                        c++;
+//                    }
+//                    sb.append("]}");
+//
+//                    response.getWriter().append(sb);
 
-                        sb.append("{");
-
-                        SimpleFieldCell casted = ((SimpleFieldCell) cell);
-                        if (casted.isChecked()) {
-                            sb.append("\"c\":");
-                            sb.append(String.valueOf(((SimpleFieldCell) cell).isChecked()));
-                        }
-
-                        sb.append("}");
-
-                        c++;
-                    }
-                    sb.append("]}");
-
-                    response.getWriter().append(sb);
+                    Gsonalizer.toJson(responseData, response.getWriter());
                 } else {
                     // TODO: 18.04.2016 report no ws session error
                 }
