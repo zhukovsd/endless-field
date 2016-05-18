@@ -51,9 +51,11 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
         FindIterable<Document> findIterable = collection.find(eq("chunk_id", chunkId));
         for (Document d : findIterable) {
             // TODO: 21.03.2016 check is cellDocument contains necessary fields
+            SimpleFieldCell cell = new SimpleFieldCell(d.getBoolean("checked"));
+//            cell.s = d.getInteger("row_index") + "," + d.getInteger("column_index");
             chunk.put(
                     new CellPosition(d.getInteger("row_index"), d.getInteger("column_index")),
-                    new SimpleFieldCell(d.getBoolean("checked"))
+                    cell
             );
         }
 

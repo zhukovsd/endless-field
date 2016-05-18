@@ -10,9 +10,12 @@
 <head>
     <meta charset="UTF-8">
     <script src="js/FieldManager.js"></script>
+    <script src="js/SimpleField/SimpleFieldManager.js"></script>
     <title>Title</title>
     <script>
-        var fieldManager = new FieldManager();
+        var fieldManager = new SimpleFieldManager();
+
+//        fieldManager.onRequestResult(null);
 
 //        var webSocket = new WebSocket("ws://" + location.host + "/online-minesweeper/action");
 //

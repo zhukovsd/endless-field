@@ -22,31 +22,32 @@ import java.util.*;
  * Created by ZhukovSD on 10.05.2016.
  */
 public class JsonSerializationPerformanceComparison {
-    static String serializeWithGson(Gson gson, FieldResponseData<SimpleFieldCell> data) {
+    static String serializeWithGson(Gson gson, FieldResponseData data) {
         return gson.toJson(data);
 //        return gson.toJson(data, new TypeToken<FieldResponseData<SimpleFieldCell>>() {}.getClass());
     }
 
-    static String serializeManually(FieldResponseData<SimpleFieldCell> data) {
+    static String serializeManually(FieldResponseData data) {
         StringBuilder sb = new StringBuilder(50000);
         sb.append("{\"responseCode\":0,\"cells\":[");
         int c = 0;
-        for (SimpleFieldCell cell : data.cells) {
-            if (c != 0)
-                sb.append(",");
 
-            sb.append("{");
-
-            if (cell.isChecked()) {
-                sb.append("\"c\":");
-                sb.append(String.valueOf(cell.isChecked()));
-            }
-
-            sb.append("}");
-
-            c++;
-        }
-        sb.append("]}");
+//        for (SimpleFieldCell cell : data.cells) {
+//            if (c != 0)
+//                sb.append(",");
+//
+//            sb.append("{");
+//
+//            if (cell.isChecked()) {
+//                sb.append("\"c\":");
+//                sb.append(String.valueOf(cell.isChecked()));
+//            }
+//
+//            sb.append("}");
+//
+//            c++;
+//        }
+//        sb.append("]}");
 
         return sb.toString();
     }
@@ -79,12 +80,12 @@ public class JsonSerializationPerformanceComparison {
                 new SimpleFieldCellFactory()
         );
 
-        List<Integer> chunkIds = Collections.singletonList(0);
-        field.lockChunksByIds(chunkIds);
+        int chunkId = 0;
+        field.lockChunksByIds(Collections.singletonList(0));
         ArrayList<SimpleFieldCell> cells;
         Random rand = new Random();
         try {
-            cells = field.getCellsByChunksId(chunkIds);
+            cells = field.getCellsByChunkId(0);
 
             for (SimpleFieldCell cell : cells) {
                 if (rand.nextBoolean()) {
@@ -111,8 +112,8 @@ public class JsonSerializationPerformanceComparison {
         PrintWriter b = new PrintWriter(a);
         StringBuilder c = new StringBuilder(50000);
 
-        FieldResponseData<SimpleFieldCell> data = new FieldResponseData<>(cells);
-        int count = 1000;
+//        FieldResponseData<SimpleFieldCell> data = new FieldResponseData<>(cells);
+        int count = 1;
 
 //        try {
 //            System.in.read();
@@ -124,9 +125,10 @@ public class JsonSerializationPerformanceComparison {
         long time = System.nanoTime();
         for (int i = 0; i < count; i++) {
 //            String s = gson.toJson(cells, new TypeToken<ArrayList<SimpleFieldCell>>() {}.getType());
-            gson.toJson(cells, new TypeToken<FieldResponseData<SimpleFieldCell>>() {}.getType(), c);
+//            gson.toJson(cells, new TypeToken<FieldResponseData>() {}.getType(), c);
+            gson.toJson(cells, c);
 
-//            System.out.println(c.toString());
+            System.out.println(c.toString());
 //            String s = JsonSerializationPerformanceComparison.serializeWithGson(gson, data);
 //            System.out.println(s);
         }
@@ -137,7 +139,7 @@ public class JsonSerializationPerformanceComparison {
 
         time = System.nanoTime();
         for (int i = 0; i < count; i++) {
-            JsonSerializationPerformanceComparison.serializeManually(data);
+//            JsonSerializationPerformanceComparison.serializeManually(data);
         }
         time = (System.nanoTime() - time) / 1000000;
         System.out.println("manually = " + time);
@@ -197,15 +199,15 @@ class ArrayAdapter extends TypeAdapter<ArrayList<SimpleFieldCell>> {
     }
 }
 
-class DataAdapter extends TypeAdapter<FieldResponseData<SimpleFieldCell>> {
+class DataAdapter extends TypeAdapter<FieldResponseData> {
     @Override
-    public void write(JsonWriter out, FieldResponseData<SimpleFieldCell> value) throws IOException {
+    public void write(JsonWriter out, FieldResponseData value) throws IOException {
         out.beginArray();
         out.endArray();
     }
 
     @Override
-    public FieldResponseData<SimpleFieldCell> read(JsonReader in) throws IOException {
+    public FieldResponseData read(JsonReader in) throws IOException {
         return null;
     }
 }
@@ -229,9 +231,9 @@ class CustomizedTypeAdapterFactory implements TypeAdapterFactory {
     }
 
     private TypeAdapter<ArrayList<SimpleFieldCell>> customizeMyClassAdapter(Gson gson, TypeToken<ArrayList<SimpleFieldCell>> type) {
-        final TypeAdapter<ArrayList<SimpleFieldCell>> delegate = gson.getDelegateAdapter(this, type);
-        final TypeAdapter<JsonElement> elementAdapter = gson.getAdapter(JsonElement.class);
-        TypeAdapter<SimpleFieldCell> test = gson.getAdapter(SimpleFieldCell.class);
+//        final TypeAdapter<ArrayList<SimpleFieldCell>> delegate = gson.getDelegateAdapter(this, type);
+//        final TypeAdapter<JsonElement> elementAdapter = gson.getAdapter(JsonElement.class);
+//        TypeAdapter<SimpleFieldCell> test = gson.getAdapter(SimpleFieldCell.class);
         return new TypeAdapter<ArrayList<SimpleFieldCell>>() {
             @Override public void write(JsonWriter out, ArrayList<SimpleFieldCell> value) throws IOException {
 //                JsonElement tree = delegate.toJsonTree(value);

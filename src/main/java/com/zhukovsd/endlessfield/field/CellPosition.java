@@ -6,11 +6,30 @@ package com.zhukovsd.endlessfield.field;
 public class CellPosition {
     static int hashCodeFactor = 2539;
 
-    public final int row, column;
+    public int row, column;
+
+    public CellPosition() {
+
+    }
 
     public CellPosition(int row, int column) {
         this.row = row;
         this.column = column;
+    }
+
+    int compare(CellPosition o2) {
+        if (row > o2.row)
+            return 1;
+        else if (row < o2.row)
+            return -1;
+        else {
+            if (column > o2.column)
+                return 1;
+            else if (column < o2.column)
+                return -1;
+            else
+                return 0;
+        }
     }
 
     @Override
@@ -39,5 +58,31 @@ public class CellPosition {
         builder.append(column);
 
         return builder.toString();
+    }
+
+    public static void main(String[] args) {
+        long time = System.nanoTime();
+        for (int i = 0; i < 1000000; i++) {
+            for (int row = 0; row < 50; row++) {
+                for (int column = 0; column < 50; column++) {
+                    CellPosition position = new CellPosition(row, column);
+                }
+            }
+        }
+        time = (System.nanoTime() - time) / 1000000;
+        System.out.println("time = " + time + "ms");
+
+        time = System.nanoTime();
+        for (int i = 0; i < 1000000; i++) {
+            CellPosition position = new CellPosition(0, 0);
+            for (int row = 0; row < 50; row++) {
+                for (int column = 0; column < 50; column++) {
+                    position.row = row;
+                    position.column = column;
+                }
+            }
+        }
+        time = (System.nanoTime() - time) / 1000000;
+        System.out.println("time = " + time + "ms");
     }
 }

@@ -1,5 +1,6 @@
 package com.zhukovsd.serverapp.endpoints.http;
 
+import com.zhukovsd.endlessfield.field.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.field.EndlessCellCloneFactory;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
@@ -19,9 +20,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
@@ -64,7 +63,7 @@ public class FieldEndpoint extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         // TODO: 29.04.2016 remove null
-        FieldResponseData<? extends EndlessFieldCell> responseData = null;
+        FieldResponseData responseData = null;
         boolean isResponseSent = false;
 
         try {
@@ -102,42 +101,22 @@ public class FieldEndpoint extends HttpServlet {
 //                    String s = "";
                     try {
 //                        Map<CellPosition, ? extends EndlessFieldCell> cells = field.getEntriesByChunkIds(requestData.scope);
-                        ArrayList<? extends EndlessFieldCell> cells = field.getCellsByChunksId(requestData.scope);
-                        ArrayList<EndlessFieldCell> clonedCells = new ArrayList<>(cells.size());
 
-                        EndlessCellCloneFactory factory = cells.get(0).getFactory();
-                        for (EndlessFieldCell cell : cells) {
-                            EndlessFieldCell clonedCell = factory.clone(cell);
-                            clonedCells.add(clonedCell);
+                        // TODO: 16.05.2016 set response code
+                        responseData = new FieldResponseData();
+
+                        for (Integer chunkId : requestData.scope) {
+                            ArrayList<? extends EndlessFieldCell> cells = field.getCellsByChunkId(chunkId);
+                            ArrayList<EndlessFieldCell> clonedCells = new ArrayList<>(cells.size());
+
+                            // TODO: 16.05.2016 move to endless field
+                            EndlessCellCloneFactory factory = cells.get(0).getFactory();
+                            for (EndlessFieldCell cell : cells) {
+                                clonedCells.add(factory.clone(cell));
+                            }
+
+                            responseData.addChunk(ChunkIdGenerator.chunkOrigin(field.chunkSize, chunkId), clonedCells);
                         }
-
-                        responseData = new FieldResponseData<>(clonedCells);
-
-//                        response.getWriter().write("data extracted, \"responseCode\":0");
-//                        s = Gsonalizer.toJson(responseData);
-
-//                        sb = new StringBuilder(50000);
-//                        sb.append("{\"responseCode\":0,\"cells\":[");
-//                        int c = 0;
-//                        for (EndlessFieldCell cell : responseData.cells) {
-//                            if (c != 0)
-//                                sb.append(",");
-//
-//                            sb.append("{");
-//
-//                            SimpleFieldCell casted = ((SimpleFieldCell) cell);
-//                            if (casted.isChecked()) {
-//                                sb.append("\"c\":");
-//                                sb.append(String.valueOf(((SimpleFieldCell) cell).isChecked()));
-//                            }
-//
-//                            sb.append("}");
-//
-//                            c++;
-//                        }
-//                        sb.append("]}");
-
-//                        response.getWriter().append(sb);
 
                         // serialize/write response before unlock to prevent response content being changed after unlock
 //                        Gsonalizer.toJson(responseData, response.getWriter());
@@ -150,15 +129,68 @@ public class FieldEndpoint extends HttpServlet {
 //                        System.out.println(Thread.activeCount());
                     }
 
-//                    sb = new StringBuilder(50000);
-//                    sb.append("{\"responseCode\":0,\"cells\":[");
-//                    int c = 0;
+                    sb = new StringBuilder(50000);
+                    sb.append("{\"responseCode\":0,\"chunks\":[");
+                    int c = 0;
+
+                    String chunkSeparator = "";
+                    for (FieldResponseData.ChunkData chunk : responseData.chunks) {
+                        sb.append(chunkSeparator);
+
+                        // chunk begin
+                        sb.append('{');
+
+                        // origin begin
+                        sb.append("\"origin\":");
+                        sb.append("{\"row\":");
+                        sb.append(chunk.origin.row);
+                        sb.append(",\"column\":");
+                        sb.append(chunk.origin.column);
+                        // origin end
+                        sb.append('}');
+
+                        // cells begin
+                        sb.append(",\"cells\":[");
+
+                        String cellsSeparator = "";
+                        for (EndlessFieldCell cell : chunk.cells) {
+                            sb.append(cellsSeparator);
+
+                            // cell begin
+                            sb.append('{');
+                            SimpleFieldCell casted = ((SimpleFieldCell) cell);
+
+                            if (casted.isChecked()) {
+                                sb.append("\"c\":");
+                                sb.append(String.valueOf(((SimpleFieldCell) cell).isChecked()));
+//                                sb.append(',');
+                            }
+//                            sb.append("\"s\":\"");
+//                            sb.append(casted.s);
+//                            sb.append("\"");
+
+                            // cell end
+                            sb.append('}');
+
+                            cellsSeparator = ",";
+                        }
+
+                        // cells end
+                        sb.append("]");
+
+                        // chunk end
+                        sb.append('}');
+
+                        chunkSeparator = ",";
+                    }
+                    sb.append("]}");
+
 //                    for (EndlessFieldCell cell : responseData.cells) {
 //                        if (c != 0)
 //                            sb.append(",");
-//
+////
 //                        sb.append("{");
-//
+////
 //                        SimpleFieldCell casted = ((SimpleFieldCell) cell);
 //                        if (casted.isChecked()) {
 //                            sb.append("\"c\":");
@@ -170,10 +202,10 @@ public class FieldEndpoint extends HttpServlet {
 //                        c++;
 //                    }
 //                    sb.append("]}");
-//
-//                    response.getWriter().append(sb);
 
-                    Gsonalizer.toJson(responseData, response.getWriter());
+                    response.getWriter().append(sb);
+
+//                    Gsonalizer.toJson(responseData, response.getWriter());
                 } else {
                     // TODO: 18.04.2016 report no ws session error
                 }

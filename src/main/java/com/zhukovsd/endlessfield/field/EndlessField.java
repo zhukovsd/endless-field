@@ -146,16 +146,36 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return result;
     }
 
-    public ArrayList<T> getCellsByChunksId(Iterable<Integer> chunkIds) {
-        // TODO: 07.05.2016 order cells
-        ArrayList<T> result = new ArrayList<>();
-        for (Integer chunkId : chunkIds) {
-            EndlessFieldChunk<T> chunk = chunkMap.getValue(chunkId);
-            result.addAll(chunk.cellsMap().values());
+    public ArrayList<T> getCellsByChunkId(Integer chunkId) {
+        ArrayList<T> result = new ArrayList<>(chunkSize.cellCount());
+
+        EndlessFieldChunk<T> chunk = chunkMap.getValue(chunkId);
+//        result.addAll(chunk.cellsMap().values());
+        CellPosition origin = ChunkIdGenerator.chunkOrigin(chunkSize, chunkId);
+
+        CellPosition position = new CellPosition();
+        for (int row = 0; row < chunkSize.rowCount; row++) {
+            for (int column = 0; column < chunkSize.columnCount; column++) {
+                position.row = origin.row + row;
+                position.column = origin.column + column;
+
+                result.add(chunk.get(position));
+            }
         }
 
         return result;
     }
+
+//    public ArrayList<T> getCellsByChunksIds(Iterable<Integer> chunkIds) {
+//        // TODO: 07.05.2016 order cells
+//        ArrayList<T> result = new ArrayList<>();
+//        for (Integer chunkId : chunkIds) {
+//            EndlessFieldChunk<T> chunk = chunkMap.getValue(chunkId);
+//            result.addAll(chunk.cellsMap().values());
+//        }
+//
+//        return result;
+//    }
 
     public Entry<CellPosition, T> getEntry(CellPosition position) {
         return new Entry<>(position, getCell(position));
@@ -168,7 +188,6 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return result;
     }
 
-    // TODO: 04.05.2016 linked hash map as a result makes to sense here, because chunk stores as hashmap
     public Map<CellPosition, T> getEntriesByChunkIds(Iterable<Integer> chunkIds) {
         HashMap<CellPosition, T> result = new HashMap<>();
         for (Integer chunkId : chunkIds) {

@@ -28,7 +28,7 @@ public class RequestCounterFilter implements Filter {
                     else
                         average = 0;
 
-                    System.out.println("count = " + count.get() + ", average = " + average);
+//                    System.out.println("count = " + count.get() + ", average = " + average);
 
                     try {
                         TimeUnit.SECONDS.sleep(1);

@@ -15,6 +15,8 @@ ActionMessageType = {
 };
 
 FieldManager = function() {
+    console.log("1");
+
     // var - hidden field/function
     // this - accessible field/function
 
@@ -89,6 +91,8 @@ FieldManager = function() {
 
     this.onRequestResult = function(response) {
         try {
+            alert("inherited");
+            
             var responseCells = JSON.parse(response).cells;
             
             for (var key in responseCells) {
@@ -109,6 +113,4 @@ FieldManager = function() {
             this.setState(FieldManagerState.SERVER_ERROR);
         }
     };
-
-
 };

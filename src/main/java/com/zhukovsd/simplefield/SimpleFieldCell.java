@@ -11,9 +11,11 @@ public class SimpleFieldCell extends EndlessFieldCell {
         this.isChecked = isChecked;
     }
 
+    // clone constructor. should be called only if source is locked, otherwise transitional state may be cloned
     protected SimpleFieldCell(EndlessFieldCell source) {
         SimpleFieldCell casted = ((SimpleFieldCell) source);
         this.isChecked = casted.isChecked;
+//        this.s = casted.s;
     }
 
     @Override
@@ -24,7 +26,8 @@ public class SimpleFieldCell extends EndlessFieldCell {
     //@SerializedName("c")
     private boolean isChecked;
 
-    transient private int a = 0, b = 0, c = 123;
+    transient int a = 0, b = 0, c = 123;
+//    public transient String s;
 
     // TODO: 25.03.2016 consider single cell synchronization
     public boolean isChecked() {
