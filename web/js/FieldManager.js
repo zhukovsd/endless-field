@@ -23,6 +23,8 @@ var FieldManager = function () {
     //
 
     this.wsSessionId = "";
+    this.chunkSize = {};    
+    
     var webSocket = new WebSocket("ws://" + location.host + "/online-minesweeper/action");
     webSocket.manager = this;
 
@@ -30,9 +32,11 @@ var FieldManager = function () {
         var msg = JSON.parse(message.data);
 
         if (msg.type === ActionMessageType.INIT_MESSAGE) {
-            alert("hi, " + msg.type + ", " + msg.wsSessionId);
+            alert("hi, " + msg.type + ", " + msg.wsSessionId + ", " + msg.chunkSize.rowCount + ", " + msg.chunkSize.columnCount);
 
             this.manager.wsSessionId = msg.wsSessionId;
+            this.manager.chunkSize = msg.chunkSize;
+            
             this.manager.setState(FieldManagerState.CONNECTED);
         } else {
             // action message
@@ -54,7 +58,10 @@ var FieldManager = function () {
         xhr.manager = this;
         xhr.onreadystatechange = this.xhronreadystatechange;
 
-        var requestData = {wsSessionId: this.wsSessionId, scope: [0]};
+        var chunkId = document.getElementById("chunk_id_text").value;
+        alert("chunkId = "+ chunkId);
+
+        var requestData = {wsSessionId: this.wsSessionId, scope: [chunkId]};
 
         xhr.open(
             "GET", "/online-minesweeper/field?data="+
@@ -84,7 +91,7 @@ var FieldManager = function () {
     };
 
     this.onRequestResult = function(response) {
-        // try {
+        try {
             //noinspection JSUnresolvedVariable
             var chunks = JSON.parse(response).chunks;
             var manager = this;
@@ -93,26 +100,19 @@ var FieldManager = function () {
                 manager.processResponseCells(chunk.origin, chunk.cells);
             });
 
-            //this.processResponseCells(responseCells);
-
-            // for (var key in responseCells) {
-            //     this.cells[key] = responseCells[key];
-            // }
-
-            // alert(Object.keys(this.cells).length);
-
-            //this.getCell(1, 1);
-            //this.getCell(1, 2);
+            alert("cells count = " + Object.keys(this.cells).length);
+            // alert("0, 0 = " + JSON.stringify(this.cells["0,0"]));
+            // alert("0, 1 = " + JSON.stringify(this.cells["0,1"]));
 
             //if (this.mazeData.status == 0)
             //    this.setState(FieldManagerState.LOADED);
             // fieldView.paint();
             //else
             //    this.setState(FieldManagerState.SERVER_ERROR);
-        // } catch (exception) {
-        //     this.setState(FieldManagerState.SERVER_ERROR);
-        // }
-    };
+        } catch (exception) {
+            this.setState(FieldManagerState.SERVER_ERROR);
+        }
+    }
 };
 
 FieldManager.prototype = {
@@ -121,6 +121,22 @@ FieldManager.prototype = {
     },
 
     processResponseCells: function(chunkOrigin, responseCells) {
-        alert("inherited");
+        //alert(this.chunkSize.rowCount + ", " + this.chunkSize.columnCount);
+        //alert("chunkOrigin = " + JSON.stringify(chunkOrigin));
+        
+        var index = 0;
+        for (var row = 0; row < this.chunkSize.rowCount; row++) {
+            for (var column = 0; column < this.chunkSize.columnCount; column++) {
+                var key = (chunkOrigin.row + row) + "," + (chunkOrigin.column + column);
+                //console.log(key);
+                this.cells[key] = this.processResponseCell(responseCells[index]);
+
+                index++;
+            }
+        }
+    },
+
+    processResponseCell: function(cell) {
+        return cell;
     }
 };

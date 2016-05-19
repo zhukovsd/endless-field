@@ -5,10 +5,14 @@
 var SimpleFieldManager = function() {
     FieldManager.call(this);
 };
-SimpleFieldManager.prototype = Object.create(SimpleFieldManager.prototype);
+SimpleFieldManager.prototype = Object.create(FieldManager.prototype);
 
-SimpleFieldManager.prototype = {
-    processResponseCells: function(chunkOrigin, responseCells) {
-        alert("derived");
-    }    
+// processResponseCells: function(a,b) {
+//     alert("derived");
+// },
+
+SimpleFieldManager.prototype.processResponseCell = function(cell) {
+    return {
+        isChecked: cell.hasOwnProperty("c")
+    };
 };

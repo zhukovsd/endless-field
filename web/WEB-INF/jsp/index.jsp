@@ -14,7 +14,6 @@
     <title>Title</title>
     <script>
 //        var fieldManager = new FieldManager();
-
         var fieldManager = new SimpleFieldManager();
 
 //        fieldManager.onRequestResult(null);
@@ -38,6 +37,7 @@
     <%--Scope for this client = 123--%>
 
     <input type="button" value="Button" onclick="fieldManager.requestField({});">
+    <input type="text" name="chunk" id="chunk_id_text" value="0">
     <%--<input type="button" value="Button" onclick="fieldManager.foo({});">--%>
 </body>
 </html>

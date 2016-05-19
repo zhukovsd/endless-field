@@ -185,24 +185,6 @@ public class FieldEndpoint extends HttpServlet {
                     }
                     sb.append("]}");
 
-//                    for (EndlessFieldCell cell : responseData.cells) {
-//                        if (c != 0)
-//                            sb.append(",");
-////
-//                        sb.append("{");
-////
-//                        SimpleFieldCell casted = ((SimpleFieldCell) cell);
-//                        if (casted.isChecked()) {
-//                            sb.append("\"c\":");
-//                            sb.append(String.valueOf(((SimpleFieldCell) cell).isChecked()));
-//                        }
-//
-//                        sb.append("}");
-//
-//                        c++;
-//                    }
-//                    sb.append("]}");
-
                     response.getWriter().append(sb);
 
 //                    Gsonalizer.toJson(responseData, response.getWriter());
