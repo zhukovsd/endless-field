@@ -7,10 +7,6 @@ var SimpleFieldManager = function() {
 };
 SimpleFieldManager.prototype = Object.create(FieldManager.prototype);
 
-// processResponseCells: function(a,b) {
-//     alert("derived");
-// },
-
 SimpleFieldManager.prototype.processResponseCell = function(cell) {
     return {
         isChecked: cell.hasOwnProperty("c")

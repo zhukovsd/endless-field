@@ -23,7 +23,8 @@ var FieldManager = function () {
     //
 
     this.wsSessionId = "";
-    this.chunkSize = {};    
+    this.chunkSize = {};
+    this.chunkIdFactor = 0;
     
     var webSocket = new WebSocket("ws://" + location.host + "/online-minesweeper/action");
     webSocket.manager = this;
@@ -32,10 +33,12 @@ var FieldManager = function () {
         var msg = JSON.parse(message.data);
 
         if (msg.type === ActionMessageType.INIT_MESSAGE) {
-            alert("hi, " + msg.type + ", " + msg.wsSessionId + ", " + msg.chunkSize.rowCount + ", " + msg.chunkSize.columnCount);
+            // alert("hi, " + msg.type + ", " + msg.wsSessionId + ", " + msg.chunkSize.rowCount + ", " + msg.chunkSize.columnCount);
+            alert(JSON.stringify(msg));
 
             this.manager.wsSessionId = msg.wsSessionId;
             this.manager.chunkSize = msg.chunkSize;
+            this.manager.chunkIdFactor = msg.chunkIdFactor;
             
             this.manager.setState(FieldManagerState.CONNECTED);
         } else {
@@ -47,7 +50,7 @@ var FieldManager = function () {
 
     //
 
-    this.requestField = function(scope) {
+    this.requestChunks = function(chunkIds) {
         console.log('requesting cells...');
 
         // todo: request chunks only is state is connected
@@ -101,6 +104,9 @@ var FieldManager = function () {
             });
 
             alert("cells count = " + Object.keys(this.cells).length);
+
+            //todo draw only new cells
+
             // alert("0, 0 = " + JSON.stringify(this.cells["0,0"]));
             // alert("0, 1 = " + JSON.stringify(this.cells["0,1"]));
 
@@ -112,7 +118,11 @@ var FieldManager = function () {
         } catch (exception) {
             this.setState(FieldManagerState.SERVER_ERROR);
         }
-    }
+    };
+    
+    this.getCell = function(row, column) {
+        return this.cells[row+","+column];
+    };
 };
 
 FieldManager.prototype = {
@@ -130,6 +140,9 @@ FieldManager.prototype = {
                 var key = (chunkOrigin.row + row) + "," + (chunkOrigin.column + column);
                 //console.log(key);
                 this.cells[key] = this.processResponseCell(responseCells[index]);
+                
+                //todo remove debug field
+                this.cells[key].text = key;
 
                 index++;
             }

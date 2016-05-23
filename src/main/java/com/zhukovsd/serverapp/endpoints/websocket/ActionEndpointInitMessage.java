@@ -1,5 +1,6 @@
 package com.zhukovsd.serverapp.endpoints.websocket;
 
+import com.zhukovsd.endlessfield.field.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.field.ChunkSize;
 
 /**
@@ -8,6 +9,7 @@ import com.zhukovsd.endlessfield.field.ChunkSize;
 public class ActionEndpointInitMessage extends ActionEndpointMessage {
     final String wsSessionId;
     final ChunkSize chunkSize;
+    final int chunkIdFactor = ChunkIdGenerator.idFactor;
 
     public ActionEndpointInitMessage(String wsSessionId, ChunkSize chunkSize) {
         super(ActionEndpointMessageType.INIT_MESSAGE);
