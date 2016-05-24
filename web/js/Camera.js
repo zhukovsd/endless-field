@@ -5,29 +5,15 @@
 var Camera = function(fieldView) {
     this.fieldView = fieldView;
 
-    this.position = {
-        originChunkId: 1,
-        shift: {
-            x: 0, y: 0
-        },
-
-        // origin of chunk with id = this.originChunkId
-        chunkOrigin: null,
-
-        getChunkOrigin: function() {
-            if (this.chunkOrigin == null)
-                this.chunkOrigin = ChunkIdGenerator.chunkOrigin(
-                    fieldView.fieldManager.chunkSize, fieldView.fieldManager.chunkIdFactor, this.originChunkId
-                );
-
-            return this.chunkOrigin;
-        }
-    };
+    this.position = new CameraPosition(1, 0, 0);
 
     this.cellsScope = function() {
+        var view = this.fieldView;
+        var canvas = view.canvas;
+        
         return new Scope(
-            this.fieldView.canvas.clientWidth, this.fieldView.canvas.clientHeight, this.position,
-            this.fieldView.drawSettings.cellSize, this.fieldView.fieldManager.chunkSize, this.fieldView.fieldManager.chunkIdFactor
+            canvas.clientWidth, canvas.clientHeight, this.position, view.drawSettings.cellSize,
+            view.fieldManager.chunkSize, view.fieldManager.chunkIdFactor
         );
     };
 
@@ -37,8 +23,8 @@ var Camera = function(fieldView) {
 
         return {
             // since canvas calculates from the half of a pixel, add 0.5 to prevent anti-aliasing
-            y: (chunkOrigin.row - row) * cellSize.height - this.position.shift.y + 0.5,
-            x: (chunkOrigin.column - column) * cellSize.width - this.position.shift.x + 0.5,
+            y: (row - chunkOrigin.row) * cellSize.height - this.position.shift.y + 0.5,
+            x: (column - chunkOrigin.column) * cellSize.width - this.position.shift.x + 0.5,
             width: cellSize.width,
             height: cellSize.height
         };

@@ -13,10 +13,12 @@
 
     <script src="js/ChunkIdGenerator.js"></script>
     <script src="js/Camera.js"></script>
+    <script src="js/CameraPosition.js"></script>
     <script src="js/Scope.js"></script>
 
     <script src="js/FieldManager.js"></script>
     <script src="js/FieldView.js"></script>
+    <script src="js/EventListener.js"></script>
 
     <script src="js/SimpleField/SimpleFieldManager.js"></script>
     <title>Title</title>
@@ -24,9 +26,11 @@
 //        var fieldManager = new FieldManager();
         var fieldManager = new SimpleFieldManager();
         var fieldView = new FieldView(fieldManager, new DrawSettings(25, 25));
+        var eventListener = new EventListener(fieldView);
 
         window.onload = function() {
             fieldView.init('field-canvas-container', 'field-canvas');
+            eventListener.init('field-canvas');
 
             var canvas = document.getElementById('field-canvas');
 
@@ -77,9 +81,28 @@
         <div>camera scope = <span id="camera-scope"></span></div>
         <div>chunks scope = <span id="chunks-scope"></span></div>
         <input type="button" value="requestChunks()" onclick="fieldManager.requestChunks();">
-        <%--<input type="button" value="scope" onclick="alert(JSON.stringify(fieldView.cameraScope()));">--%>
         <input type="button" value="draw" onclick="fieldView.drawCellsByChunkIds([0, 1]);">
         <input type="text" name="chunk" id="chunk_id_text" value="0">
+
+        <input type="button" value="left" onclick="
+            var context = document.getElementById('field-canvas').getContext('2d');
+
+            // shift everything to the left:
+            var imageData = context.getImageData(1, 0, context.canvas.width-1, context.canvas.height);
+            context.putImageData(imageData, 0, 0);
+            // now clear the right-most pixels:
+            context.clearRect(context.canvas.width-1, 0, 1, context.canvas.height);
+        ">
+
+        <input type="button" value="right" onclick="
+            var context = document.getElementById('field-canvas').getContext('2d');
+
+            // shift everything to the right:
+            var imageData = context.getImageData(0, 0, context.canvas.width-1, context.canvas.height);
+            context.putImageData(imageData, 1, 0);
+            // now clear the right-most pixels:
+//            context.clearRect(context.canvas.width-1, 0, 1, context.canvas.height);
+        ">
     </div>
 
     <%--<input type="button" value="Button" onclick="fieldManager.foo({});">--%>
