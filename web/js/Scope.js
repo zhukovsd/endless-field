@@ -2,29 +2,31 @@
  * Created by ZhukovSD on 21.05.2016.
  */
 
-var Scope = function(width, height, cameraPosition, cellSize) {
+var Scope = function(width, height, cameraPosition, cellSize, chunkSize, chunkIdFactor) {
     // todo: min/max row/column constraints
+   
+    var chunkOrigin = ChunkIdGenerator.chunkOrigin(chunkSize, chunkIdFactor, cameraPosition.originChunkId);
 
-    var leftVisibleColumnIndex = Math.ceil(cameraPosition.x / cellSize.width) - 1;
+    var leftVisibleColumnIndex = chunkOrigin.column + Math.ceil(cameraPosition.shift.x / cellSize.width) - 1;
     // if mod > cell width, then this cell are not visible yet
     // if ((this.cameraPosition.x - 5) % 25 > 21) leftVisibleColumnIndex++;
-    if (cameraPosition.x % cellSize.width == 0) leftVisibleColumnIndex++;
+    if (cameraPosition.shift.x % cellSize.width == 0) leftVisibleColumnIndex++;
     if (leftVisibleColumnIndex < 0) leftVisibleColumnIndex = 0;
 
-    var topVisibleRowIndex = Math.ceil(cameraPosition.y / cellSize.height) - 1;
+    var topVisibleRowIndex = chunkOrigin.row + Math.ceil(cameraPosition.shift.y / cellSize.height) - 1;
     // // if mod > cell height, then this cell are not visible yet
     // if ((this.cameraPosition.y - 5) % 25 > 21) topVisibleRowIndex++;
-    if (cameraPosition.y % cellSize.height == 0) topVisibleRowIndex++;
+    if (cameraPosition.shift.y % cellSize.height == 0) topVisibleRowIndex++;
     if (topVisibleRowIndex < 0) topVisibleRowIndex = 0;
 
     var leftTopCellOriginPoint = {
-        x: leftVisibleColumnIndex * cellSize.width - cameraPosition.x,
-        y: topVisibleRowIndex * cellSize.height - cameraPosition.y
+        x: (leftVisibleColumnIndex - chunkOrigin.column) * cellSize.width - cameraPosition.shift.x,
+        y: (topVisibleRowIndex - chunkOrigin.row) * cellSize.height - cameraPosition.shift.y
     };
 
     var visibleColumnCount = Math.ceil((width - leftTopCellOriginPoint.x) / cellSize.width);
     // ?
-    // if ((width - leftTopCellOriginPoint.x) % cellSize.width == 0) visibleColumnCount++; 
+    // if ((width - leftTopCellOriginPoint.x) % cellSize.width == 0) visibleColumnCount++;
 
     var visibleRowCount = Math.ceil((height - leftTopCellOriginPoint.y) / cellSize.height);
     // ?
@@ -33,13 +35,6 @@ var Scope = function(width, height, cameraPosition, cellSize) {
     this.origin = {row: topVisibleRowIndex, column: leftVisibleColumnIndex};
     this.rowCount = visibleRowCount;
     this.columnCount = visibleColumnCount;
-
-    // //console.log(leftVisibleColumnIndex + ", " + topVisibleRowIndex + ", " + visibleColumnsCount);
-    //
-    // return {
-    //     originRow: topVisibleRowIndex, originColumn: leftVisibleColumnIndex,
-    //     rowCount: visibleRowsCount, columnCount: visibleColumnsCount
-    // };
 };
 
 Scope.prototype = {

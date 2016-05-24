@@ -64,7 +64,7 @@ var FieldManager = function () {
         var chunkId = document.getElementById("chunk_id_text").value;
         alert("chunkId = "+ chunkId);
 
-        var requestData = {wsSessionId: this.wsSessionId, scope: [chunkId]};
+        var requestData = {wsSessionId: this.wsSessionId, scope: [0, 1]};
 
         xhr.open(
             "GET", "/online-minesweeper/field?data="+

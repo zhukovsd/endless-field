@@ -16,6 +16,8 @@ var FieldView = function(fieldManager, drawSettings) {
 
     // this.paintAreaWidth
 
+    this.camera = new Camera(this);
+    
     this.init = function(containerId, canvasId) {
         this.canvasContainer = document.getElementById(containerId);
         this.canvas = document.getElementById(canvasId);
@@ -31,19 +33,6 @@ var FieldView = function(fieldManager, drawSettings) {
         // this.canvasContext.beginPath();
         // this.canvasContext.rect(5, 5, 25, 25);
         // this.canvasContext.stroke();
-    };
-
-    this.cameraScope = function() {
-        return new Scope(this.canvas.clientWidth, this.canvas.clientHeight, {x: 0, y: 0}, this.drawSettings.cellSize);
-    };
-
-    this.cellRect = function(row, column) {
-        return {
-            x: column * drawSettings.cellSize.width,
-            y: row * drawSettings.cellSize.height,
-            width: drawSettings.cellSize.width,
-            height: drawSettings.cellSize.height
-        };
     };
 
     //
@@ -65,7 +54,7 @@ var FieldView = function(fieldManager, drawSettings) {
             for (var row = 0; row < fieldManager.chunkSize.rowCount; row++) {
                 for (var column = 0; column < fieldManager.chunkSize.columnCount; column++) {
                     view.drawCell(
-                        view.cellRect(origin.row + row, origin.column + column),
+                        view.camera.cellRect(origin.row + row, origin.column + column),
                         fieldManager.getCell(origin.row + row, origin.column + column)
                     );
                 }
@@ -79,7 +68,7 @@ FieldView.prototype = {
         var c = this.canvasContext;
 
         c.beginPath();
-        c.rect(rect.x + 0.5, rect.y + 0.5, rect.width, rect.height);
+        c.rect(rect.x, rect.y, rect.width, rect.height);
         c.stroke();
         c.fillText(cell.text, rect.x + 2, rect.y + 9);
     }

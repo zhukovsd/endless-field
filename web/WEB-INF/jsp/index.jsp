@@ -12,6 +12,7 @@
     <link href="style.css" rel="stylesheet" type="text/css" />
 
     <script src="js/ChunkIdGenerator.js"></script>
+    <script src="js/Camera.js"></script>
     <script src="js/Scope.js"></script>
 
     <script src="js/FieldManager.js"></script>
@@ -34,12 +35,13 @@
                         canvas.width = canvas.clientWidth;
                         canvas.height = canvas.clientHeight;
 
-                        var scope = fieldView.cameraScope();
+                        var scope = fieldView.camera.cellsScope();
                         document.getElementById('canvas-size').textContent = canvas.width + ", " + canvas.height;
+                        document.getElementById('camera-position').textContent = JSON.stringify(fieldView.camera.position);
                         document.getElementById('camera-scope').textContent = JSON.stringify(scope);
                         document.getElementById('chunks-scope').textContent = JSON.stringify(scope.chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
 
-                        fieldView.drawCellsByChunkIds([0]);
+                        fieldView.drawCellsByChunkIds([0, 1]);
                     },
                     false
             );
@@ -71,11 +73,12 @@
     <div style="position: absolute; left: 20px; top: 20px; width: 600px; height: 200px; background-color: rgba(240, 255, 255, 0.8);">
         <h3>Hi! Your session Id = <%= request.getSession().getId() %></h3>
         <div>canvas size = <span id="canvas-size"></span></div>
+        <div>camera position = <span id="camera-position"></span></div>
         <div>camera scope = <span id="camera-scope"></span></div>
         <div>chunks scope = <span id="chunks-scope"></span></div>
         <input type="button" value="requestChunks()" onclick="fieldManager.requestChunks();">
         <%--<input type="button" value="scope" onclick="alert(JSON.stringify(fieldView.cameraScope()));">--%>
-        <input type="button" value="draw" onclick="fieldView.drawCellsByChunkIds([0]);">
+        <input type="button" value="draw" onclick="fieldView.drawCellsByChunkIds([0, 1]);">
         <input type="text" name="chunk" id="chunk_id_text" value="0">
     </div>
 
