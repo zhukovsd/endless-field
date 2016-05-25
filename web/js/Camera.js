@@ -5,7 +5,7 @@
 var Camera = function(fieldView) {
     this.fieldView = fieldView;
 
-    this.position = new CameraPosition(1, 0, 0);
+    this.position = new CameraPosition(1, 5, 5);
 
     this.cellsScope = function() {
         var view = this.fieldView;

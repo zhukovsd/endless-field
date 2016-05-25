@@ -1,5 +1,6 @@
 body {
     text-align: center;
+    margin: 0;
 }
 #field-canvas-container {
     background-color: #fff2a1;

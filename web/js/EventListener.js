@@ -44,15 +44,22 @@ var EventListener = function(fieldView) {
             var mousePos = getMousePos(canvas, event);
             var mouseOffset = {x: mousePos.x - mouseDownPos.x, y: mousePos.y - mouseDownPos.y};
 
-            canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-            canvasContext.putImageData(imageData, mouseOffset.x, mouseOffset.y);
-
             var shiftedCameraPosition = mouseDownCameraPosition.shiftBy(
                 mouseOffset, fieldManager.chunkSize, fieldManager.chunkIdFactor,
                 fieldView.drawSettings.cellSize
             );
 
-            console.log(JSON.stringify(mouseOffset) + ", " + JSON.stringify(shiftedCameraPosition));
+            var offset = mouseDownCameraPosition.calculateMouseOffset(
+                shiftedCameraPosition, fieldManager.chunkSize, fieldManager.chunkIdFactor, fieldView.drawSettings.cellSize
+            );
+
+            canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+            canvasContext.putImageData(imageData, mouseOffset.x, mouseOffset.y);
+
+            console.log(
+                JSON.stringify(mouseOffset) + ", " + JSON.stringify(shiftedCameraPosition) + ", " +
+                JSON.stringify(offset)
+            );
         }
     };
     
