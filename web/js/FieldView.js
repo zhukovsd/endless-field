@@ -37,6 +37,12 @@ var FieldView = function(fieldManager, drawSettings) {
 
     //
 
+    this.setCameraPosition = function(position) {
+        this.camera.position = position;
+    };
+
+    //
+
     this.drawCellsByChunkIds = function(chunkIds) {
         var fieldManager = this.fieldManager;
         var view = this;
@@ -61,15 +67,32 @@ var FieldView = function(fieldManager, drawSettings) {
             }
         });
     };
+
+    this.drawCellsByPositions = function(positions) {
+        var fieldManager = this.fieldManager;
+
+        for (var key in positions) {
+            if (positions.hasOwnProperty(key)) {
+                var position = positions[key];
+
+                this.drawCell(
+                    this.camera.cellRect(position.row, position.column),
+                    fieldManager.getCell(position.row, position.column)
+                );
+            }
+        }
+    }
 };
 
 FieldView.prototype = {
     drawCell: function(rect, cell) {
-        var c = this.canvasContext;
+        if (cell != null) {
+            var c = this.canvasContext;
 
-        c.beginPath();
-        c.rect(rect.x, rect.y, rect.width, rect.height);
-        c.stroke();
-        c.fillText(cell.text, rect.x + 2, rect.y + 9);
+            c.beginPath();
+            c.rect(rect.x, rect.y, rect.width, rect.height);
+            c.stroke();
+            c.fillText(cell.text, rect.x + 2, rect.y + 9);
+        }
     }
 };

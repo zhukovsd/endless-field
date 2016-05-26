@@ -11,6 +11,7 @@ var EventListener = function(fieldView) {
     var isDragging = false;
     var mouseDownPos = null;
     var mouseDownCameraPosition = null;
+    var mouseDownCameraScope = null;
     var imageData = null;
 
     this.init = function(canvasId) {
@@ -36,6 +37,7 @@ var EventListener = function(fieldView) {
         isDragging = true;
         mouseDownPos = getMousePos(canvas, event);
         mouseDownCameraPosition = fieldView.camera.position.clone();
+        mouseDownCameraScope = fieldView.camera.cellsScope();
         imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
     };
 
@@ -44,22 +46,31 @@ var EventListener = function(fieldView) {
             var mousePos = getMousePos(canvas, event);
             var mouseOffset = {x: mousePos.x - mouseDownPos.x, y: mousePos.y - mouseDownPos.y};
 
+            // shift camera position considering field boundaries (camera can't be shifted to the left from most left chunk, for example)
             var shiftedCameraPosition = mouseDownCameraPosition.shiftBy(
                 mouseOffset, fieldManager.chunkSize, fieldManager.chunkIdFactor,
                 fieldView.drawSettings.cellSize
             );
 
+            // final offset may differ from mouseOffset, because user may rich field boundary while scrolling the field
             var offset = mouseDownCameraPosition.calculateMouseOffset(
                 shiftedCameraPosition, fieldManager.chunkSize, fieldManager.chunkIdFactor, fieldView.drawSettings.cellSize
             );
 
             canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-            canvasContext.putImageData(imageData, mouseOffset.x, mouseOffset.y);
+            canvasContext.putImageData(imageData, offset.x, offset.y);
 
-            console.log(
-                JSON.stringify(mouseOffset) + ", " + JSON.stringify(shiftedCameraPosition) + ", " +
-                JSON.stringify(offset)
-            );
+            fieldView.setCameraPosition(shiftedCameraPosition);
+
+            var newScope = fieldView.camera.cellsScope();
+            if (!newScope.equals(mouseDownCameraScope)) {
+                fieldView.drawCellsByPositions(newScope.difference(mouseDownCameraScope));
+            }
+
+            // console.log(
+            //     JSON.stringify(mouseOffset) + ", " + JSON.stringify(shiftedCameraPosition) + ", " +
+            //     JSON.stringify(offset)
+            // );
         }
     };
     

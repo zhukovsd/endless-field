@@ -2,6 +2,17 @@
  * Created by ZhukovSD on 21.05.2016.
  */
 
+var CellPosition = function(row, column) {
+    this.row = row;
+    this.column = column;
+};
+
+CellPosition.prototype = {
+    toString: function() {
+        return this.row + "," + this.column;
+    }
+};
+
 var Scope = function(width, height, cameraPosition, cellSize, chunkSize, chunkIdFactor) {
     // todo: min/max row/column constraints
    
@@ -61,5 +72,42 @@ Scope.prototype = {
         }
         
         return result;
+    },
+
+    equals: function(scope) {
+        var result = true;
+
+        if (this.origin.row != scope.origin.row) return false;
+        if (this.origin.column != scope.origin.column) return false;
+        if (this.rowCount != scope.rowCount) return false;
+        if (this.columnCount != scope.columnCount) return false;        
+        
+        return result;
+    },
+
+    toSet: function() {
+        var result = {};
+
+        for (var row = 0; row < this.rowCount; row++) {
+            for (var column = 0; column < this.columnCount; column++) {
+                // var key = (this.origin.row + row) + "," + (this.origin.column + column);
+
+                var position = new CellPosition(this.origin.row + row, this.origin.column + column);
+                result[position.toString()] = position;
+            }
+        }
+
+        return result;
+    },
+
+    difference: function(scope) {
+        var scope1 = this.toSet();
+        var scope2 = scope.toSet();
+
+        for (var key in scope2)
+            //noinspection JSUnfilteredForInLoop
+            delete scope1[key];
+
+        return scope1;
     }
 };
