@@ -11,12 +11,12 @@ import java.io.IOException;
 /**
  * Created by ZhukovSD on 07.04.2016.
  */
-@WebServlet(urlPatterns = {""})
+@WebServlet(urlPatterns = {"", "/game/*"})
 // TODO: 11.04.2016 session cookie is not working w/o trailing slash
 public class IndexEndpoint extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        RequestDispatcher rd = request.getRequestDispatcher("WEB-INF/jsp/index.jsp");
+        RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/jsp/index.jsp");
         rd.forward(request, response);
     }
 }

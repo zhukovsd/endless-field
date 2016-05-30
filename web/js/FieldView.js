@@ -13,9 +13,7 @@ var FieldView = function(fieldManager, drawSettings) {
     this.canvasContainer = null;
     this.canvas = null;
     this.canvasContext = null;
-
-    // this.paintAreaWidth
-
+    
     this.camera = new Camera(this);
     
     this.init = function(containerId, canvasId) {
@@ -37,15 +35,10 @@ var FieldView = function(fieldManager, drawSettings) {
 
     //
 
-    this.setCameraPosition = function(position) {
-        this.camera.position = position;
-    };
-
-    //
-
     this.drawCellsByChunkIds = function(chunkIds) {
         var fieldManager = this.fieldManager;
         var view = this;
+        var scope = this.camera.cellsScope();
 
         //this.canvasContext.fillstyle = "black";
         this.canvasContext.strokeStyle = "black";
@@ -53,19 +46,26 @@ var FieldView = function(fieldManager, drawSettings) {
         this.canvasContext.lineWidth = 1;
 
         // fieldManager.chunkSize = {rowCount: 1, columnCount: 2};
-        
+
+        var a = 0;
+
         chunkIds.forEach(function(chunkId) {
             var origin = ChunkIdGenerator.chunkOrigin(fieldManager.chunkSize, fieldManager.chunkIdFactor, chunkId);
 
-            for (var row = 0; row < fieldManager.chunkSize.rowCount; row++) {
-                for (var column = 0; column < fieldManager.chunkSize.columnCount; column++) {
-                    view.drawCell(
-                        view.camera.cellRect(origin.row + row, origin.column + column),
-                        fieldManager.getCell(origin.row + row, origin.column + column)
-                    );
+            for (var r = 0; r < fieldManager.chunkSize.rowCount; r++) {
+                for (var c = 0; c < fieldManager.chunkSize.columnCount; c++) {
+                    var row = origin.row + r;
+                    var column = origin.column + c;
+                    
+                    if (scope.containsCell(row, column)) {
+                        view.drawCell(view.camera.cellRect(row, column), fieldManager.getCell(row, column));
+                        a++;
+                    }
                 }
             }
         });
+
+        console.log(a + " cells drawn");
     };
 
     this.drawCellsByPositions = function(positions) {
@@ -81,7 +81,14 @@ var FieldView = function(fieldManager, drawSettings) {
                 );
             }
         }
-    }
+    };
+
+    //
+
+    var view = this;
+    this.fieldManager.onChunksReceived = function(chunkIds) {
+        view.drawCellsByChunkIds(chunkIds);
+    };
 };
 
 FieldView.prototype = {

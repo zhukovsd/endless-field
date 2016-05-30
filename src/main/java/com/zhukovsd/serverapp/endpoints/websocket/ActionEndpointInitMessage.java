@@ -9,11 +9,13 @@ import com.zhukovsd.endlessfield.field.ChunkSize;
 public class ActionEndpointInitMessage extends ActionEndpointMessage {
     final String wsSessionId;
     final ChunkSize chunkSize;
+    final Integer initialChunkId;
     final int chunkIdFactor = ChunkIdGenerator.idFactor;
 
-    public ActionEndpointInitMessage(String wsSessionId, ChunkSize chunkSize) {
+    public ActionEndpointInitMessage(String wsSessionId, ChunkSize chunkSize, Integer initialChunkId) {
         super(ActionEndpointMessageType.INIT_MESSAGE);
         this.wsSessionId = wsSessionId;
         this.chunkSize = chunkSize;
+        this.initialChunkId = initialChunkId;
     }
 }

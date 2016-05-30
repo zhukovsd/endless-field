@@ -74,6 +74,16 @@ Scope.prototype = {
         return result;
     },
 
+    containsCell: function(row, column) {
+        var result = true;
+
+        if ((row < this.origin.row) || (column < this.origin.column)) result = false;
+        if (row >= this.origin.row + this.rowCount) result = false;
+        if (column >= this.origin.column + this.columnCount) result = false;
+
+        return result;
+    },
+
     equals: function(scope) {
         var result = true;
 

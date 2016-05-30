@@ -5,8 +5,18 @@
 var Camera = function(fieldView) {
     this.fieldView = fieldView;
 
-    this.position = new CameraPosition(1, 5, 5);
+    this.position = new CameraPosition(1, 0, 0);
 
+    this.onPositionChanged = null;
+    
+    this.setPosition = function(position) {
+        this.position = position;
+        
+        if (this.onPositionChanged != null) {
+            this.onPositionChanged(this.position);
+        }
+    };
+    
     this.cellsScope = function() {
         var view = this.fieldView;
         var canvas = view.canvas;

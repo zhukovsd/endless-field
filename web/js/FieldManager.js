@@ -17,14 +17,24 @@ ActionMessageType = {
 var FieldManager = function () {
     this.state = FieldManagerState.UNINITIALIZED;
     this.onStateChange = null;
+    this.onChunksReceived = null;
 
     this.cells = {};
 
+    this.setState = function(state) {
+        this.state = state;
+
+        if (this.onStateChange != null) {
+            this.onStateChange(this.state);
+        }
+    };
+    
     //
 
     this.wsSessionId = "";
     this.chunkSize = {};
     this.chunkIdFactor = 0;
+    this.initialChunkId = 0;
     
     var webSocket = new WebSocket("ws://" + location.host + "/online-minesweeper/action");
     webSocket.manager = this;
@@ -39,6 +49,7 @@ var FieldManager = function () {
             this.manager.wsSessionId = msg.wsSessionId;
             this.manager.chunkSize = msg.chunkSize;
             this.manager.chunkIdFactor = msg.chunkIdFactor;
+            this.manager.initialChunkId = msg.initialChunkId;
             
             this.manager.setState(FieldManagerState.CONNECTED);
         } else {
@@ -51,20 +62,17 @@ var FieldManager = function () {
     //
 
     this.requestChunks = function(chunkIds) {
-        console.log('requesting cells...');
+        console.log('requesting chunks ' + chunkIds);
 
         // todo: request chunks only is state is connected
-
-        // var manager = this;
-
         var xhr = new XMLHttpRequest();
         xhr.manager = this;
         xhr.onreadystatechange = this.xhronreadystatechange;
 
-        var chunkId = document.getElementById("chunk_id_text").value;
-        alert("chunkId = "+ chunkId);
+        //var chunkId = document.getElementById("chunk_id_text").value;
+        //alert("chunkId = "+ chunkId);
 
-        var requestData = {wsSessionId: this.wsSessionId, scope: [0, 1]};
+        var requestData = {wsSessionId: this.wsSessionId, scope: chunkIds};
 
         xhr.open(
             "GET", "/online-minesweeper/field?data="+
@@ -99,13 +107,21 @@ var FieldManager = function () {
             var chunks = JSON.parse(response).chunks;
             var manager = this;
 
+            var chunkIds = [];
+
             chunks.forEach(function(chunk) {
+                chunkIds.push(ChunkIdGenerator.generateId(manager.chunkSize, manager.chunkIdFactor, chunk.origin));
+
                 manager.processResponseCells(chunk.origin, chunk.cells);
             });
 
-            alert("cells count = " + Object.keys(this.cells).length);
+            console.log("chunk received, ids = " + chunkIds + ", current cells count = " + Object.keys(this.cells).length);
+            // alert("cells count = " + Object.keys(this.cells).length);
 
             //todo draw only new cells
+            if (this.onChunksReceived != null) {
+                this.onChunksReceived(chunkIds);
+            }
 
             // alert("0, 0 = " + JSON.stringify(this.cells["0,0"]));
             // alert("0, 1 = " + JSON.stringify(this.cells["0,1"]));
@@ -121,7 +137,7 @@ var FieldManager = function () {
     };
     
     this.getCell = function(row, column) {
-        return this.cells[row+","+column];
+        return this.cells[row + "," + column];
     };
 };
 

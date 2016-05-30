@@ -60,8 +60,9 @@ var EventListener = function(fieldView) {
             canvasContext.clearRect(0, 0, canvas.width, canvas.height);
             canvasContext.putImageData(imageData, offset.x, offset.y);
 
-            fieldView.setCameraPosition(shiftedCameraPosition);
+            fieldView.camera.setPosition(shiftedCameraPosition);
 
+            // draw cells, which was out of scope on mouse down (todo also redraw cells, which was only partly visible)
             var newScope = fieldView.camera.cellsScope();
             if (!newScope.equals(mouseDownCameraScope)) {
                 fieldView.drawCellsByPositions(newScope.difference(mouseDownCameraScope));
@@ -79,7 +80,21 @@ var EventListener = function(fieldView) {
         
         if (isDragging) {
             isDragging = false;
-            //
+
+            var mouseDownChunkIds = mouseDownCameraScope.chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor);
+            var mouseUpChunkIds = fieldView.camera.cellsScope().chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor);
+
+            // plain array comparison, array items have to be ordered in the same way
+            var chunksScopeChanged = !(
+                (mouseDownChunkIds.length==mouseUpChunkIds.length)
+                    &&
+                (mouseDownChunkIds.every(function(v,i) { return v === mouseUpChunkIds[i]}))
+            );
+
+            if (chunksScopeChanged) {
+                // todo request only difference
+                fieldManager.requestChunks(mouseUpChunkIds);
+            }
         }
     };
 };

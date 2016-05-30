@@ -9,24 +9,25 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <link href="style.css" rel="stylesheet" type="text/css" />
+    <link href="${pageContext.request.contextPath}/style.css" rel="stylesheet" type="text/css" />
 
-    <script src="js/ChunkIdGenerator.js"></script>
-    <script src="js/Camera.js"></script>
-    <script src="js/CameraPosition.js"></script>
-    <script src="js/Scope.js"></script>
+    <script src="${pageContext.request.contextPath}/js/FieldManager.js"></script>
+    <script src="${pageContext.request.contextPath}/js/FieldView.js"></script>
+    <script src="${pageContext.request.contextPath}/js/EventListener.js"></script>
 
-    <script src="js/FieldManager.js"></script>
-    <script src="js/FieldView.js"></script>
-    <script src="js/EventListener.js"></script>
+    <script src="${pageContext.request.contextPath}/js/ChunkIdGenerator.js"></script>
+    <script src="${pageContext.request.contextPath}/js/Camera.js"></script>
+    <script src="${pageContext.request.contextPath}/js/CameraPosition.js"></script>
+    <script src="${pageContext.request.contextPath}/js/Scope.js"></script>
+    <script src="${pageContext.request.contextPath}/js/URIManager.js"></script>
 
-    <script src="js/SimpleField/SimpleFieldManager.js"></script>
+    <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldManager.js"></script>
     <title>Title</title>
     <script>
-//        var fieldManager = new FieldManager();
         var fieldManager = new SimpleFieldManager();
         var fieldView = new FieldView(fieldManager, new DrawSettings(25, 25));
         var eventListener = new EventListener(fieldView);
+        var uriManager = new URIManager('/online-minesweeper/game/');
 
         window.onload = function() {
             fieldView.init('field-canvas-container', 'field-canvas');
@@ -51,17 +52,42 @@
             );
         };
 
-//        fieldManager.onRequestResult(null);
+        fieldManager.onStateChange = function() {
+            switch (fieldManager.state) {
+                case (FieldManagerState.CONNECTED): {
+                    var storedPosition = JSON.parse(localStorage["cameraPosition"]);
+                    var uriChunkId = uriManager.getChunkId();
 
-//        var webSocket = new WebSocket("ws://" + location.host + "/online-minesweeper/action");
-//
-//        webSocket.onmessage = function(message) {
-//            document.getElementById("web_socket_ids").innerHTML = message.data;
-//        };
+                    var cameraPosition;
+                    if (uriChunkId == null) {
+                        // if no chunk id specified in the URI (/path/game/<chunkId>)
+                        cameraPosition = new CameraPosition(fieldManager.initialChunkId, 0, 0);
+                    } else {
+                        // if stored chunk id differs from uri chunk id, set camera to left-top corner of uri id
+                        if (uriChunkId != storedPosition.originChunkId) {
+                            cameraPosition = new CameraPosition(uriChunkId, 0, 0);
+                        } else {
+                            cameraPosition = new CameraPosition(
+                                    storedPosition.originChunkId, storedPosition.shift.x, storedPosition.shift.y
+                            );
+                        }
+                    }
 
-//        webSocket.onopen = function () {
-//            console.log("id = " + webSocket.id);
-//        };
+                    fieldView.camera.setPosition(cameraPosition);
+                    // todo expand scope
+                    fieldManager.requestChunks(fieldView.camera.cellsScope().chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
+                }
+
+//                case (FieldManagerState.LOADED): {
+//                     fieldView.paint();
+//                }
+            }
+        };
+
+        fieldView.camera.onPositionChanged = function(position) {
+            uriManager.setChunkId(position.originChunkId);
+            localStorage["cameraPosition"] = JSON.stringify(position);
+        };
 
         // TODO websocket close/error events
     </script>
