@@ -46,6 +46,9 @@
                         document.getElementById('camera-scope').textContent = JSON.stringify(scope);
                         document.getElementById('chunks-scope').textContent = JSON.stringify(scope.chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
 
+//                        scope.removePartiallyVisibleCells();
+//                        console.log(JSON.stringify(scope));
+
                         fieldView.drawCellsByChunkIds([0, 1]);
                     },
                     false

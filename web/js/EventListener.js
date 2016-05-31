@@ -38,6 +38,13 @@ var EventListener = function(fieldView) {
         mouseDownPos = getMousePos(canvas, event);
         mouseDownCameraPosition = fieldView.camera.position.clone();
         mouseDownCameraScope = fieldView.camera.cellsScope();
+        // this variable used to determine how scope is changing during dragging.
+        // (mouse move scope - this scope) = newly appeared cells which has to be drawn. since cells, which was only
+        // partially visible in the beginning of the dragging also has to be redrawn, exclude them from current scope
+        // to force their redraw on every dragging mouse move event
+        mouseDownCameraScope.removePartiallyVisibleCells();
+        
+        // reducedMouseDownCameraScope = mouseDownCameraScope.reduce(1);
         imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
     };
 

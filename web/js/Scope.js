@@ -46,6 +46,26 @@ var Scope = function(width, height, cameraPosition, cellSize, chunkSize, chunkId
     this.origin = {row: topVisibleRowIndex, column: leftVisibleColumnIndex};
     this.rowCount = visibleRowCount;
     this.columnCount = visibleColumnCount;
+
+    this.removePartiallyVisibleCells = function() {
+        if (cameraPosition.shift.y % cellSize.height != 0) {
+            this.origin.row++;
+            this.rowCount--;
+        }
+
+        if (height - cameraPosition.shift.y % cellSize.height !=0) {
+            this.rowCount--;
+        }
+
+        if (cameraPosition.shift.x % cellSize.width != 0) {
+            this.origin.column++;
+            this.columnCount--;
+        }
+
+        if (width - cameraPosition.shift.x % cellSize.width !=0) {
+            this.columnCount--;
+        }
+    }
 };
 
 Scope.prototype = {
@@ -95,6 +115,21 @@ Scope.prototype = {
         return result;
     },
 
+    // reduce: function(amount) {
+    //     // todo exit if amount < 0
+    //
+    //     this.origin.row += amount;
+    //     this.origin.column += amount;
+    //
+    //     this.rowCount -= 2 * amount;
+    //     // this.rowCount = Math.max(0, this.rowCount);
+    //
+    //     this.columnCount -= 2 * amount;
+    //     // this.columnCount = Math.max(0, this.columnCount);
+    //
+    //     return this;
+    // },
+
     toSet: function() {
         var result = {};
 
@@ -117,7 +152,7 @@ Scope.prototype = {
         for (var key in scope2)
             //noinspection JSUnfilteredForInLoop
             delete scope1[key];
-
+        
         return scope1;
     }
 };

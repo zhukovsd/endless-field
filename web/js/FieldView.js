@@ -93,9 +93,10 @@ var FieldView = function(fieldManager, drawSettings) {
 
 FieldView.prototype = {
     drawCell: function(rect, cell) {
+        var c = this.canvasContext;
+        c.clearRect(rect.x, rect.y, rect.width, rect.height);
+        
         if (cell != null) {
-            var c = this.canvasContext;
-
             c.beginPath();
             c.rect(rect.x, rect.y, rect.width, rect.height);
             c.stroke();
