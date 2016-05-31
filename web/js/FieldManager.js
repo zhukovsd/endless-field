@@ -14,7 +14,7 @@ ActionMessageType = {
     ACTION_MESSAGE: 1
 };
 
-var FieldManager = function () {
+var FieldManager = function (applicationContextPath) {
     this.state = FieldManagerState.UNINITIALIZED;
     this.onStateChange = null;
     this.onChunksReceived = null;
@@ -36,7 +36,7 @@ var FieldManager = function () {
     this.chunkIdFactor = 0;
     this.initialChunkId = 0;
     
-    var webSocket = new WebSocket("ws://" + location.host + "/online-minesweeper/action");
+    var webSocket = new WebSocket("ws://" + location.host + applicationContextPath + "/action");
     webSocket.manager = this;
 
     webSocket.onmessage = function(message) {
@@ -75,7 +75,7 @@ var FieldManager = function () {
         var requestData = {wsSessionId: this.wsSessionId, scope: chunkIds};
 
         xhr.open(
-            "GET", "/online-minesweeper/field?data="+
+            "GET", applicationContextPath + "/field?data="+
             encodeURIComponent(JSON.stringify(requestData)), true
         );
         xhr.send(null);

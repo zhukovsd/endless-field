@@ -24,10 +24,12 @@
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldManager.js"></script>
     <title>Title</title>
     <script>
-        var fieldManager = new SimpleFieldManager();
+        var contextPath = "${pageContext.request.contextPath}";
+
+        var fieldManager = new SimpleFieldManager(contextPath);
         var fieldView = new FieldView(fieldManager, new DrawSettings(25, 25));
         var eventListener = new EventListener(fieldView);
-        var uriManager = new URIManager('/online-minesweeper/game/');
+        var uriManager = new URIManager(contextPath + '/game/');
 
         window.onload = function() {
             fieldView.init('field-canvas-container', 'field-canvas');

@@ -84,22 +84,22 @@ public class StripedEntryLockingConcurrentHashMap<K, V> implements EntryLockingC
         // TODO: 25.03.2016 provide proper exception type
         if (lockSet.size() > 0) throw new RuntimeException("striped set has to be empty before locking!");
 
-        boolean rslt = true;
+        boolean result = true;
         for (K key : keys) {
-            rslt = (provideAndLock(key, instaniator) != null);
+            result = (provideAndLock(key, instaniator) != null);
 
             // add to set only on successful lock
-            if (rslt)
+            if (result)
                 lockSet.add(key);
-            if (!rslt)
+            if (!result)
                 break;
         }
 
         // if we unable to lock all requested entries, unlock already locked ones
-        if (!rslt)
+        if (!result)
             unlock();
 
-        return rslt;
+        return result;
     }
 
     @Override
@@ -116,13 +116,11 @@ public class StripedEntryLockingConcurrentHashMap<K, V> implements EntryLockingC
 
         for (K key : lockSet) {
             // unlock chunk to provide access to another readers and to allow this chunk to be removed.
-            // chunk guaranteed to exists, because removeChunk() methods locks on removing chunk striped object
+            // chunk guaranteed to exist
             if (map.containsKey(key)) {
                 // TODO: 19.04.2016 describe why striped might be unlocked (interrupted exception during provide and striped)
                 striped.get(key).unlock();
                 Lockable.unlockCount.incrementAndGet();
-//                else
-//                    System.out.println(6543);
             } else
                 System.out.println("123456789");
         }
