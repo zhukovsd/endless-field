@@ -6,6 +6,8 @@ import com.zhukovsd.endlessfield.fielddatasource.UpdateCellTask;
 import com.zhukovsd.enrtylockingconcurrenthashmap.Entry;
 import com.zhukovsd.enrtylockingconcurrenthashmap.StripedEntryLockingConcurrentHashMap;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -31,20 +33,24 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     public ExecutorService cellUpdateExec = new ThreadPoolExecutor(10, 10,
             0L,TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(100), new ThreadPoolExecutor.CallerRunsPolicy());//Executors.newFixedThreadPool(10);
 
-//    private final KeyLockManager lockManager = KeyLockManagers.newLock();
-
-//    private ThreadLocal<TreeSet<Integer>> lockedChunkIds = new ThreadLocal<TreeSet<Integer>>() {
-//        @Override
-//        protected TreeSet<Integer> initialValue() {
-//            return new TreeSet<>(); // TODO: 25.03.2016 provide explicit comparator
-//        }
-//    };
-
     public EndlessField(int stripes, ChunkSize chunkSize, EndlessFieldDataSource<T> dataSource, EndlessFieldCellFactory<T> cellFactory) {
         chunkMap = new StripedEntryLockingConcurrentHashMap<>(stripes);
         this.chunkSize = chunkSize;
         this.dataSource = dataSource;
         this.cellFactory = cellFactory;
+    }
+
+    public static EndlessField instantiate(
+            String className, int stripes, ChunkSize chunkSize, EndlessFieldDataSource dataSource,
+            EndlessFieldCellFactory cellFactory
+    ) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Class<?> fieldType = Class.forName(className);
+
+        Constructor<?> constructor = fieldType.getConstructor(
+                int.class, ChunkSize.class, EndlessFieldDataSource.class, EndlessFieldCellFactory.class
+        );
+
+        return (EndlessField) constructor.newInstance(stripes, chunkSize, dataSource, cellFactory);
     }
 
 //    public EndlessFieldChunk<T> provideAndLockChunk(Integer chunkId) {

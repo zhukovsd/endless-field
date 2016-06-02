@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by ZhukovSD on 13.04.2016.
  */
+// map<websocket session id, action websocket endpoint instance>
 public class WebSocketSessionsConcurrentHashMap extends ConcurrentHashMap<String, ActionEndpoint> {
 
 }

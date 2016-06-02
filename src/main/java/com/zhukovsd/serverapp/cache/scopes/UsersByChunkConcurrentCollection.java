@@ -7,6 +7,7 @@ import java.util.Set;
 /**
  * Created by ZhukovSD on 18.04.2016.
  */
+// map<chunk id, set of user id>
 public class UsersByChunkConcurrentCollection extends StripedEntryLockingConcurrentHashMap<
         Integer, LockableConcurrentHashSetAdapter<String>>
 {

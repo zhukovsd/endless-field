@@ -1,14 +1,16 @@
 package com.zhukovsd.serverapp;
 
 import com.zhukovsd.endlessfield.field.ChunkSize;
+import com.zhukovsd.endlessfield.field.EndlessField;
+import com.zhukovsd.endlessfield.field.EndlessFieldCellFactory;
+import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.serverapp.cache.scopes.UsersByChunkConcurrentCollection;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
-import com.zhukovsd.simplefield.SimpleField;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
-import com.zhukovsd.simplefield.SimpleFieldDataSource;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Created by ZhukovSD on 12.04.2016.
@@ -16,13 +18,36 @@ import javax.servlet.ServletContextListener;
 // TODO: 12.04.2016 move to more appropriate package
 public class ContextListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent event) {
-        event.getServletContext().setAttribute("sessions_cache", new SessionsCacheConcurrentHashMap());
-        // TODO: 26.04.2016 get stripes value from config
-        event.getServletContext().setAttribute("scopes_cache", new UsersByChunkConcurrentCollection(10000));
-        // TODO: 26.04.2016  get field class and params from config
-        event.getServletContext().setAttribute(
-                "field", new SimpleField(16, new ChunkSize(50, 50), new SimpleFieldDataSource(), new SimpleFieldCellFactory())
+        ServletContext context = event.getServletContext();
+
+        context.setAttribute("sessions_cache", new SessionsCacheConcurrentHashMap());
+
+        context.setAttribute(
+                "scopes_cache",
+                new UsersByChunkConcurrentCollection(
+                        Integer.parseInt(context.getInitParameter("ChunkMapStripesCount"))
+                )
         );
+
+        try {
+            String fieldClassName = context.getInitParameter("EndlessFieldClassName");
+
+            int stripes = Integer.parseInt(context.getInitParameter("EndlessFieldStripesCount"));
+            ChunkSize chunkSize = new ChunkSize(
+                    Integer.parseInt(context.getInitParameter("ChunkRowCount")),
+                    Integer.parseInt(context.getInitParameter("ChunkColumnCount"))
+            );
+
+            EndlessField field = EndlessField.instantiate(
+                    fieldClassName, stripes, chunkSize,
+                    EndlessFieldDataSource.instantiate(context.getInitParameter("EndlessFieldDataSourceClassName")),
+                    EndlessFieldCellFactory.instantiate(context.getInitParameter("EndlessFieldCellFactoryClassName"))
+            );
+
+            context.setAttribute("field", field);
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+             e.printStackTrace();
+        }
     }
 
     public void contextDestroyed(ServletContextEvent event) {

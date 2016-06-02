@@ -20,7 +20,6 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
@@ -110,6 +109,7 @@ public class FieldEndpoint extends HttpServlet {
                             ArrayList<EndlessFieldCell> clonedCells = new ArrayList<>(cells.size());
 
                             // TODO: 16.05.2016 move to endless field
+                            // TODO: 31.05.2016 what if array has no items?
                             EndlessCellCloneFactory factory = cells.get(0).getFactory();
                             for (EndlessFieldCell cell : cells) {
                                 clonedCells.add(factory.clone(cell));
