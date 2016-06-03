@@ -24,6 +24,8 @@ import com.zhukovsd.endlessfield.fielddatasource.StoreChunkTask;
 import com.zhukovsd.endlessfield.fielddatasource.UpdateCellTask;
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -66,6 +68,19 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         this.chunkSize = chunkSize;
         this.dataSource = dataSource;
         this.cellFactory = cellFactory;
+    }
+
+    public static EndlessField instantiate(
+            String className, int stripes, ChunkSize chunkSize, EndlessFieldDataSource dataSource,
+            EndlessFieldCellFactory cellFactory
+    ) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Class<?> fieldType = Class.forName(className);
+
+        Constructor<?> constructor = fieldType.getConstructor(
+                int.class, ChunkSize.class, EndlessFieldDataSource.class, EndlessFieldCellFactory.class
+        );
+
+        return (EndlessField) constructor.newInstance(stripes, chunkSize, dataSource, cellFactory);
     }
 
 //    public EndlessFieldChunk<T> provideAndLockChunk(Integer chunkId) {

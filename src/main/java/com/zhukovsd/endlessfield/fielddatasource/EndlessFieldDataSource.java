@@ -22,12 +22,20 @@ import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 /**
  * Created by ZhukovSD on 21.03.2016.
  */
 public interface EndlessFieldDataSource<T extends EndlessFieldCell> {
+    static EndlessFieldDataSource instantiate(String className) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Class<?> factoryType = Class.forName(className);
+        Constructor<?> constructor = factoryType.getConstructor();
+        return (EndlessFieldDataSource) constructor.newInstance();
+    }
+
     boolean containsChunk(Integer chunkId);
     EndlessFieldChunk<T> getChunk(Integer chunkId, ChunkSize chunkSize);
 
