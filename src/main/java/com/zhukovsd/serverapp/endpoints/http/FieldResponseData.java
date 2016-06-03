@@ -2,19 +2,16 @@ package com.zhukovsd.serverapp.endpoints.http;
 
 import com.zhukovsd.endlessfield.field.CellPosition;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
-import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
-import com.zhukovsd.serialization.Gsonable;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * Created by ZhukovSD on 29.04.2016.
  */
-public class FieldResponseData implements Gsonable {
-    class ChunkData {
-        CellPosition origin;
-        ArrayList<EndlessFieldCell> cells;
+public class FieldResponseData {
+    public class ChunkData {
+        public CellPosition origin;
+        public ArrayList<EndlessFieldCell> cells;
 
         ChunkData(CellPosition origin, ArrayList<EndlessFieldCell> cells) {
             this.origin = origin;
@@ -26,7 +23,7 @@ public class FieldResponseData implements Gsonable {
     private String msg;
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
-    ArrayList<ChunkData> chunks = new ArrayList<>();
+    public ArrayList<ChunkData> chunks = new ArrayList<>();
 
 //    public FieldResponseData(Map<CellPosition, T> cells) {
 //    public FieldResponseData(ArrayList<T> cells) {

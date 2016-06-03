@@ -4,6 +4,8 @@ import com.zhukovsd.endlessfield.field.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldCellFactory;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
+import com.zhukovsd.serverapp.serialization.EndlessFieldDeserializer;
+import com.zhukovsd.serverapp.serialization.EndlessFieldSerializer;
 import com.zhukovsd.serverapp.cache.scopes.UsersByChunkConcurrentCollection;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 
@@ -30,6 +32,16 @@ public class ContextListener implements ServletContextListener {
         );
 
         try {
+            context.setAttribute(
+                    "serializer",
+                    EndlessFieldSerializer.instantiate(context.getInitParameter("EndlessFieldSerializerClassName"))
+            );
+
+            context.setAttribute(
+                    "deserializer",
+                    EndlessFieldDeserializer.instantiate(context.getInitParameter("EndlessFieldDeserializerClassName"))
+            );
+
             String fieldClassName = context.getInitParameter("EndlessFieldClassName");
 
             int stripes = Integer.parseInt(context.getInitParameter("EndlessFieldStripesCount"));

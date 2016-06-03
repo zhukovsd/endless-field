@@ -4,12 +4,12 @@ import com.zhukovsd.endlessfield.field.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.field.EndlessCellCloneFactory;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
-import com.zhukovsd.serialization.Gsonalizer;
 import com.zhukovsd.serverapp.cache.scopes.UsersByChunkConcurrentCollection;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
 import com.zhukovsd.serverapp.endpoints.websocket.ActionEndpoint;
-import com.zhukovsd.simplefield.SimpleFieldCell;
+import com.zhukovsd.serverapp.serialization.EndlessFieldDeserializer;
+import com.zhukovsd.serverapp.serialization.EndlessFieldSerializer;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -24,12 +24,15 @@ import java.util.ArrayList;
 /**
  * Created by ZhukovSD on 07.04.2016.
  */
-// single servlet object instance for all requests
+// single instance for all requests
 @WebServlet(urlPatterns = {"/field"})
 public class FieldEndpoint extends HttpServlet {
-    @Override
-    public void init() throws ServletException {
-        super.init();
+    private EndlessFieldSerializer getSerializer() {
+        return (EndlessFieldSerializer) this.getServletContext().getAttribute("serializer");
+    }
+
+    private EndlessFieldDeserializer getDeserializer() {
+        return (EndlessFieldDeserializer) this.getServletContext().getAttribute("deserializer");
     }
 
     private ActionEndpoint getCachedWebSocketEndpoint(String userId, String webSocketSessionId) {
@@ -61,6 +64,9 @@ public class FieldEndpoint extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
+        EndlessFieldSerializer serializer = getSerializer();
+        EndlessFieldDeserializer deserializer = getDeserializer();
+
         // TODO: 29.04.2016 remove null
         FieldResponseData responseData = null;
         boolean isResponseSent = false;
@@ -74,7 +80,9 @@ public class FieldEndpoint extends HttpServlet {
                 // TODO: 18.04.2016 check if user_id attribute exists
                 String userId = ((String) session.getAttribute("user_id"));
 
-                FieldRequestData requestData = Gsonalizer.fromJson(URLDecoder.decode(request.getParameter("data"), "UTF-8"), FieldRequestData.class);
+                FieldRequestData requestData = deserializer.fieldResponseDataFromJSON(
+                        URLDecoder.decode(request.getParameter("data"), "UTF-8")
+                );
 
                 // TODO: 25.04.2016 validate params
                 if (requestData.wsSessionId.isEmpty())
@@ -94,13 +102,7 @@ public class FieldEndpoint extends HttpServlet {
                     EndlessField<?> field = getField();
                     field.lockChunksByIds(requestData.scope);
 
-//                    long time = System.nanoTime();
-
-                    StringBuilder sb = null;
-//                    String s = "";
                     try {
-//                        Map<CellPosition, ? extends EndlessFieldCell> cells = field.getEntriesByChunkIds(requestData.scope);
-
                         // TODO: 16.05.2016 set response code
                         responseData = new FieldResponseData();
 
@@ -117,77 +119,12 @@ public class FieldEndpoint extends HttpServlet {
 
                             responseData.addChunk(ChunkIdGenerator.chunkOrigin(field.chunkSize, chunkId), clonedCells);
                         }
-
-                        // serialize/write response before unlock to prevent response content being changed after unlock
-//                        Gsonalizer.toJson(responseData, response.getWriter());
-                        isResponseSent = true;
                     } finally {
-//                        time = (System.nanoTime() - time) / 1000000;
-//                        System.out.println(time + "ms");
-
                         field.unlockChunks();
-//                        System.out.println(Thread.activeCount());
                     }
 
-                    sb = new StringBuilder(50000);
-                    sb.append("{\"responseCode\":0,\"chunks\":[");
-                    int c = 0;
-
-                    String chunkSeparator = "";
-                    for (FieldResponseData.ChunkData chunk : responseData.chunks) {
-                        sb.append(chunkSeparator);
-
-                        // chunk begin
-                        sb.append('{');
-
-                        // origin begin
-                        sb.append("\"origin\":");
-                        sb.append("{\"row\":");
-                        sb.append(chunk.origin.row);
-                        sb.append(",\"column\":");
-                        sb.append(chunk.origin.column);
-                        // origin end
-                        sb.append('}');
-
-                        // cells begin
-                        sb.append(",\"cells\":[");
-
-                        String cellsSeparator = "";
-                        for (EndlessFieldCell cell : chunk.cells) {
-                            sb.append(cellsSeparator);
-
-                            // cell begin
-                            sb.append('{');
-                            SimpleFieldCell casted = ((SimpleFieldCell) cell);
-
-                            if (casted.isChecked()) {
-                                sb.append("\"c\":");
-                                sb.append(String.valueOf(((SimpleFieldCell) cell).isChecked()));
-//                                sb.append(',');
-                            }
-//                            sb.append("\"s\":\"");
-//                            sb.append(casted.s);
-//                            sb.append("\"");
-
-                            // cell end
-                            sb.append('}');
-
-                            cellsSeparator = ",";
-                        }
-
-                        // cells end
-                        sb.append("]");
-
-                        // chunk end
-                        sb.append('}');
-
-                        chunkSeparator = ",";
-                    }
-                    sb.append("]}");
-
-                    response.getWriter().append(sb);
-
-//                    Gsonalizer.toJson(responseData, response.getWriter());
+                    serializer.fieldResponseDataToJSON(responseData, response.getWriter());
+                    isResponseSent = true;
                 } else {
                     // TODO: 18.04.2016 report no ws session error
                 }
@@ -202,8 +139,6 @@ public class FieldEndpoint extends HttpServlet {
         }
 
         if (!isResponseSent)
-           Gsonalizer.toJson(responseData, response.getWriter());
-
-//        response.getWriter().append("hey buddy");
+            serializer.fieldResponseDataToJSON(responseData, response.getWriter());
     }
 }

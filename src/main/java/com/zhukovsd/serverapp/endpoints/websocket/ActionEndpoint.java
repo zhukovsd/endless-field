@@ -1,17 +1,15 @@
 package com.zhukovsd.serverapp.endpoints.websocket;
 
 import com.zhukovsd.endlessfield.field.ChunkSize;
-import com.zhukovsd.serialization.Gsonalizer;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
+import com.zhukovsd.serverapp.serialization.EndlessFieldSerializer;
 
 import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
@@ -24,6 +22,7 @@ public class ActionEndpoint {
     private Session wsSession;
     private HttpSession httpSession;
 
+    private EndlessFieldSerializer serializer;
     private SessionsCacheConcurrentHashMap sessionsCacheMap;
 
     // This set stores chunks, which was requested with last request to /field HTTP servlet.
@@ -34,11 +33,11 @@ public class ActionEndpoint {
 
     @OnOpen
     public void onOpen(Session session, EndpointConfig config) {
-        this.wsSession = session;
+        wsSession = session;
         httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
 
-        sessionsCacheMap = (SessionsCacheConcurrentHashMap) httpSession.
-                getServletContext().getAttribute("sessions_cache");
+        serializer = (EndlessFieldSerializer) httpSession.getServletContext().getAttribute("serializer");
+        sessionsCacheMap = (SessionsCacheConcurrentHashMap) httpSession.getServletContext().getAttribute("sessions_cache");
 
         String userId = ((String) httpSession.getAttribute("user_id"));
 
@@ -54,7 +53,7 @@ public class ActionEndpoint {
 
             try {
                 if (wsSession.isOpen())
-                    wsSession.getAsyncRemote().sendText(Gsonalizer.toJson(message));
+                    wsSession.getAsyncRemote().sendText(serializer.actionEndpointMessageToJSON(message));
             } catch (Exception e) {
                 // sending message on closing session (isOpen is still true) may cause exception
 //                        System.out.println(1);

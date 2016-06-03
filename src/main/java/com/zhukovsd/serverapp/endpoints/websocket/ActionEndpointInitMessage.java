@@ -7,10 +7,10 @@ import com.zhukovsd.endlessfield.field.ChunkSize;
  * Created by ZhukovSD on 05.05.2016.
  */
 public class ActionEndpointInitMessage extends ActionEndpointMessage {
-    final String wsSessionId;
-    final ChunkSize chunkSize;
-    final Integer initialChunkId;
-    final int chunkIdFactor = ChunkIdGenerator.idFactor;
+    public final String wsSessionId;
+    public final ChunkSize chunkSize;
+    public final Integer initialChunkId;
+    public final int chunkIdFactor = ChunkIdGenerator.idFactor;
 
     public ActionEndpointInitMessage(String wsSessionId, ChunkSize chunkSize, Integer initialChunkId) {
         super(ActionEndpointMessageType.INIT_MESSAGE);

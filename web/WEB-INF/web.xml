@@ -44,7 +44,7 @@
         <param-value>50</param-value>
     </context-param>
 
-    <!-- Class name of specific EndlessFieldCellFactory implementation -->
+    <!-- Class name of specific EndlessFieldDataSource implementation -->
     <context-param>
         <param-name>EndlessFieldDataSourceClassName</param-name>
         <param-value>com.zhukovsd.simplefield.SimpleFieldDataSource</param-value>
@@ -54,6 +54,19 @@
     <context-param>
         <param-name>EndlessFieldCellFactoryClassName</param-name>
         <param-value>com.zhukovsd.simplefield.SimpleFieldCellFactory</param-value>
+    </context-param>
+
+    <!-- Class name of specific EndlessFieldSerializer implementation -->
+    <context-param>
+        <param-name>EndlessFieldSerializerClassName</param-name>
+        <param-value>com.zhukovsd.simplefield.SimpleFieldSerializer</param-value>
+        <!--<param-value>com.zhukovsd.serverapp.serialization.EndlessFieldGsonSerializer</param-value>-->
+    </context-param>
+
+    <!-- Class name of specific EndlessFieldDeserializer implementation -->
+    <context-param>
+        <param-name>EndlessFieldDeserializerClassName</param-name>
+        <param-value>com.zhukovsd.serverapp.serialization.EndlessFieldGsonDeserializer</param-value>
     </context-param>
 
     <listener>
