@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
+
+    <!--
+        Stripes count for Striped<Lock> lock object used in map <chunk id, set of users in this chunk>.
+        Consider guava docs before changing this parameter:
+            - http://google.github.io/guava/releases/19.0/api/docs/com/google/common/util/concurrent/Striped.html#bulkGet(java.lang.Iterable)
+            - http://google.github.io/guava/releases/19.0/api/docs/com/google/common/util/concurrent/Striped.html
+    -->
+    <context-param>
+        <param-name>ChunkMapStripesCount</param-name>
+        <param-value>15000</param-value>
+    </context-param>
+
+    <!-- Class name of specific EndlessField implementation -->
+    <!--<context-param>-->
+        <!--<param-name>EndlessFieldClassName</param-name>-->
+        <!--<param-value></param-value>-->
+    <!--</context-param>-->
+
+    <!--
+        Stripes count for Striped<Lock> lock object used for chunks locking. Consider guava docs before changing this
+        parameter:
+            - http://google.github.io/guava/releases/19.0/api/docs/com/google/common/util/concurrent/Striped.html#bulkGet(java.lang.Iterable)
+            - http://google.github.io/guava/releases/19.0/api/docs/com/google/common/util/concurrent/Striped.html
+    -->
+    <context-param>
+        <param-name>EndlessFieldStripesCount</param-name>
+        <param-value>15000</param-value>
+    </context-param>
+
+    <!-- Row count of endless-field chunk -->
+    <context-param>
+        <param-name>ChunkRowCount</param-name>
+        <param-value>50</param-value>
+    </context-param>
+
+    <!-- Column count of endless-field chunk -->
+    <context-param>
+        <param-name>ChunkColumnCount</param-name>
+        <param-value>50</param-value>
+    </context-param>
+
+    <!-- Class name of specific EndlessFieldDataSource implementation -->
+    <!--<context-param>-->
+        <!--<param-name>EndlessFieldDataSourceClassName</param-name>-->
+        <!--<param-value></param-value>-->
+    <!--</context-param>-->
+
+    <!-- Class name of specific EndlessFieldCellFactory implementation -->
+    <!--<context-param>-->
+        <!--<param-name>EndlessFieldCellFactoryClassName</param-name>-->
+        <!--<param-value></param-value>-->
+    <!--</context-param>-->
+
+    <!-- Class name of specific EndlessFieldSerializer implementation -->
+    <context-param>
+        <param-name>EndlessFieldSerializerClassName</param-name>
+        <param-value>com.zhukovsd.serverapp.serialization.EndlessFieldGsonSerializer</param-value>
+    </context-param>
+
+    <!-- Class name of specific EndlessFieldDeserializer implementation -->
+    <context-param>
+        <param-name>EndlessFieldDeserializerClassName</param-name>
+        <param-value>com.zhukovsd.serverapp.serialization.EndlessFieldGsonDeserializer</param-value>
+    </context-param>
+
+    <listener>
+        <listener-class>com.zhukovsd.serverapp.endpoints.http.HttpSessionInterceptor</listener-class>
+    </listener>
+
+    <listener>
+        <listener-class>com.zhukovsd.serverapp.ContextListener</listener-class>
+    </listener>
+</web-app>
