@@ -16,10 +16,10 @@
     </context-param>
 
     <!-- Class name of specific EndlessField implementation -->
-    <!--<context-param>-->
-        <!--<param-name>EndlessFieldClassName</param-name>-->
-        <!--<param-value></param-value>-->
-    <!--</context-param>-->
+    <context-param>
+        <param-name>EndlessFieldClassName</param-name>
+        <param-value>com.zhukovsd.simplefield.SimpleField</param-value>
+    </context-param>
 
     <!--
         Stripes count for Striped<Lock> lock object used for chunks locking. Consider guava docs before changing this
@@ -45,21 +45,22 @@
     </context-param>
 
     <!-- Class name of specific EndlessFieldDataSource implementation -->
-    <!--<context-param>-->
-        <!--<param-name>EndlessFieldDataSourceClassName</param-name>-->
-        <!--<param-value></param-value>-->
-    <!--</context-param>-->
+    <context-param>
+        <param-name>EndlessFieldDataSourceClassName</param-name>
+        <param-value>com.zhukovsd.simplefield.SimpleFieldDataSource</param-value>
+    </context-param>
 
     <!-- Class name of specific EndlessFieldCellFactory implementation -->
-    <!--<context-param>-->
-        <!--<param-name>EndlessFieldCellFactoryClassName</param-name>-->
-        <!--<param-value></param-value>-->
-    <!--</context-param>-->
+    <context-param>
+        <param-name>EndlessFieldCellFactoryClassName</param-name>
+        <param-value>com.zhukovsd.simplefield.SimpleFieldCellFactory</param-value>
+    </context-param>
 
     <!-- Class name of specific EndlessFieldSerializer implementation -->
     <context-param>
         <param-name>EndlessFieldSerializerClassName</param-name>
-        <param-value>com.zhukovsd.serverapp.serialization.EndlessFieldGsonSerializer</param-value>
+        <param-value>com.zhukovsd.simplefield.SimpleFieldSerializer</param-value>
+        <!--<param-value>com.zhukovsd.serverapp.serialization.EndlessFieldGsonSerializer</param-value>-->
     </context-param>
 
     <!-- Class name of specific EndlessFieldDeserializer implementation -->
@@ -75,4 +76,5 @@
     <listener>
         <listener-class>com.zhukovsd.serverapp.ContextListener</listener-class>
     </listener>
+
 </web-app>
