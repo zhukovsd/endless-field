@@ -30,11 +30,13 @@
     <script src="${pageContext.request.contextPath}/js/Scope.js"></script>
     <script src="${pageContext.request.contextPath}/js/URIManager.js"></script>
 
+    <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldManager.js"></script>
+
     <title>Title</title>
     <script>
         var contextPath = "${pageContext.request.contextPath}";
 
-        var fieldManager = new FieldManager(contextPath);
+        var fieldManager = new SimpleFieldManager(contextPath);
         var fieldView = new FieldView(fieldManager, new DrawSettings(25, 25));
         var eventListener = new EventListener(fieldView);
         var uriManager = new URIManager(contextPath + '/game/');
