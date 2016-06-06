@@ -22,28 +22,31 @@
 
     <script src="${pageContext.request.contextPath}/js/FieldManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/FieldView.js"></script>
-    <script src="${pageContext.request.contextPath}/js/EventListener.js"></script>
+    <script src="${pageContext.request.contextPath}/js/MouseEventListener.js"></script>
 
     <script src="${pageContext.request.contextPath}/js/ChunkIdGenerator.js"></script>
     <script src="${pageContext.request.contextPath}/js/Camera.js"></script>
     <script src="${pageContext.request.contextPath}/js/CameraPosition.js"></script>
     <script src="${pageContext.request.contextPath}/js/Scope.js"></script>
-    <script src="${pageContext.request.contextPath}/js/URIManager.js"></script>
+    <script src="${pageContext.request.contextPath}/js/AddressBarManager.js"></script>
+    <script src="${pageContext.request.contextPath}/js/ActionMessage.js"></script>
 
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldManager.js"></script>
+    <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleMouseEventListener.js"></script>
+    <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldView.js"></script>
 
     <title>Title</title>
     <script>
         var contextPath = "${pageContext.request.contextPath}";
 
         var fieldManager = new SimpleFieldManager(contextPath);
-        var fieldView = new FieldView(fieldManager, new DrawSettings(25, 25));
-        var eventListener = new EventListener(fieldView);
-        var uriManager = new URIManager(contextPath + '/game/');
+        var fieldView = new SimpleFieldView(fieldManager, new DrawSettings(25, 25));
+        var mouseEventListener = new SimpleMouseEventListener(fieldView);
+        var uriManager = new AddressBarManager(contextPath + '/game/');
 
         window.onload = function() {
             fieldView.init('field-canvas-container', 'field-canvas');
-            eventListener.init('field-canvas');
+            mouseEventListener.init('field-canvas');
 
             var canvas = document.getElementById('field-canvas');
 
@@ -111,7 +114,7 @@
     <%--Your websocket session ids = [<span id="web_socket_ids"></span>]<br/>--%>
     <%--Scope for this client = 123--%>
 
-    <div id="field-canvas-container">
+    <div class="unselectable" id="field-canvas-container">
         <canvas id="field-canvas"></canvas>
     </div>
 

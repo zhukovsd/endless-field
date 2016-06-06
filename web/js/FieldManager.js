@@ -75,6 +75,13 @@ var FieldManager = function (applicationContextPath) {
 
     // todo: handle on close and on error events
 
+    this.sendMessage = function(message) {
+        if (this.state = FieldManagerState.CONNECTED) {
+            webSocket.send(JSON.stringify(message));
+            // alert(JSON.stringify(message));
+        }
+    };
+
     //
 
     this.requestChunks = function(chunkIds) {
@@ -170,10 +177,10 @@ FieldManager.prototype = {
         for (var row = 0; row < this.chunkSize.rowCount; row++) {
             for (var column = 0; column < this.chunkSize.columnCount; column++) {
                 var key = (chunkOrigin.row + row) + "," + (chunkOrigin.column + column);
-                //console.log(key);
+                // console.log(key);
                 this.cells[key] = this.processResponseCell(responseCells[index]);
                 
-                //todo remove debug field
+                // todo remove debug field
                 this.cells[key].text = key;
 
                 index++;

@@ -1,11 +1,9 @@
 package com.zhukovsd.simplefield;
 
-import com.sun.org.apache.xml.internal.utils.StringBufferPool;
-import com.zhukovsd.endlessfield.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 import com.zhukovsd.serverapp.endpoints.http.FieldResponseData;
-import com.zhukovsd.serverapp.endpoints.websocket.ActionEndpointInitMessage;
-import com.zhukovsd.serverapp.endpoints.websocket.ActionEndpointMessage;
+import com.zhukovsd.serverapp.endpoints.websocket.ActionInitServerMessage;
+import com.zhukovsd.serverapp.endpoints.websocket.ActionServerMessage;
 import com.zhukovsd.serverapp.serialization.EndlessFieldSerializer;
 
 import java.io.IOException;
@@ -79,11 +77,11 @@ public class SimpleFieldSerializer implements EndlessFieldSerializer {
     }
 
     @Override
-    public String actionEndpointMessageToJSON(ActionEndpointMessage message) {
+    public String actionEndpointMessageToJSON(ActionServerMessage message) {
         String content = "";
 
-        if (message instanceof ActionEndpointInitMessage) {
-            ActionEndpointInitMessage casted = ((ActionEndpointInitMessage) message);
+        if (message instanceof ActionInitServerMessage) {
+            ActionInitServerMessage casted = ((ActionInitServerMessage) message);
 
             content = ',' + String.format(
                     "\"wsSessionId\":\"%s\",\"chunkSize\":{\"rowCount\":%d,\"columnCount\":%d},\"initialChunkId\":%d," +

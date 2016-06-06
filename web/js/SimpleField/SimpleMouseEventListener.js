@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.serverapp.endpoints.websocket;
-
 /**
- * Created by ZhukovSD on 05.05.2016.
+ * Created by ZhukovSD on 05.06.2016.
  */
-public class ActionEndpointMessage {
-    public final int type;
 
-    public ActionEndpointMessage(ActionEndpointMessageType type) {
-        this.type = type.value;
-    }
-}
+var SimpleMouseEventListener = function(fieldView) {
+    MouseEventListener.call(this, fieldView);
+};
+SimpleMouseEventListener.prototype = Object.create(MouseEventListener.prototype);
+
+SimpleMouseEventListener.prototype.cellClicked = function(mouseButton, cellPosition) {
+    this.fieldManager.sendMessage(
+        new ActionMessage(cellPosition, mouseButton)
+    );
+};

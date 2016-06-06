@@ -117,7 +117,6 @@ public class FieldEndpoint extends HttpServlet {
 
                     EndlessField<?> field = getField();
                     field.lockChunksByIds(requestData.scope);
-
                     try {
                         // TODO: 16.05.2016 set response code
                         responseData = new FieldResponseData();

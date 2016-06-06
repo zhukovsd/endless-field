@@ -74,7 +74,7 @@ var FieldView = function(fieldManager, drawSettings) {
                     var column = origin.column + c;
                     
                     if (scope.containsCell(row, column)) {
-                        view.drawCell(view.camera.cellRect(row, column), fieldManager.getCell(row, column));
+                        view.drawCell(view.camera.cellRect(row, column), fieldManager.getCell(row, column), true);
                         a++;
                     }
                 }
@@ -93,7 +93,8 @@ var FieldView = function(fieldManager, drawSettings) {
 
                 this.drawCell(
                     this.camera.cellRect(position.row, position.column),
-                    fieldManager.getCell(position.row, position.column)
+                    fieldManager.getCell(position.row, position.column),
+                    true
                 );
             }
         }
@@ -108,11 +109,13 @@ var FieldView = function(fieldManager, drawSettings) {
 };
 
 FieldView.prototype = {
-    drawCell: function(rect, cell) {
+    drawCell: function(rect, cell, clear) {
         var c = this.canvasContext;
-        c.clearRect(rect.x, rect.y, rect.width, rect.height);
         
         if (cell != null) {
+            if (clear)
+                c.clearRect(rect.x, rect.y, rect.width, rect.height);
+            
             c.beginPath();
             c.rect(rect.x, rect.y, rect.width, rect.height);
             c.stroke();

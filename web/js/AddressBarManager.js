@@ -18,7 +18,7 @@
  * Created by ZhukovSD on 29.05.2016.
  */
 
-var URIManager = function(pathPrefix) {
+var AddressBarManager = function(pathPrefix) {
     var url = document.createElement('a');
     
     this.getChunkId = function() {

@@ -16,15 +16,23 @@
 
 package com.zhukovsd.serverapp.endpoints.websocket;
 
+import com.zhukovsd.endlessfield.CellPosition;
+import com.zhukovsd.endlessfield.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.ChunkSize;
+import com.zhukovsd.endlessfield.field.EndlessField;
+import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
+import com.zhukovsd.serverapp.serialization.EndlessFieldDeserializer;
 import com.zhukovsd.serverapp.serialization.EndlessFieldSerializer;
+import com.zhukovsd.simplefield.SimpleFieldCell;
 
 import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 /**
@@ -32,18 +40,20 @@ import java.util.Set;
  */
 // Web container creates ServerEndpoint instance for every websocket connection
 @ServerEndpoint(value = "/action", configurator = ActionEndpointConfigurator.class)
-public class ActionEndpoint {
+public class ActionEndpoint<T extends EndlessFieldCell> {
     // this variables are thread safe due to individual server endpoint instance for each websocket connection
 
     private Session wsSession;
     private HttpSession httpSession;
 
     private EndlessFieldSerializer serializer;
+    private EndlessFieldDeserializer deserializer;
     private SessionsCacheConcurrentHashMap sessionsCacheMap;
+    private EndlessField<T> field;
 
     // This set stores chunks, which was requested with last request to /field HTTP servlet.
-    // Set modifies in UserScopeConcurrentCollection methods with synchronization on this set.
-    // No iteration allowed, because set is not concurrent, and modifies in HTTP request thread,
+    // This set modified by UserScopeConcurrentCollection methods with synchronization on this set.
+    // No iteration allowed, because set is not concurrent, and modified in HTTP request thread,
     // not in ws request thread.
     public final Set<Integer> scope = new HashSet<>();
 
@@ -53,7 +63,10 @@ public class ActionEndpoint {
         httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
 
         serializer = (EndlessFieldSerializer) httpSession.getServletContext().getAttribute("serializer");
+        deserializer = (EndlessFieldDeserializer) httpSession.getServletContext().getAttribute("deserializer");
         sessionsCacheMap = (SessionsCacheConcurrentHashMap) httpSession.getServletContext().getAttribute("sessions_cache");
+        // TODO: 06.06.2016 resolve unchecked cast
+        field = ((EndlessField<T>) httpSession.getServletContext().getAttribute("field"));
 
         String userId = ((String) httpSession.getAttribute("user_id"));
 
@@ -65,7 +78,7 @@ public class ActionEndpoint {
 
             // TODO: 05.05.2016 get real chunk size from field in servlet context
             // TODO: 29.05.2016 determine initial chunk for current user
-            ActionEndpointMessage message = new ActionEndpointInitMessage(session.getId(), new ChunkSize(50, 50), 0);
+            ActionServerMessage message = new ActionInitServerMessage(session.getId(), new ChunkSize(50, 50), 0);
 
             try {
                 if (wsSession.isOpen())
@@ -76,27 +89,6 @@ public class ActionEndpoint {
 
                 // TODO: 05.05.2016 log smth
             }
-
-//            String s = "";
-//            for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
-//                if (s != "") s += ", ";
-//                s += entry.getValue().wsSession.getId();
-//            }
-//
-//            for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
-//                Session sess = entry.getValue().wsSession;
-//
-//                try {
-//                    if (sess.isOpen())
-//                        sess.getAsyncRemote().sendText(s);
-////                        else
-//                    // TODO: 12.04.2016 remove closed sessions? closed sessions may remain after server restart
-////                            System.out.println(3);
-//                } catch (Exception e) {
-//                    // sending message on closing session (isOpen is still true) may cause exception
-////                        System.out.println(1);
-//                }
-//            }
         } else {
             // TODO: 05.05.2016 send no such session error to client
         }
@@ -150,7 +142,28 @@ public class ActionEndpoint {
 //        }
     }
 
-    public void close() {
+    @OnMessage
+    public void onMessage(String message, Session userSession) throws InterruptedException {
+//        System.out.println("Message Received: " + message);
+
+        ActionClientMessage clientMessage = deserializer.actionMessageDataFromJSON(message);
+        int chunkId = ChunkIdGenerator.generateID(field.chunkSize, clientMessage.cell);
+
+        field.lockChunksByIds(Collections.singletonList(chunkId));
+        try {
+            LinkedHashMap<CellPosition, T> entries = field.getEntries(Collections.singletonList(clientMessage.cell));
+            for (EndlessFieldCell cell : entries.values()) {
+                SimpleFieldCell casted = ((SimpleFieldCell) cell);
+                casted.setChecked(!casted.isChecked());
+            }
+
+            field.updateEntries(entries);
+        } finally {
+            field.unlockChunks();
+        }
+    }
+
+    private void close() {
         if (wsSession != null) {
             try {
                 if (wsSession.isOpen())
