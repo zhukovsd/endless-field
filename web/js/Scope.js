@@ -26,6 +26,16 @@ var CellPosition = function(row, column) {
 CellPosition.prototype = {
     toString: function() {
         return this.row + "," + this.column;
+    },
+    
+    fromKey: function(key) {
+        var coordinates = key.split(',');
+        if (coordinates.length == 2) {
+            this.row = coordinates[0];
+            this.column = coordinates[1];
+        }
+        
+        return this;
     }
 };
 

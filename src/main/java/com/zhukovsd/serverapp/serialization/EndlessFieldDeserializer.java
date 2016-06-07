@@ -17,7 +17,7 @@
 package com.zhukovsd.serverapp.serialization;
 
 import com.zhukovsd.serverapp.endpoints.http.FieldRequestData;
-import com.zhukovsd.serverapp.endpoints.websocket.ActionClientMessage;
+import com.zhukovsd.serverapp.endpoints.websocket.ClientMessage;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -33,5 +33,5 @@ public interface EndlessFieldDeserializer {
     }
 
     FieldRequestData fieldResponseDataFromJSON(String string);
-    ActionClientMessage actionMessageDataFromJSON(String string);
+    ClientMessage actionMessageDataFromJSON(String string);
 }

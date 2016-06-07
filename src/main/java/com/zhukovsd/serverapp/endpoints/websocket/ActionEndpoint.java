@@ -21,19 +21,19 @@ import com.zhukovsd.endlessfield.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
+import com.zhukovsd.serverapp.cache.scopes.UsersByChunkConcurrentCollection;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
 import com.zhukovsd.serverapp.serialization.EndlessFieldDeserializer;
+import com.zhukovsd.serverapp.serialization.EndlessFieldGsonSerializer;
 import com.zhukovsd.serverapp.serialization.EndlessFieldSerializer;
 import com.zhukovsd.simplefield.SimpleFieldCell;
 
 import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
@@ -49,6 +49,7 @@ public class ActionEndpoint<T extends EndlessFieldCell> {
     private EndlessFieldSerializer serializer;
     private EndlessFieldDeserializer deserializer;
     private SessionsCacheConcurrentHashMap sessionsCacheMap;
+    private UsersByChunkConcurrentCollection scopes;
     private EndlessField<T> field;
 
     // This set stores chunks, which was requested with last request to /field HTTP servlet.
@@ -65,6 +66,8 @@ public class ActionEndpoint<T extends EndlessFieldCell> {
         serializer = (EndlessFieldSerializer) httpSession.getServletContext().getAttribute("serializer");
         deserializer = (EndlessFieldDeserializer) httpSession.getServletContext().getAttribute("deserializer");
         sessionsCacheMap = (SessionsCacheConcurrentHashMap) httpSession.getServletContext().getAttribute("sessions_cache");
+        scopes = ((UsersByChunkConcurrentCollection) this.httpSession.getServletContext().getAttribute("scopes_cache"));
+
         // TODO: 06.06.2016 resolve unchecked cast
         field = ((EndlessField<T>) httpSession.getServletContext().getAttribute("field"));
 
@@ -78,7 +81,7 @@ public class ActionEndpoint<T extends EndlessFieldCell> {
 
             // TODO: 05.05.2016 get real chunk size from field in servlet context
             // TODO: 29.05.2016 determine initial chunk for current user
-            ActionServerMessage message = new ActionInitServerMessage(session.getId(), new ChunkSize(50, 50), 0);
+            ServerMessage message = new InitServerMessage(session.getId(), new ChunkSize(50, 50), 0);
 
             try {
                 if (wsSession.isOpen())
@@ -88,6 +91,7 @@ public class ActionEndpoint<T extends EndlessFieldCell> {
 //                        System.out.println(1);
 
                 // TODO: 05.05.2016 log smth
+//                e.printStackTrace();
             }
         } else {
             // TODO: 05.05.2016 send no such session error to client
@@ -100,53 +104,35 @@ public class ActionEndpoint<T extends EndlessFieldCell> {
     }
 
     @OnClose
-    public void onClose(Session session, CloseReason closeReason) {
+    public void onClose(Session session, CloseReason closeReason) throws InterruptedException {
         System.out.println("close, reason code = " + closeReason.getCloseCode());
 
         // TODO: 12.04.2016 consider reactions to different reason codes
 //        if (closeReason.getCloseCode().getCode() != 1001) {
-            // might be null if session was just destroyed
 
-            // TODO: 13.04.2016 check if session is invalidated
+        // TODO: 13.04.2016 check if session is invalidated
 
-            // TODO: 18.04.2016 check if attribute exists
-            String userId = ((String) httpSession.getAttribute("user_id"));
+        // TODO: 18.04.2016 check if attribute exists
+        String userId = ((String) httpSession.getAttribute("user_id"));
 
-            WebSocketSessionsConcurrentHashMap webSocketSessionsMap = sessionsCacheMap.get(userId);
+        WebSocketSessionsConcurrentHashMap webSocketSessionsMap = sessionsCacheMap.get(userId);
 
-            // might be null if session was just destroyed
-            if (webSocketSessionsMap != null) {
-                webSocketSessionsMap.remove(session.getId(), this);
+        // might be null if session was just destroyed
+        if (webSocketSessionsMap != null) {
+            webSocketSessionsMap.remove(session.getId(), this);
+        }
 
-//                String s = "";
-//                for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
-//                    if (s != "") s += ", ";
-//                    s += entry.getValue().wsSession.getId();
-//                }
-//
-//                for (Map.Entry<String, ActionEndpoint> entry : webSocketSessionsMap.entrySet()) {
-//                    Session sess = entry.getValue().wsSession;
-//
-//                    try {
-//                        if (sess.isOpen())
-//                            sess.getAsyncRemote().sendText(s);
-//    //                        else
-//                        // TODO: 12.04.2016 remove closed sessions? closed sessions may remain after server restart
-//    //                            System.out.println(3);
-//                    } catch (Exception e) {
-//                        // sending message on closing session (isOpen is still true) may cause exception
-//    //                        System.out.println(1);
-//                    }
-//                }
-            }
-//        }
+        // TODO: update <chunk id, endpoints> collection
+        scopes.updateEndpointScope(this, Collections.emptySet());
     }
 
     @OnMessage
     public void onMessage(String message, Session userSession) throws InterruptedException {
 //        System.out.println("Message Received: " + message);
 
-        ActionClientMessage clientMessage = deserializer.actionMessageDataFromJSON(message);
+        ClientMessage clientMessage = deserializer.actionMessageDataFromJSON(message);
+        ActionServerMessage serverMessage = null;
+
         int chunkId = ChunkIdGenerator.generateID(field.chunkSize, clientMessage.cell);
 
         field.lockChunksByIds(Collections.singletonList(chunkId));
@@ -158,9 +144,35 @@ public class ActionEndpoint<T extends EndlessFieldCell> {
             }
 
             field.updateEntries(entries);
+
+            HashMap<CellPosition, EndlessFieldCell> cloned = new LinkedHashMap<>(entries.size());
+            for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
+                EndlessFieldCell cell = entry.getValue();
+                cloned.put(entry.getKey(), cell.getFactory().clone(cell));
+            }
+
+            serverMessage = new ActionServerMessage(cloned);
         } finally {
             field.unlockChunks();
         }
+
+        String serialized = serializer.actionEndpointMessageToJSON(serverMessage);
+
+        if (scopes.lockEntry(chunkId)) {
+            try {
+                HashSet<ActionEndpoint<?>> endpoints = scopes.getValue(chunkId);
+
+                int c = 0;
+                for (ActionEndpoint<?> endpoint : endpoints) {
+                    endpoint.wsSession.getAsyncRemote().sendText(serialized);
+                    c++;
+                }
+
+                System.out.println("message sent to " + c + " endpoints");
+            } finally {
+                scopes.unlock();
+            }
+        };
     }
 
     private void close() {
@@ -170,6 +182,8 @@ public class ActionEndpoint<T extends EndlessFieldCell> {
                     wsSession.close();
             } catch (Exception e) {
                 // TODO: 05.05.2016 log smth
+
+//                e.printStackTrace();
 
 //                LOGGER.warning(format("Error closing session: %s", e.getMessage()));
             }

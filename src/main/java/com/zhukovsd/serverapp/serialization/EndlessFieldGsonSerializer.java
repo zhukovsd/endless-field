@@ -19,6 +19,7 @@ package com.zhukovsd.serverapp.serialization;
 import com.google.gson.Gson;
 import com.zhukovsd.serverapp.endpoints.http.FieldResponseData;
 import com.zhukovsd.serverapp.endpoints.websocket.ActionServerMessage;
+import com.zhukovsd.serverapp.endpoints.websocket.ServerMessage;
 
 import java.io.IOException;
 
@@ -34,7 +35,7 @@ public class EndlessFieldGsonSerializer implements EndlessFieldSerializer {
     }
 
     @Override
-    public String actionEndpointMessageToJSON(ActionServerMessage message) {
+    public String actionEndpointMessageToJSON(ServerMessage message) {
         return gson.toJson(message);
     }
 }

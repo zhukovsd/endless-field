@@ -16,19 +16,22 @@
 
 package com.zhukovsd.serverapp.endpoints.websocket;
 
-import com.zhukovsd.endlessfield.CellPosition;
-import com.zhukovsd.endlessfield.field.EndlessFieldCell;
-
-import java.util.HashMap;
+import com.zhukovsd.endlessfield.ChunkIdGenerator;
+import com.zhukovsd.endlessfield.ChunkSize;
 
 /**
- * Created by ZhukovSD on 06.06.2016.
+ * Created by ZhukovSD on 05.05.2016.
  */
-public class ActionServerMessage extends ServerMessage {
-    public final HashMap<CellPosition, EndlessFieldCell> cells;
+public class InitServerMessage extends ServerMessage {
+    public final String wsSessionId;
+    public final ChunkSize chunkSize;
+    public final Integer initialChunkId;
+    public final int chunkIdFactor = ChunkIdGenerator.idFactor;
 
-    ActionServerMessage(HashMap<CellPosition, EndlessFieldCell> cells) {
-        super(ServerMessageType.ACTION_MESSAGE);
-        this.cells = cells;
+    InitServerMessage(String wsSessionId, ChunkSize chunkSize, Integer initialChunkId) {
+        super(ServerMessageType.INIT_MESSAGE);
+        this.wsSessionId = wsSessionId;
+        this.chunkSize = chunkSize;
+        this.initialChunkId = initialChunkId;
     }
 }

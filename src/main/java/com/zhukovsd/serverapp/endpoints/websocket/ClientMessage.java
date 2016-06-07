@@ -16,16 +16,12 @@
 
 package com.zhukovsd.serverapp.endpoints.websocket;
 
+import com.zhukovsd.endlessfield.CellPosition;
+
 /**
- * Created by ZhukovSD on 05.05.2016.
+ * Created by ZhukovSD on 05.06.2016.
  */
-public enum ActionServerMessageType {
-    INIT_MESSAGE (0),
-    ACTION_MESSAGE (1);
-
-    public final int value;
-
-    ActionServerMessageType(int value) {
-        this.value = value;
-    }
+public class ClientMessage {
+    CellPosition cell;
+    int type;
 }
