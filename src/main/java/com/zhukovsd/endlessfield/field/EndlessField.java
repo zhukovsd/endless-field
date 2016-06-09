@@ -218,17 +218,22 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     // It is possible that some of entries to update belongs to currently storing, or queued to store chunk.
     // In that case update actions will have no effect (we update existing db record here),
     // in this case cell will be stored with entire chunk during StoreChunkTask execution
-    public void updateEntries(Map<CellPosition, T> entries) {
+    public void updateEntries(Map<CellPosition, ? extends EndlessFieldCell> entries) {
         // get chunk ids for updating cells
         Set<Integer> chunkIds = new HashSet<>();
-        for (Map.Entry<CellPosition, T> entry : entries.entrySet()) {
+        for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
             chunkIds.add(ChunkIdGenerator.generateID(chunkSize, entry.getKey()));
         }
 
         // increment update task counts used to prevent chunk removing before all its tasks are finished
         for (Integer chunkId : chunkIds) chunkMap.getValue(chunkId).updateTaskCount.incrementAndGet();
 
-        cellUpdateExec.submit(new UpdateCellTask<>(dataSource, chunkMap, entries, chunkIds));
+        LinkedHashMap<CellPosition, T> casted = new LinkedHashMap<>(entries.size());
+        for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
+            casted.put(entry.getKey(), ((T) entry.getValue()));
+        }
+
+        cellUpdateExec.submit(new UpdateCellTask<>(dataSource, chunkMap, casted, chunkIds));
     }
 
     public void removeChunk(Integer chunkId) throws InterruptedException {
@@ -238,4 +243,9 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     public int size() {
         return chunkMap.size();
     }
+
+    public EndlessFieldActionInvoker<T> test;
+    public EndlessFieldActionInvoker<T> invoker() {
+        return test;
+    };
 }

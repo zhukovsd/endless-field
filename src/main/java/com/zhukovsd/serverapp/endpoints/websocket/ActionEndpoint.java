@@ -20,27 +20,29 @@ import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessField;
+import com.zhukovsd.endlessfield.field.EndlessFieldAction;
+import com.zhukovsd.endlessfield.field.EndlessFieldActionInvoker;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 import com.zhukovsd.serverapp.cache.scopes.UsersByChunkConcurrentCollection;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
 import com.zhukovsd.serverapp.serialization.EndlessFieldDeserializer;
-import com.zhukovsd.serverapp.serialization.EndlessFieldGsonSerializer;
 import com.zhukovsd.serverapp.serialization.EndlessFieldSerializer;
+import com.zhukovsd.simplefield.SimpleField;
+import com.zhukovsd.simplefield.SimpleFieldActionInvoker;
 import com.zhukovsd.simplefield.SimpleFieldCell;
 
 import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
  */
 // Web container creates ServerEndpoint instance for every websocket connection
 @ServerEndpoint(value = "/action", configurator = ActionEndpointConfigurator.class)
-public class ActionEndpoint<T extends EndlessFieldCell> {
+public class ActionEndpoint {
     // this variables are thread safe due to individual server endpoint instance for each websocket connection
 
     private Session wsSession;
@@ -50,7 +52,7 @@ public class ActionEndpoint<T extends EndlessFieldCell> {
     private EndlessFieldDeserializer deserializer;
     private SessionsCacheConcurrentHashMap sessionsCacheMap;
     private UsersByChunkConcurrentCollection scopes;
-    private EndlessField<T> field;
+    private EndlessField<? extends EndlessFieldCell> field;
 
     // This set stores chunks, which was requested with last request to /field HTTP servlet.
     // This set modified by UserScopeConcurrentCollection methods with synchronization on this set.
@@ -69,8 +71,7 @@ public class ActionEndpoint<T extends EndlessFieldCell> {
         scopes = ((UsersByChunkConcurrentCollection) this.httpSession.getServletContext().getAttribute("scopes_cache"));
 
         // TODO: 06.06.2016 resolve unchecked cast
-        field = ((EndlessField<T>) httpSession.getServletContext().getAttribute("field"));
-
+        field = ((EndlessField<?>) httpSession.getServletContext().getAttribute("field"));
         String userId = ((String) httpSession.getAttribute("user_id"));
 
         WebSocketSessionsConcurrentHashMap webSocketSessionsMap = sessionsCacheMap.get(userId);
@@ -133,15 +134,21 @@ public class ActionEndpoint<T extends EndlessFieldCell> {
         ClientMessage clientMessage = deserializer.actionMessageDataFromJSON(message);
         ActionServerMessage serverMessage = null;
 
-        int chunkId = ChunkIdGenerator.generateID(field.chunkSize, clientMessage.cell);
+        EndlessFieldActionInvoker<? extends EndlessFieldCell> invoker = new SimpleFieldActionInvoker(((SimpleField) field));
+        EndlessFieldAction action = invoker.selectActionByNumber(clientMessage.type);
+        Iterable<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
 
-        field.lockChunksByIds(Collections.singletonList(chunkId));
+        field.lockChunksByIds(chunkIds);
         try {
-            LinkedHashMap<CellPosition, T> entries = field.getEntries(Collections.singletonList(clientMessage.cell));
-            for (EndlessFieldCell cell : entries.values()) {
-                SimpleFieldCell casted = ((SimpleFieldCell) cell);
-                casted.setChecked(!casted.isChecked());
-            }
+            LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = action.perform(field, clientMessage.cell);
+
+//            invoker.performAction();
+
+//            LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = field.getEntries(Collections.singletonList(clientMessage.cell));
+//            for (EndlessFieldCell cell : entries.values()) {
+//                SimpleFieldCell casted = ((SimpleFieldCell) cell);
+//                casted.setChecked(!casted.isChecked());
+//            }
 
             field.updateEntries(entries);
 
@@ -158,21 +165,23 @@ public class ActionEndpoint<T extends EndlessFieldCell> {
 
         String serialized = serializer.actionEndpointMessageToJSON(serverMessage);
 
-        if (scopes.lockEntry(chunkId)) {
-            try {
-                HashSet<ActionEndpoint<?>> endpoints = scopes.getValue(chunkId);
+        for (Integer chunkId : chunkIds) {
+            if (scopes.lockEntry(chunkId)) {
+                try {
+                    HashSet<ActionEndpoint> endpoints = scopes.getValue(chunkId);
 
-                int c = 0;
-                for (ActionEndpoint<?> endpoint : endpoints) {
-                    endpoint.wsSession.getAsyncRemote().sendText(serialized);
-                    c++;
+                    int c = 0;
+                    for (ActionEndpoint endpoint : endpoints) {
+                        endpoint.wsSession.getAsyncRemote().sendText(serialized);
+                        c++;
+                    }
+
+                    System.out.println("message sent to " + c + " endpoints");
+                } finally {
+                    scopes.unlock();
                 }
-
-                System.out.println("message sent to " + c + " endpoints");
-            } finally {
-                scopes.unlock();
-            }
-        };
+            };
+        }
     }
 
     private void close() {

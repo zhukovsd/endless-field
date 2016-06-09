@@ -26,21 +26,22 @@ import java.util.Set;
  * Created by ZhukovSD on 18.04.2016.
  */
 // map<chunk id, set of action endpoints>
+// TODO: 07.06.2016 rename
 public class UsersByChunkConcurrentCollection extends EntryLockingConcurrentHashMap<
-        Integer, HashSet<ActionEndpoint<?>>>
+        Integer, HashSet<ActionEndpoint>>
 {
     public UsersByChunkConcurrentCollection(int stripes) {
         super(stripes);
     }
 
-    public void updateEndpointScope(ActionEndpoint<?> endpoint, Set<Integer> newScope) throws InterruptedException {
+    public void updateEndpointScope(ActionEndpoint endpoint, Set<Integer> newScope) throws InterruptedException {
         // lock on scope due to its changing (clear / refilling)
         synchronized (endpoint.scope) {
             // endpoint leaving chunks with ids in scope set
             for (Integer chunkId : endpoint.scope) {
                 // remove endpoint from set for each chunk
                 if (this.lockEntry(chunkId)) {
-                    Set<ActionEndpoint<?>> endpoints = getValue(chunkId);
+                    Set<ActionEndpoint> endpoints = getValue(chunkId);
                     try {
                         endpoints.remove(endpoint);
                     } finally {
@@ -62,7 +63,7 @@ public class UsersByChunkConcurrentCollection extends EntryLockingConcurrentHash
             // endpoint entering chunks with ids in its new scope set
             for (Integer chunkId : endpoint.scope) {
                 if (lockEntry(chunkId, key -> new HashSet<>())) {
-                    Set<ActionEndpoint<?>> endpoints = getValue(chunkId);
+                    Set<ActionEndpoint> endpoints = getValue(chunkId);
                     try {
                         endpoints.add(endpoint);
                     } finally {

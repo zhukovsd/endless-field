@@ -41,9 +41,9 @@ public class SimpleFieldSerializer implements EndlessFieldSerializer {
                 // cells begin
                 sb.append(",\"cells\":[");
 
-                String cellsSeparator = "";
+                String cellSeparator = "";
                 for (EndlessFieldCell cell : chunk.cells) {
-                    sb.append(cellsSeparator);
+                    sb.append(cellSeparator);
 
                     // cell begin
                     sb.append('{');
@@ -56,7 +56,7 @@ public class SimpleFieldSerializer implements EndlessFieldSerializer {
                     // cell end
                     sb.append('}');
 
-                    cellsSeparator = ",";
+                    cellSeparator = ",";
                 }
 
                 // cells end
@@ -99,8 +99,11 @@ public class SimpleFieldSerializer implements EndlessFieldSerializer {
                 // cells start
                 sb.append("\"cells\":{");
 
+                String cellSeparator = "";
                 for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : casted.cells.entrySet()) {
                     CellPosition position = entry.getKey();
+
+                    sb.append(cellSeparator);
 
                     // cell position
                     sb.append('"');
@@ -117,6 +120,8 @@ public class SimpleFieldSerializer implements EndlessFieldSerializer {
                     }
 
                     sb.append('}');
+
+                    cellSeparator = ",";
                 }
 
                 // cells end

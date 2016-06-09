@@ -20,7 +20,7 @@ package com.zhukovsd.endlessfield;
  * Created by ZhukovSD on 19.03.2016.
  */
 public class CellPosition {
-    static int hashCodeFactor = 2539;
+    private static int hashCodeFactor = 2539;
 
     public int row, column;
 

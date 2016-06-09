@@ -18,6 +18,20 @@
  * Created by ZhukovSD on 05.06.2016.
  */
 
+SimpleFieldActionType = {
+    TOGGLE_CELL: 0,
+    TOGGLE_SQUARE_REGION: 1,
+    TOGGLE_ROUND_REGION: 2,
+
+    selectByMouseButton: function(mouseButton) {
+        switch(mouseButton) {
+            case MouseButton.LEFT: return SimpleFieldActionType.TOGGLE_CELL;
+            case MouseButton.RIGHT: return SimpleFieldActionType.TOGGLE_SQUARE_REGION;
+            case MouseButton.WHEEL: return SimpleFieldActionType.TOGGLE_ROUND_REGION;
+        }
+    }
+};
+
 var SimpleMouseEventListener = function(fieldView) {
     MouseEventListener.call(this, fieldView);
 };
@@ -25,6 +39,6 @@ SimpleMouseEventListener.prototype = Object.create(MouseEventListener.prototype)
 
 SimpleMouseEventListener.prototype.cellClicked = function(mouseButton, cellPosition) {
     this.fieldManager.sendMessage(
-        new ActionMessage(cellPosition, mouseButton)
+        new ActionMessage(cellPosition, SimpleFieldActionType.selectByMouseButton(mouseButton))
     );
 };

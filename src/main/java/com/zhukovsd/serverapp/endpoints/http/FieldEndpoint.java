@@ -109,7 +109,7 @@ public class FieldEndpoint extends HttpServlet {
                     throw new RuntimeException("scope can't be empty");
 
                 // TODO: 18.04.2016 check if get param exists
-                ActionEndpoint<?> wsEndpoint = getCachedWebSocketEndpoint(userId, requestData.wsSessionId);
+                ActionEndpoint wsEndpoint = getCachedWebSocketEndpoint(userId, requestData.wsSessionId);
 
                 if (wsEndpoint != null) {
                     getUsersScopesCache().updateEndpointScope(wsEndpoint, requestData.scope);
