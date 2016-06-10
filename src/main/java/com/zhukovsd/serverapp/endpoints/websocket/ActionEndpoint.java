@@ -101,6 +101,8 @@ public class ActionEndpoint {
 
     @OnError
     public void onError(Session session, Throwable throwable) {
+        throwable.printStackTrace();
+
         close();
     }
 
@@ -131,61 +133,64 @@ public class ActionEndpoint {
     public void onMessage(String message, Session userSession) throws InterruptedException {
 //        System.out.println("Message Received: " + message);
 
-        ClientMessage clientMessage = deserializer.actionMessageDataFromJSON(message);
-        ActionServerMessage serverMessage = null;
-
-        EndlessFieldActionInvoker<? extends EndlessFieldCell> invoker = new SimpleFieldActionInvoker(((SimpleField) field));
-        EndlessFieldAction action = invoker.selectActionByNumber(clientMessage.type);
-        Iterable<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
-
-        field.lockChunksByIds(chunkIds);
         try {
-            LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = action.perform(field, clientMessage.cell);
+            ClientMessage clientMessage = deserializer.actionMessageDataFromJSON(message);
+            ActionServerMessage serverMessage = null;
 
-//            invoker.performAction();
+            EndlessFieldActionInvoker<? extends EndlessFieldCell> invoker = new SimpleFieldActionInvoker(((SimpleField) field));
+            EndlessFieldAction action = invoker.selectActionByNumber(clientMessage.type);
+            Iterable<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
 
-//            LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = field.getEntries(Collections.singletonList(clientMessage.cell));
-//            for (EndlessFieldCell cell : entries.values()) {
-//                SimpleFieldCell casted = ((SimpleFieldCell) cell);
-//                casted.setChecked(!casted.isChecked());
-//            }
+            field.lockChunksByIds(chunkIds);
+            try {
+                LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = action.perform(field, clientMessage.cell);
 
-            field.updateEntries(entries);
+    //            invoker.performAction();
 
-            HashMap<CellPosition, EndlessFieldCell> cloned = new LinkedHashMap<>(entries.size());
-            for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
-                EndlessFieldCell cell = entry.getValue();
-                cloned.put(entry.getKey(), cell.getFactory().clone(cell));
+    //            LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = field.getEntries(Collections.singletonList(clientMessage.cell));
+    //            for (EndlessFieldCell cell : entries.values()) {
+    //                SimpleFieldCell casted = ((SimpleFieldCell) cell);
+    //                casted.setChecked(!casted.isChecked());
+    //            }
+
+                field.updateEntries(entries);
+
+                HashMap<CellPosition, EndlessFieldCell> cloned = new LinkedHashMap<>(entries.size());
+                for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
+                    EndlessFieldCell cell = entry.getValue();
+                    cloned.put(entry.getKey(), cell.getFactory().clone(cell));
+                }
+
+                serverMessage = new ActionServerMessage(cloned);
+            } finally {
+                field.unlockChunks();
             }
 
-            serverMessage = new ActionServerMessage(cloned);
-        } finally {
-            field.unlockChunks();
-        }
+            String serialized = serializer.actionEndpointMessageToJSON(serverMessage);
 
-        String serialized = serializer.actionEndpointMessageToJSON(serverMessage);
+            int c = 0;
+            for (Integer chunkId : chunkIds) {
+                if (scopes.lockEntry(chunkId)) {
+                    try {
+                        HashSet<ActionEndpoint> endpoints = scopes.getValue(chunkId);
 
-        for (Integer chunkId : chunkIds) {
-            if (scopes.lockEntry(chunkId)) {
-                try {
-                    HashSet<ActionEndpoint> endpoints = scopes.getValue(chunkId);
-
-                    int c = 0;
-                    for (ActionEndpoint endpoint : endpoints) {
-                        endpoint.wsSession.getAsyncRemote().sendText(serialized);
-                        c++;
+                        for (ActionEndpoint endpoint : endpoints) {
+                            endpoint.wsSession.getAsyncRemote().sendText(serialized);
+                            c++;
+                        }
+                    } finally {
+                        scopes.unlock();
                     }
-
-                    System.out.println("message sent to " + c + " endpoints");
-                } finally {
-                    scopes.unlock();
-                }
-            };
+                };
+            }
+            System.out.println("message sent to " + c + " endpoints");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
     private void close() {
-        if (wsSession != null) {
+         if (wsSession != null) {
             try {
                 if (wsSession.isOpen())
                     wsSession.close();
