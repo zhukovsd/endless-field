@@ -49,6 +49,10 @@ public class UpdateCellTask<T extends EndlessFieldCell> implements Runnable {
 
     @Override
     public void run() {
+//        if (Thread.currentThread().getName().contains("extended")) {
+//            System.out.println("from extended thread pool");
+//        }
+
         // TODO: 23.03.2016 handle store exceptions / errors
         dataSource.modifyEntries(entries);
 

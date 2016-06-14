@@ -63,6 +63,7 @@ var FieldManager = function (applicationContextPath) {
         if (msg.type === ActionMessageType.INIT_MESSAGE) {
             // alert("hi, " + msg.type + ", " + msg.wsSessionId + ", " + msg.chunkSize.rowCount + ", " + msg.chunkSize.columnCount);
             alert(JSON.stringify(msg));
+            console.log(message.data);
 
             this.manager.wsSessionId = msg.wsSessionId;
             this.manager.chunkSize = msg.chunkSize;

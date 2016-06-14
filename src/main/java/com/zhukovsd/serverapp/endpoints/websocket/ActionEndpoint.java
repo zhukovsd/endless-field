@@ -17,7 +17,6 @@
 package com.zhukovsd.serverapp.endpoints.websocket;
 
 import com.zhukovsd.endlessfield.CellPosition;
-import com.zhukovsd.endlessfield.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldAction;
@@ -30,12 +29,14 @@ import com.zhukovsd.serverapp.serialization.EndlessFieldDeserializer;
 import com.zhukovsd.serverapp.serialization.EndlessFieldSerializer;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldActionInvoker;
-import com.zhukovsd.simplefield.SimpleFieldCell;
 
 import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
@@ -47,6 +48,9 @@ public class ActionEndpoint {
 
     private Session wsSession;
     private HttpSession httpSession;
+
+    private final AtomicBoolean isSending = new AtomicBoolean(false);
+    private final LinkedList<String> messagesBuffer = new LinkedList<>();
 
     private EndlessFieldSerializer serializer;
     private EndlessFieldDeserializer deserializer;
@@ -64,6 +68,8 @@ public class ActionEndpoint {
     public void onOpen(Session session, EndpointConfig config) {
         wsSession = session;
         httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
+
+        System.out.println("session opened, id = " + session.getId());
 
         serializer = (EndlessFieldSerializer) httpSession.getServletContext().getAttribute("serializer");
         deserializer = (EndlessFieldDeserializer) httpSession.getServletContext().getAttribute("deserializer");
@@ -86,7 +92,8 @@ public class ActionEndpoint {
 
             try {
                 if (wsSession.isOpen())
-                    wsSession.getAsyncRemote().sendText(serializer.actionEndpointMessageToJSON(message));
+//                    wsSession.getAsyncRemote().sendText(serializer.actionEndpointMessageToJSON(message), sendHandler);
+                    sendTextMessageAsync(serializer.actionEndpointMessageToJSON(message));
             } catch (Exception e) {
                 // sending message on closing session (isOpen is still true) may cause exception
 //                        System.out.println(1);
@@ -132,62 +139,64 @@ public class ActionEndpoint {
     @OnMessage
     public void onMessage(String message, Session userSession) throws InterruptedException {
 //        System.out.println("Message Received: " + message);
+//        TimeUnit.SECONDS.sleep(20);
 
+        ClientMessage clientMessage = deserializer.actionMessageDataFromJSON(message);
+        ActionServerMessage serverMessage = null;
+
+        EndlessFieldActionInvoker<? extends EndlessFieldCell> invoker = new SimpleFieldActionInvoker(((SimpleField) field));
+        EndlessFieldAction action = invoker.selectActionByNumber(clientMessage.type);
+        Iterable<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
+
+        field.lockChunksByIds(chunkIds);
         try {
-            ClientMessage clientMessage = deserializer.actionMessageDataFromJSON(message);
-            ActionServerMessage serverMessage = null;
+            LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = action.perform(field, clientMessage.cell);
 
-            EndlessFieldActionInvoker<? extends EndlessFieldCell> invoker = new SimpleFieldActionInvoker(((SimpleField) field));
-            EndlessFieldAction action = invoker.selectActionByNumber(clientMessage.type);
-            Iterable<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
+            field.updateEntries(entries);
 
-            field.lockChunksByIds(chunkIds);
-            try {
-                LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = action.perform(field, clientMessage.cell);
-
-    //            invoker.performAction();
-
-    //            LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = field.getEntries(Collections.singletonList(clientMessage.cell));
-    //            for (EndlessFieldCell cell : entries.values()) {
-    //                SimpleFieldCell casted = ((SimpleFieldCell) cell);
-    //                casted.setChecked(!casted.isChecked());
-    //            }
-
-                field.updateEntries(entries);
-
-                HashMap<CellPosition, EndlessFieldCell> cloned = new LinkedHashMap<>(entries.size());
-                for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
-                    EndlessFieldCell cell = entry.getValue();
-                    cloned.put(entry.getKey(), cell.getFactory().clone(cell));
-                }
-
-                serverMessage = new ActionServerMessage(cloned);
-            } finally {
-                field.unlockChunks();
+            HashMap<CellPosition, EndlessFieldCell> cloned = new LinkedHashMap<>(entries.size());
+            for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
+                EndlessFieldCell cell = entry.getValue();
+                cloned.put(entry.getKey(), cell.getFactory().clone(cell));
             }
 
-            String serialized = serializer.actionEndpointMessageToJSON(serverMessage);
+            serverMessage = new ActionServerMessage(cloned);
+        } finally {
+            field.unlockChunks();
+        }
 
-            int c = 0;
-            for (Integer chunkId : chunkIds) {
-                if (scopes.lockEntry(chunkId)) {
-                    try {
-                        HashSet<ActionEndpoint> endpoints = scopes.getValue(chunkId);
+        String serialized = serializer.actionEndpointMessageToJSON(serverMessage);
 
-                        for (ActionEndpoint endpoint : endpoints) {
-                            endpoint.wsSession.getAsyncRemote().sendText(serialized);
+        HashSet<ActionEndpoint> recipients = new HashSet<>();
+
+        int c = 0;
+        for (Integer chunkId : chunkIds) {
+            if (scopes.lockEntry(chunkId)) {
+                try {
+                    HashSet<ActionEndpoint> endpoints = scopes.getValue(chunkId);
+//                    Set<ActionEndpoint> endpoints = Collections.singleton(this);
+
+                    for (ActionEndpoint endpoint : endpoints) {
+                        if (!recipients.contains(endpoint)) {
+                            Session session = endpoint.wsSession;
+
+//                            session.getAsyncRemote().sendText(serialized, sendHandler);
+                            sendTextMessageAsync(serialized);
+
+                            recipients.add(endpoint);
                             c++;
                         }
-                    } finally {
-                        scopes.unlock();
                     }
-                };
+                } finally {
+                    scopes.unlock();
+                }
             }
-            System.out.println("message sent to " + c + " endpoints");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
+
+//        System.out.println("message sent to " + c + " endpoints, " + recipients.toString());
     }
+
+    //
 
     private void close() {
          if (wsSession != null) {
@@ -202,5 +211,47 @@ public class ActionEndpoint {
 //                LOGGER.warning(format("Error closing session: %s", e.getMessage()));
             }
         }
+    }
+
+    private void sendTextMessageAsync(String message) {
+        if (isSending.get()) {
+            synchronized (messagesBuffer) {
+                if (messagesBuffer.size() < 10)
+                    messagesBuffer.add(message);
+                else {
+                    System.out.println("buffer is full");
+                }
+            }
+        } else {
+            isSending.set(true);
+            internalSendTextMessageAsync(message);
+        }
+    }
+
+    static AtomicInteger messagesSent = new AtomicInteger();
+
+    private void internalSendTextMessageAsync(String message) {
+        wsSession.getAsyncRemote().sendText(message, sendHandler);
+
+        messagesSent.incrementAndGet();
+    }
+
+    private final SendHandler sendHandler = sendResult -> {
+        if (!sendResult.isOK()) {
+            close();
+        }
+
+        synchronized (messagesBuffer) {
+            if (!messagesBuffer.isEmpty()) {
+                internalSendTextMessageAsync(messagesBuffer.remove());
+            } else {
+                isSending.set(false);
+            }
+        }
+    };
+
+    @Override
+    public String toString() {
+        return wsSession.getId();
     }
 }

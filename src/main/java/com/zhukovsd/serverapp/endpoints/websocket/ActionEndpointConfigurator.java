@@ -27,12 +27,24 @@ import javax.websocket.server.ServerEndpointConfig;
 // http://stackoverflow.com/questions/17936440/accessing-httpsession-from-httpservletrequest-in-a-web-socket-serverendpoint/17994303#17994303
 public class ActionEndpointConfigurator extends ServerEndpointConfig.Configurator
 {
+    // TODO: 13.06.2016 remove debug
+    private static HttpSession cached = null;
+
     @Override
     public void modifyHandshake(ServerEndpointConfig config,
                                 HandshakeRequest request,
                                 HandshakeResponse response)
     {
         HttpSession httpSession = (HttpSession)request.getHttpSession();
-        config.getUserProperties().put(HttpSession.class.getName(),httpSession);
+        if (cached == null) {
+            cached = httpSession;
+        }
+
+        if (httpSession == null) {
+            System.out.println("null session on websocket connection upgrade");
+            config.getUserProperties().put(HttpSession.class.getName(), cached);
+        } else {
+            config.getUserProperties().put(HttpSession.class.getName(), httpSession);
+        }
     }
 }
