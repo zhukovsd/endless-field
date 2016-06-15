@@ -49,7 +49,7 @@ public class ActionEndpoint {
     private Session wsSession;
     private HttpSession httpSession;
 
-    private final AtomicBoolean isSending = new AtomicBoolean(false);
+    private boolean isSending = false;
     private final LinkedList<String> messagesBuffer = new LinkedList<>();
 
     private EndlessFieldSerializer serializer;
@@ -152,7 +152,7 @@ public class ActionEndpoint {
         try {
             LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = action.perform(field, clientMessage.cell);
 
-            field.updateEntries(entries);
+//            field.updateEntries(entries);
 
             HashMap<CellPosition, EndlessFieldCell> cloned = new LinkedHashMap<>(entries.size());
             for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
@@ -178,9 +178,6 @@ public class ActionEndpoint {
 
                     for (ActionEndpoint endpoint : endpoints) {
                         if (!recipients.contains(endpoint)) {
-                            Session session = endpoint.wsSession;
-
-//                            session.getAsyncRemote().sendText(serialized, sendHandler);
                             sendTextMessageAsync(serialized);
 
                             recipients.add(endpoint);
@@ -214,26 +211,28 @@ public class ActionEndpoint {
     }
 
     private void sendTextMessageAsync(String message) {
-        if (isSending.get()) {
-            synchronized (messagesBuffer) {
+        synchronized (messagesBuffer) {
+            if (isSending) {
                 if (messagesBuffer.size() < 10)
                     messagesBuffer.add(message);
                 else {
-                    System.out.println("buffer is full");
+                    // TODO: 15.06.2016 specify close reason
+//                    System.out.println("buffer is full");
+                    close();
                 }
+            } else {
+                isSending = true;
+                internalSendTextMessageAsync(message);
             }
-        } else {
-            isSending.set(true);
-            internalSendTextMessageAsync(message);
         }
     }
 
-    static AtomicInteger messagesSent = new AtomicInteger();
+//    static AtomicInteger messagesSent = new AtomicInteger();
 
     private void internalSendTextMessageAsync(String message) {
         wsSession.getAsyncRemote().sendText(message, sendHandler);
 
-        messagesSent.incrementAndGet();
+//        messagesSent.incrementAndGet();
     }
 
     private final SendHandler sendHandler = sendResult -> {
@@ -245,7 +244,7 @@ public class ActionEndpoint {
             if (!messagesBuffer.isEmpty()) {
                 internalSendTextMessageAsync(messagesBuffer.remove());
             } else {
-                isSending.set(false);
+                isSending = false;
             }
         }
     };

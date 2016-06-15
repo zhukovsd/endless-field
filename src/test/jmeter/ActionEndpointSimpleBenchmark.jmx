@@ -17,7 +17,7 @@
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <intProp name="LoopController.loops">-1</intProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.num_threads">100</stringProp>
         <stringProp name="ThreadGroup.ramp_time">0</stringProp>
         <longProp name="ThreadGroup.start_time">1462528769000</longProp>
         <longProp name="ThreadGroup.end_time">1462528769000</longProp>
@@ -152,7 +152,7 @@
             <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="HTTP Cookie Manager" enabled="true">
               <collectionProp name="CookieManager.cookies">
                 <elementProp name="JSESSIONID" elementType="Cookie" testname="JSESSIONID">
-                  <stringProp name="Cookie.value">5E30BC454098F565577D7FED5184221D</stringProp>
+                  <stringProp name="Cookie.value">F48461A000530C26B31CFDAC9DD5A5FE</stringProp>
                   <stringProp name="Cookie.domain">localhost</stringProp>
                   <stringProp name="Cookie.path">/endless-field/</stringProp>
                   <boolProp name="Cookie.secure">false</boolProp>
@@ -210,7 +210,7 @@
           <stringProp name="protocol">ws</stringProp>
           <stringProp name="contextPath">/endless-field/action</stringProp>
           <stringProp name="contentEncoding">UTF-8</stringProp>
-          <stringProp name="requestPayload">{&quot;type&quot;:0,&quot;cell&quot;:{&quot;row&quot;:25,&quot;column&quot;:25}}</stringProp>
+          <stringProp name="requestPayload">{&quot;type&quot;:2,&quot;cell&quot;:{&quot;row&quot;:25,&quot;column&quot;:25}}</stringProp>
           <stringProp name="connectionTimeout">5000</stringProp>
           <stringProp name="responseTimeout">20000</stringProp>
           <boolProp name="ignoreSslErrors">false</boolProp>
@@ -314,7 +314,7 @@
         </ResultCollector>
         <hashTree/>
         <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
-          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <boolProp name="ResultCollector.error_logging">true</boolProp>
           <objProp>
             <name>saveConfig</name>
             <value class="SampleSaveConfiguration">
