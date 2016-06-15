@@ -76,6 +76,7 @@ public class CellPosition {
         return builder.toString();
     }
 
+    // TODO: 15.06.2016 remove main
     public static void main(String[] args) {
         long time = System.nanoTime();
         for (int i = 0; i < 1000000; i++) {

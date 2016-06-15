@@ -24,6 +24,8 @@
     <script src="${pageContext.request.contextPath}/js/FieldView.js"></script>
     <script src="${pageContext.request.contextPath}/js/MouseEventListener.js"></script>
 
+    <script src="${pageContext.request.contextPath}/js/bimap.js"></script>
+
     <script src="${pageContext.request.contextPath}/js/ChunkIdGenerator.js"></script>
     <script src="${pageContext.request.contextPath}/js/Camera.js"></script>
     <script src="${pageContext.request.contextPath}/js/CameraPosition.js"></script>
