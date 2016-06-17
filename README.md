@@ -5,6 +5,9 @@ Features
   - [x] user + origin position in server action message
   - [ ] layer with players labels
     - [x] prototype
+- [ ] users authorization / guest mode
+- [ ] scores
+- [ ] rankings
 
 Server
 - [ ] don't resend same chunks on partial user's scope changing ([0,1] -> [1,2] - send chunk with id = 2)
@@ -17,6 +20,6 @@ Client
 - [ ] buffered renderers
 - [ ] layer has image data with bigger size than actual canvas. Don't perform any rendering on mouse mouse events, just scroll internal image data
 
-Documentation [ ]
+Documentation
 - [ ] JavaDoc
 - [ ] JSDoc
