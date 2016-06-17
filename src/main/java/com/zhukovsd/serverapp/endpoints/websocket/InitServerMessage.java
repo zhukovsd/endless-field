@@ -24,13 +24,15 @@ import com.zhukovsd.endlessfield.ChunkSize;
  */
 public class InitServerMessage extends ServerMessage {
     public final String wsSessionId;
+    public final String userId;
     public final ChunkSize chunkSize;
     public final Integer initialChunkId;
     public final int chunkIdFactor = ChunkIdGenerator.idFactor;
 
-    InitServerMessage(String wsSessionId, ChunkSize chunkSize, Integer initialChunkId) {
+    InitServerMessage(String wsSessionId, String userId, ChunkSize chunkSize, Integer initialChunkId) {
         super(ServerMessageType.INIT_MESSAGE);
         this.wsSessionId = wsSessionId;
+        this.userId = userId;
         this.chunkSize = chunkSize;
         this.initialChunkId = initialChunkId;
     }

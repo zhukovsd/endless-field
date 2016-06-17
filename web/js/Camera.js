@@ -35,10 +35,10 @@ var Camera = function(fieldView) {
     
     this.cellsScope = function() {
         var view = this.fieldView;
-        var canvas = view.canvas;
+        var container = view.canvasContainer;
         
         return new Scope(
-            canvas.clientWidth, canvas.clientHeight, this.position, view.drawSettings.cellSize,
+            container.clientWidth, container.clientHeight, this.position, view.drawSettings.cellSize,
             view.fieldManager.chunkSize, view.fieldManager.chunkIdFactor
         );
     };

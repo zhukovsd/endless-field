@@ -18,14 +18,15 @@
  * Created by ZhukovSD on 06.06.2016.
  */
 
-var SimpleFieldView = function(fieldManager, drawSettings) {
-    FieldView.call(this, fieldManager, drawSettings);
+var SimpleCellsFieldViewLayer = function(fieldView, canvasId) {
+    CellsFieldViewLayer.call(this, fieldView, canvasId);
 };
-SimpleFieldView.prototype = Object.create(FieldView.prototype);
 
-var inheritedDrawCell = SimpleFieldView.prototype.drawCell;
-SimpleFieldView.prototype.drawCell = function(rect, cell, clear) {
-    var c = this.canvasContext;
+SimpleCellsFieldViewLayer.prototype = Object.create(CellsFieldViewLayer.prototype);
+
+var inheritedDrawCell = SimpleCellsFieldViewLayer.prototype.drawCell;
+SimpleCellsFieldViewLayer.prototype.drawCell = function(rect, cell, clear) {
+    var c = this.context;
 
     if (cell != null) {
         // clear rect for this cell only if clear flag equals true,

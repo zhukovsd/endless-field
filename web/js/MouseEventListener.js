@@ -24,34 +24,33 @@ MouseButton = {
     RIGHT: 3
 };
 
-var MouseEventListener = function(fieldView) {
+var MouseEventListener = function(fieldView, fieldViewTopLayerName) {
     this.fieldManager = fieldView.fieldManager;
+    this.layer = null;
+    
     var listener = this;
-
-    var canvas = null;
-    var canvasContext = null;
 
     var isDragging = false;
     var dragMouseButton = null;
     var mouseDownPos = null;
     var mouseDownCameraPosition = null;
     var mouseDownCameraScope = null;
-    var imageData = null;
     var handleClick = false;
 
-    this.init = function(canvasId) {
-        canvas = document.getElementById(canvasId);
-        canvasContext = canvas.getContext('2d');
-        
-        canvas.addEventListener('mousedown', this.mouseDownEvent, false);
-        // canvas.addEventListener('mousemove', this.mouseMoveEvent, false);
-        document.getElementsByTagName('html').item(0).addEventListener('mousemove', this.mouseMoveEvent, false);
-        // canvas.addEventListener('mouseup', this.mouseUpEvent, false);
-        document.getElementsByTagName('html').item(0).addEventListener('mouseup', this.mouseUpEvent, false);
-        // canvas.addEventListener('mouseleave', this.mouseLeaveEvent, false);
-        canvas.oncontextmenu = this.contextMenuEvent;
-        canvas.addEventListener('click', this.mouseClickEvent, false);
-    };
+    window.addEventListener('load',
+        function(event) {
+            listener.layer = fieldView.getLayer(fieldViewTopLayerName);
+
+            listener.layer.canvas.addEventListener('mousedown', listener.mouseDownEvent, false);
+            // canvas.addEventListener('mousemove', this.mouseMoveEvent, false);
+            document.getElementsByTagName('html').item(0).addEventListener('mousemove', listener.mouseMoveEvent, false);
+            // canvas.addEventListener('mouseup', this.mouseUpEvent, false);
+            document.getElementsByTagName('html').item(0).addEventListener('mouseup', listener.mouseUpEvent, false);
+            // canvas.addEventListener('mouseleave', this.mouseLeaveEvent, false);
+            listener.layer.canvas.oncontextmenu = listener.contextMenuEvent;
+            listener.layer.canvas.addEventListener('click', listener.mouseClickEvent, false);            
+        }, false
+    );
 
     function getMousePos(canvas, event) {
         var rect = canvas.getBoundingClientRect();
@@ -66,7 +65,7 @@ var MouseEventListener = function(fieldView) {
 
         isDragging = true;
         dragMouseButton = event.which;
-        mouseDownPos = getMousePos(canvas, event);
+        mouseDownPos = getMousePos(listener.layer.canvas, event);
 
         if (dragMouseButton == MouseButton.LEFT) {
             mouseDownCameraPosition = fieldView.camera.position.clone();
@@ -78,7 +77,8 @@ var MouseEventListener = function(fieldView) {
             // to force their redraw on every dragging mouse move event
             mouseDownCameraScope.removePartiallyVisibleCells();
 
-            imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+            // imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+            fieldView.forEachLayer(function(layer) { layer.storeImageData(); });
         }
 
         handleClick = true;
@@ -86,7 +86,7 @@ var MouseEventListener = function(fieldView) {
 
     this.mouseMoveEvent = function(event) {
         if (isDragging) {
-            var mousePos = getMousePos(canvas, event);
+            var mousePos = getMousePos(listener.layer.canvas, event);
             var mouseOffset = {x: mousePos.x - mouseDownPos.x, y: mousePos.y - mouseDownPos.y};
 
             if ((handleClick) && (Math.abs(mouseOffset.x) + Math.abs(mouseOffset.y) > 5)) {
@@ -107,15 +107,19 @@ var MouseEventListener = function(fieldView) {
                     fieldView.drawSettings.cellSize
                 );
 
-                canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-                canvasContext.putImageData(imageData, offset.x, offset.y);
+                // canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+                // canvasContext.putImageData(imageData, offset.x, offset.y);
+                fieldView.forEachLayer(function(layer) { layer.restoreImageData(offset); });
 
                 fieldView.camera.setPosition(shiftedCameraPosition);
 
                 // draw cells, which was out of scope on mouse down (todo also redraw cells, which was only partly visible)
                 var newScope = fieldView.camera.cellsScope();
                 if (!newScope.equals(mouseDownCameraScope)) {
-                    fieldView.drawCellsByPositions(newScope.difference(mouseDownCameraScope));
+                    var difference = newScope.difference(mouseDownCameraScope);
+                    
+                    // fieldView.drawByPositions(newScope.difference(mouseDownCameraScope));
+                    fieldView.forEachLayer(function(layer) { layer.drawByPositions(difference); });
                 }
             }
 
@@ -176,7 +180,7 @@ var MouseEventListener = function(fieldView) {
 
     this.mouseClickEvent = function(event) {
         if (handleClick) {
-            var mousePos = getMousePos(canvas, event);
+            var mousePos = getMousePos(listener.layer.canvas, event);
             var cellPosition = fieldView.camera.cellPositionByPoint(mousePos);
 
             listener.cellClicked(event.which, cellPosition);

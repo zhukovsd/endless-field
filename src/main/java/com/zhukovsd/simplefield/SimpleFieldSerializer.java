@@ -82,9 +82,9 @@ public class SimpleFieldSerializer implements EndlessFieldSerializer {
             InitServerMessage casted = ((InitServerMessage) message);
 
             content = ',' + String.format(
-                    "\"wsSessionId\":\"%s\",\"chunkSize\":{\"rowCount\":%d,\"columnCount\":%d},\"initialChunkId\":%d," +
+                    "\"wsSessionId\":\"%s\",\"userId\":\"%s\",\"chunkSize\":{\"rowCount\":%d,\"columnCount\":%d},\"initialChunkId\":%d," +
                             "\"chunkIdFactor\":%d",
-                    casted.wsSessionId, casted.chunkSize.rowCount, casted.chunkSize.columnCount,
+                    casted.wsSessionId, casted.userId, casted.chunkSize.rowCount, casted.chunkSize.columnCount,
                     casted.initialChunkId, casted.chunkIdFactor
             );
         } else {
@@ -126,6 +126,20 @@ public class SimpleFieldSerializer implements EndlessFieldSerializer {
 
                 // cells end
                 sb.append('}');
+
+                // origin
+                sb.append(",\"origin\":{\"row\":");
+                sb.append(casted.origin.row);
+                sb.append(",\"column\":");
+                sb.append(casted.origin.column);
+                sb.append("}");
+
+                // player
+                sb.append(",\"player\":{\"id\":\"");
+                sb.append(casted.player.id);
+                sb.append("\",\"name\":\"");
+                sb.append(casted.player.name);
+                sb.append("\"}");
 
                 content = sb.toString();
             }

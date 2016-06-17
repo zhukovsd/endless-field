@@ -22,9 +22,10 @@
 
     <script src="${pageContext.request.contextPath}/js/FieldManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/FieldView.js"></script>
+    <script src="${pageContext.request.contextPath}/js/AbstractFieldViewLayer.js"></script>
+    <script src="${pageContext.request.contextPath}/js/CellsFieldViewLayer.js"></script>
+    <script src="${pageContext.request.contextPath}/js/PlayersLabelsFieldViewLayer.js"></script>
     <script src="${pageContext.request.contextPath}/js/MouseEventListener.js"></script>
-
-    <script src="${pageContext.request.contextPath}/js/bimap.js"></script>
 
     <script src="${pageContext.request.contextPath}/js/ChunkIdGenerator.js"></script>
     <script src="${pageContext.request.contextPath}/js/Camera.js"></script>
@@ -35,42 +36,44 @@
 
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleMouseEventListener.js"></script>
-    <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldView.js"></script>
+    <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleCellsFieldViewLayer.js"></script>
 
     <title>Title</title>
     <script>
         var contextPath = "${pageContext.request.contextPath}";
 
         var fieldManager = new SimpleFieldManager(contextPath);
-        var fieldView = new SimpleFieldView(fieldManager, new DrawSettings(25, 25));
-        var mouseEventListener = new SimpleMouseEventListener(fieldView);
+        var fieldView = new FieldView(fieldManager, 'field-canvas-container', new DrawSettings(25, 25));
+        fieldView.addLayer('cells-layer', new SimpleCellsFieldViewLayer(fieldView, 'field-cells-layer-canvas'));
+        fieldView.addLayer('players-labels-layer', new PlayersLabelsFieldViewLayer(fieldView, 'field-players-labels-layer-canvas'));
+
+        var mouseEventListener = new SimpleMouseEventListener(fieldView, 'players-labels-layer');
         var uriManager = new AddressBarManager(contextPath + '/game/');
 
-        window.onload = function() {
-            fieldView.init('field-canvas-container', 'field-canvas');
-            mouseEventListener.init('field-canvas');
+        window.addEventListener('load',
+            function(event) {
+//                fieldView.init('field-canvas-container', 'field-canvas');
+//                mouseEventListener.init(fieldView.getLayer('player-labels-layer'));
 
-            var canvas = document.getElementById('field-canvas');
+                var canvas = document.getElementById('field-cells-layer-canvas');
 
-            window.addEventListener('resize',
-                    function() {
-                        canvas.width = canvas.clientWidth;
-                        canvas.height = canvas.clientHeight;
+                window.addEventListener('resize',
+                        function() {
+                            canvas.width = canvas.clientWidth;
+                            canvas.height = canvas.clientHeight;
 
-                        var scope = fieldView.camera.cellsScope();
-                        document.getElementById('canvas-size').textContent = canvas.width + ", " + canvas.height;
-                        document.getElementById('camera-position').textContent = JSON.stringify(fieldView.camera.position);
-                        document.getElementById('camera-scope').textContent = JSON.stringify(scope);
-                        document.getElementById('chunks-scope').textContent = JSON.stringify(scope.chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
+                            var scope = fieldView.camera.cellsScope();
+                            document.getElementById('canvas-size').textContent = canvas.width + ", " + canvas.height;
+                            document.getElementById('camera-position').textContent = JSON.stringify(fieldView.camera.position);
+                            document.getElementById('camera-scope').textContent = JSON.stringify(scope);
+                            document.getElementById('chunks-scope').textContent = JSON.stringify(scope.chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
 
-//                        scope.removePartiallyVisibleCells();
-//                        console.log(JSON.stringify(scope));
-
-                        fieldView.drawCellsByChunkIds([0, 1]);
-                    },
-                    false
-            );
-        };
+                            fieldView.getLayer('cells-layer').drawCellsByChunkIds([0, 1]);
+                        },
+                        false
+                );
+            }, false
+        );
 
         fieldManager.onStateChange = function() {
             switch (fieldManager.state) {
@@ -104,6 +107,15 @@
             }
         };
 
+        fieldManager.onChunksReceived = function(chunkIds) {
+            fieldView.getLayer('cells-layer').drawCellsByChunkIds(chunkIds);
+        };
+
+        fieldManager.OnActionMessageReceived = function (positions) {
+            fieldView.getLayer('cells-layer').drawByPositions(positions);
+            fieldView.getLayer('players-labels-layer').drawVisiblePlayersLabels();
+        };
+
         fieldView.camera.onPositionChanged = function(position) {
             uriManager.setChunkId(position.originChunkId);
             localStorage["cameraPosition"] = JSON.stringify(position);
@@ -117,10 +129,11 @@
     <%--Scope for this client = 123--%>
 
     <div class="unselectable" id="field-canvas-container">
-        <canvas id="field-canvas"></canvas>
+        <canvas id="field-cells-layer-canvas"></canvas>
+        <canvas id="field-players-labels-layer-canvas"></canvas>
     </div>
 
-    <div style="position: absolute; left: 20px; top: 20px; width: 600px; height: 200px; background-color: rgba(240, 255, 255, 0.8);">
+    <div style="position: absolute; left: 20px; top: 20px; width: 600px; height: 200px; background-color: rgba(240, 255, 255, 0.8); z-index: 100;">
         <h3>Hi! Your session Id = <%= request.getSession().getId() %></h3>
         <div>canvas size = <span id="canvas-size"></span></div>
         <div>camera position = <span id="camera-position"></span></div>
@@ -131,7 +144,7 @@
         <input type="text" name="chunk" id="chunk_id_text" value="0">
 
         <input type="button" value="left" onclick="
-            var context = document.getElementById('field-canvas').getContext('2d');
+            var context = document.getElementById('field-cells-layer-canvas').getContext('2d');
 
             // shift everything to the left:
             var imageData = context.getImageData(1, 0, context.canvas.width-1, context.canvas.height);
@@ -141,7 +154,7 @@
         ">
 
         <input type="button" value="right" onclick="
-            var context = document.getElementById('field-canvas').getContext('2d');
+            var context = document.getElementById('field-cells-layer-canvas').getContext('2d');
 
             // shift everything to the right:
             var imageData = context.getImageData(0, 0, context.canvas.width-1, context.canvas.height);

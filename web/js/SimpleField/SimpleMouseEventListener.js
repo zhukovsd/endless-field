@@ -32,8 +32,8 @@ SimpleFieldActionType = {
     }
 };
 
-var SimpleMouseEventListener = function(fieldView) {
-    MouseEventListener.call(this, fieldView);
+var SimpleMouseEventListener = function(fieldView, fieldViewTopLayerName) {
+    MouseEventListener.call(this, fieldView, fieldViewTopLayerName);
 };
 SimpleMouseEventListener.prototype = Object.create(MouseEventListener.prototype);
 

@@ -34,9 +34,6 @@ import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by ZhukovSD on 07.04.2016.
@@ -88,7 +85,7 @@ public class ActionEndpoint {
 
             // TODO: 05.05.2016 get real chunk size from field in servlet context
             // TODO: 29.05.2016 determine initial chunk for current user
-            ServerMessage message = new InitServerMessage(session.getId(), new ChunkSize(50, 50), 0);
+            ServerMessage message = new InitServerMessage(session.getId(), userId, new ChunkSize(50, 50), 0);
 
             try {
                 if (wsSession.isOpen())
@@ -152,7 +149,7 @@ public class ActionEndpoint {
         try {
             LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = action.perform(field, clientMessage.cell);
 
-//            field.updateEntries(entries);
+            field.updateEntries(entries);
 
             HashMap<CellPosition, EndlessFieldCell> cloned = new LinkedHashMap<>(entries.size());
             for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
@@ -160,7 +157,9 @@ public class ActionEndpoint {
                 cloned.put(entry.getKey(), cell.getFactory().clone(cell));
             }
 
-            serverMessage = new ActionServerMessage(cloned);
+            String userId = ((String) httpSession.getAttribute("user_id"));
+            // TODO: 17.06.2016 username from data source
+            serverMessage = new ActionServerMessage(cloned, clientMessage.cell, userId, "user #" + userId);
         } finally {
             field.unlockChunks();
         }
@@ -178,7 +177,7 @@ public class ActionEndpoint {
 
                     for (ActionEndpoint endpoint : endpoints) {
                         if (!recipients.contains(endpoint)) {
-                            sendTextMessageAsync(serialized);
+                            endpoint.sendTextMessageAsync(serialized);
 
                             recipients.add(endpoint);
                             c++;
@@ -190,7 +189,7 @@ public class ActionEndpoint {
             }
         }
 
-//        System.out.println("message sent to " + c + " endpoints, " + recipients.toString());
+        System.out.println("message sent to " + c + " endpoints, " + recipients.toString());
     }
 
     //

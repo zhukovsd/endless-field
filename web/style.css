@@ -18,16 +18,29 @@ body {
     text-align: center;
     margin: 0;
 }
+
 #field-canvas-container {
     background-color: #fff2a1;
     width: 100%;
     height: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    /*margin-top: 19px;*/
+    position: relative;
 }
-#field-canvas {
+
+#field-cells-layer-canvas {
+    position: absolute;
+    z-index: 1;
     background-color: white;
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: auto;
+}
+
+#field-players-labels-layer-canvas {
+    position: absolute;
+    z-index: 2;
     display: block;
     width: 100%;
     height: 100%;

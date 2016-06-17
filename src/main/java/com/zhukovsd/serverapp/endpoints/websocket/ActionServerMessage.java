@@ -25,10 +25,23 @@ import java.util.HashMap;
  * Created by ZhukovSD on 06.06.2016.
  */
 public class ActionServerMessage extends ServerMessage {
-    public final HashMap<CellPosition, EndlessFieldCell> cells;
+    public static class User {
+        public final String id, name;
 
-    ActionServerMessage(HashMap<CellPosition, EndlessFieldCell> cells) {
+        public User(String id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+    }
+
+    public final HashMap<CellPosition, EndlessFieldCell> cells;
+    public final CellPosition origin;
+    public final User player;
+
+    ActionServerMessage(HashMap<CellPosition, EndlessFieldCell> cells, CellPosition origin, String userId, String username) {
         super(ServerMessageType.ACTION_MESSAGE);
         this.cells = cells;
+        this.origin = origin;
+        this.player = new User(userId, username);
     }
 }
