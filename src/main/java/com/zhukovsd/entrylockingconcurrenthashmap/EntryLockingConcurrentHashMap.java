@@ -73,7 +73,7 @@ public class EntryLockingConcurrentHashMap<K, V> {
         return value;
     }
 
-    public boolean lockKey(K key, Function<K, V> instantiator) throws InterruptedException {
+    public boolean lockEntry(K key, Function<K, V> instantiator) throws InterruptedException {
         Set<K> lockSet = lockedKeys.get();
         // TODO: 25.03.2016 provide proper exception type
         if (lockSet.size() > 0) throw new RuntimeException("striped set has to be empty before locking!");
@@ -86,8 +86,8 @@ public class EntryLockingConcurrentHashMap<K, V> {
             return false;
     }
 
-    public boolean lockKey(K key) throws InterruptedException {
-        return lockKey(key, null);
+    public boolean lockEntry(K key) throws InterruptedException {
+        return lockEntry(key, null);
     }
 
     public boolean lockEntries(Iterable<K> keys, Function<K, V> instaniator) throws InterruptedException {
