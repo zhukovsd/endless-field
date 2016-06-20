@@ -37,8 +37,9 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class EndlessField<T extends EndlessFieldCell> {
     public ChunkSize chunkSize;
-    private EndlessFieldDataSource<T> dataSource;
-    private EndlessFieldCellFactory<T> cellFactory;
+    private final EndlessFieldDataSource<T> dataSource;
+    private final EndlessFieldCellFactory<T> cellFactory;
+    public final EndlessFieldActionInvoker actionInvoker;
     // TODO: 21.03.2016 add field size constraints
 
     // TODO: 25.03.2016 hide to private
@@ -68,7 +69,11 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         this.chunkSize = chunkSize;
         this.dataSource = dataSource;
         this.cellFactory = cellFactory;
+
+        actionInvoker = createActionInvoker();
     }
+
+    protected abstract EndlessFieldActionInvoker createActionInvoker();
 
     public static EndlessField instantiate(
             String className, int stripes, ChunkSize chunkSize, EndlessFieldDataSource dataSource,
@@ -82,41 +87,6 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 
         return (EndlessField) constructor.newInstance(stripes, chunkSize, dataSource, cellFactory);
     }
-
-//    public EndlessFieldChunk<T> provideAndLockChunk(Integer chunkId) {
-//        // lock on chunkId to prevent simultaneous creating / removing of chunk with same id by different threads.
-//        // if one thread entered this lambda, another thread, requesting chunk with same id will have to wait.
-//        return lockManager.executeLocked(chunkId, () -> {
-//            EndlessFieldChunk<T> chunk = null;
-//
-//            try {
-//                // get already loaded chunk
-//                if (chunkMap.containsKey(chunkId))
-//                    chunk = chunkMap.get(chunkId);
-//                // get stored, but not loaded chunk
-//                else if (dataSource.containsChunk(chunkId)) {
-//                    chunk = dataSource.getChunk(chunkId, chunkSize);
-//                    // TODO: 21.03.2016 check if chunk has correct size
-//                    chunk.setStored(true);
-//                    chunkMap.put(chunkId, chunk);
-//                // generate new chunk and store it
-//                } else {
-//                    chunk = generateChunk(chunkId);
-//                    chunkMap.put(chunkId, chunk);
-//
-//                    chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunk, chunkId));
-//                }
-//
-//                // lock on chunk's lock object to protect it from being deleted after exiting from locked lambda,
-//                // but before locking on lock object, which will cause exception in reader thread
-//                chunk.lock.lock();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//
-//            return chunk;
-//        });
-//    }
 
     // TODO: 25.04.2016 this method might throw exception
     EndlessFieldChunk<T> instantiateChunk(Integer chunkId) {
