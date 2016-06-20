@@ -1,1 +1,2 @@
-# online-minesweeper
+# endless-field
+
