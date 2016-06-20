@@ -16,6 +16,8 @@
 
 package com.zhukovsd.endlessfield;
 
+import java.util.ArrayList;
+
 /**
  * Created by ZhukovSD on 19.03.2016.
  */
@@ -32,5 +34,31 @@ public class ChunkIdGenerator {
                 (chunkId / idFactor) * chunkSize.rowCount,
                 (chunkId % idFactor) * chunkSize.columnCount
         );
+    }
+
+    public static Iterable<Integer> chunkIdsByArea(ChunkSize chunkSize, EndlessFieldArea area) {
+        ArrayList<Integer> chunkIds = new ArrayList<>();
+
+        Integer originChunkId = ChunkIdGenerator.generateID(chunkSize, new CellPosition(area.origin.row, area.origin.column));
+
+        int vChunkCount = (area.origin.row / chunkSize.rowCount) * chunkSize.rowCount;
+        vChunkCount = area.origin.row + area.rowCount - vChunkCount;
+        vChunkCount = vChunkCount / chunkSize.rowCount;
+        if (!((area.origin.row % chunkSize.rowCount == 0) && (area.rowCount % chunkSize.rowCount == 0)))
+            vChunkCount++;
+
+        int hChunkCount = (area.origin.column / chunkSize.columnCount) * chunkSize.columnCount;
+        hChunkCount = area.origin.column + area.columnCount - hChunkCount;
+        hChunkCount = hChunkCount / chunkSize.columnCount;
+        if (!((area.origin.column % chunkSize.columnCount == 0) && (area.columnCount % chunkSize.columnCount == 0)))
+            hChunkCount++;
+
+        for (int chunkRow = 0; chunkRow < vChunkCount; chunkRow++) {
+            for (int chunkColumn = 0; chunkColumn < hChunkCount; chunkColumn++) {
+                chunkIds.add(originChunkId + chunkRow * ChunkIdGenerator.idFactor + chunkColumn);
+            }
+        }
+
+        return chunkIds;
     }
 }

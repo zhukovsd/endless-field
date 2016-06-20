@@ -20,7 +20,7 @@ package com.zhukovsd.endlessfield;
  * Created by ZhukovSD on 19.03.2016.
  */
 public class CellPosition {
-    static int hashCodeFactor = 2539;
+    private static int hashCodeFactor = 2539;
 
     public int row, column;
 
@@ -74,31 +74,5 @@ public class CellPosition {
         builder.append(column);
 
         return builder.toString();
-    }
-
-    public static void main(String[] args) {
-        long time = System.nanoTime();
-        for (int i = 0; i < 1000000; i++) {
-            for (int row = 0; row < 50; row++) {
-                for (int column = 0; column < 50; column++) {
-                    CellPosition position = new CellPosition(row, column);
-                }
-            }
-        }
-        time = (System.nanoTime() - time) / 1000000;
-        System.out.println("time = " + time + "ms");
-
-        time = System.nanoTime();
-        for (int i = 0; i < 1000000; i++) {
-            CellPosition position = new CellPosition(0, 0);
-            for (int row = 0; row < 50; row++) {
-                for (int column = 0; column < 50; column++) {
-                    position.row = row;
-                    position.column = column;
-                }
-            }
-        }
-        time = (System.nanoTime() - time) / 1000000;
-        System.out.println("time = " + time + "ms");
     }
 }
