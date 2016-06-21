@@ -38,7 +38,7 @@ public class UsersByChunkConcurrentCollection extends EntryLockingConcurrentHash
             // user leaving chunks with ids in scope set
             for (Integer chunkId : scope) {
                 // remove user id from users set for each chunk
-                if (this.lockKey(chunkId)) {
+                if (this.lockEntry(chunkId)) {
                     Set<String> users = getValue(chunkId);
                     try {
                         users.remove(userId);
@@ -60,7 +60,7 @@ public class UsersByChunkConcurrentCollection extends EntryLockingConcurrentHash
 
             // user entering chunks with in in scope set
             for (Integer chunkId : scope) {
-                if (lockKey(chunkId, key -> new HashSet<>())) {
+                if (lockEntry(chunkId, key -> new HashSet<>())) {
                     Set<String> users = getValue(chunkId);
                     try {
                         users.add(userId);
