@@ -65,7 +65,7 @@ public class ActionEndpoint {
 
             // TODO: 05.05.2016 get real chunk size from field in servlet context
             // TODO: 29.05.2016 determine initial chunk for current user
-            ActionEndpointMessage message = new ActionEndpointInitMessage(session.getId(), new ChunkSize(50, 50), 0);
+            ServerMessage message = new InitServerMessage(session.getId(), userId, new ChunkSize(50, 50), 0);
 
             try {
                 if (wsSession.isOpen())

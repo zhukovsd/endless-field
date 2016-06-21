@@ -22,15 +22,17 @@ import com.zhukovsd.endlessfield.ChunkSize;
 /**
  * Created by ZhukovSD on 05.05.2016.
  */
-public class ActionEndpointInitMessage extends ActionEndpointMessage {
+public class InitServerMessage extends ServerMessage {
     public final String wsSessionId;
+    public final String userId;
     public final ChunkSize chunkSize;
     public final Integer initialChunkId;
     public final int chunkIdFactor = ChunkIdGenerator.idFactor;
 
-    public ActionEndpointInitMessage(String wsSessionId, ChunkSize chunkSize, Integer initialChunkId) {
-        super(ActionEndpointMessageType.INIT_MESSAGE);
+    InitServerMessage(String wsSessionId, String userId, ChunkSize chunkSize, Integer initialChunkId) {
+        super(ServerMessageType.INIT_MESSAGE);
         this.wsSessionId = wsSessionId;
+        this.userId = userId;
         this.chunkSize = chunkSize;
         this.initialChunkId = initialChunkId;
     }
