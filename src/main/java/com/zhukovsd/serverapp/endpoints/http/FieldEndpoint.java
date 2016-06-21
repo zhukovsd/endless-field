@@ -17,7 +17,6 @@
 package com.zhukovsd.serverapp.endpoints.http;
 
 import com.zhukovsd.endlessfield.ChunkIdGenerator;
-import com.zhukovsd.endlessfield.field.EndlessCellCloneFactory;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 import com.zhukovsd.serverapp.cache.scopes.UsersByChunkConcurrentCollection;
@@ -113,24 +112,21 @@ public class FieldEndpoint extends HttpServlet {
                 ActionEndpoint wsEndpoint = getCachedWebSocketEndpoint(userId, requestData.wsSessionId);
 
                 if (wsEndpoint != null) {
-                    getUsersScopesCache().updateUserScope(userId, wsEndpoint.scope, requestData.scope);
+                    getUsersScopesCache().updateEndpointScope(wsEndpoint, requestData.scope);
 
                     EndlessField<?> field = getField();
                     field.lockChunksByIds(requestData.scope);
-
                     try {
                         // TODO: 16.05.2016 set response code
                         responseData = new FieldResponseData();
 
+                        // before unlocking clone cells of chunk to send
                         for (Integer chunkId : requestData.scope) {
                             ArrayList<? extends EndlessFieldCell> cells = field.getCellsByChunkId(chunkId);
                             ArrayList<EndlessFieldCell> clonedCells = new ArrayList<>(cells.size());
 
-                            // TODO: 16.05.2016 move to endless field
-                            // TODO: 31.05.2016 what if array has no items?
-                            EndlessCellCloneFactory factory = cells.get(0).getFactory();
                             for (EndlessFieldCell cell : cells) {
-                                clonedCells.add(factory.clone(cell));
+                                clonedCells.add(cell.getFactory().clone(cell));
                             }
 
                             responseData.addChunk(ChunkIdGenerator.chunkOrigin(field.chunkSize, chunkId), clonedCells);
