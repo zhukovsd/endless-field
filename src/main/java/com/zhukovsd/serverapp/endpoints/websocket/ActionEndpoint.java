@@ -43,6 +43,9 @@ public class ActionEndpoint {
     private Session wsSession;
     private HttpSession httpSession;
 
+    private boolean isSending = false;
+    private final LinkedList<String> messagesBuffer = new LinkedList<>();
+
     private EndlessFieldSerializer serializer;
     private EndlessFieldDeserializer deserializer;
     private SessionsCacheConcurrentHashMap sessionsCacheMap;
@@ -60,6 +63,8 @@ public class ActionEndpoint {
         wsSession = session;
         httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
 
+        System.out.println("session opened, id = " + session.getId());
+
         serializer = (EndlessFieldSerializer) httpSession.getServletContext().getAttribute("serializer");
         deserializer = (EndlessFieldDeserializer) httpSession.getServletContext().getAttribute("deserializer");
         sessionsCacheMap = (SessionsCacheConcurrentHashMap) httpSession.getServletContext().getAttribute("sessions_cache");
@@ -74,13 +79,13 @@ public class ActionEndpoint {
         if (webSocketSessionsMap != null) {
             webSocketSessionsMap.put(session.getId(), this);
 
-            // TODO: 05.05.2016 get real chunk size from field in servlet context
             // TODO: 29.05.2016 determine initial chunk for current user
-            ServerMessage message = new InitServerMessage(session.getId(), userId, new ChunkSize(50, 50), 0);
+            ServerMessage message = new InitServerMessage(session.getId(), userId, field.chunkSize, 0);
 
             try {
                 if (wsSession.isOpen())
-                    wsSession.getAsyncRemote().sendText(serializer.actionEndpointMessageToJSON(message));
+//                    wsSession.getAsyncRemote().sendText(serializer.actionEndpointMessageToJSON(message), sendHandler);
+                    sendTextMessageAsync(serializer.actionEndpointMessageToJSON(message));
             } catch (Exception e) {
                 // sending message on closing session (isOpen is still true) may cause exception
 //                        System.out.println(1);
@@ -124,56 +129,60 @@ public class ActionEndpoint {
 
     @OnMessage
     public void onMessage(String message, Session userSession) throws InterruptedException {
-//        System.out.println("Message Received: " + message);
+        ClientMessage clientMessage = deserializer.actionMessageDataFromJSON(message);
+        ActionServerMessage serverMessage = null;
 
+        EndlessFieldAction action = field.actionInvoker.selectActionByNumber(clientMessage.type);
+        Iterable<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
+
+        field.lockChunksByIds(chunkIds);
         try {
-            ClientMessage clientMessage = deserializer.actionMessageDataFromJSON(message);
-            ActionServerMessage serverMessage = null;
+            LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = action.perform(field, clientMessage.cell);
 
-            EndlessFieldAction action = field.actionInvoker.selectActionByNumber(clientMessage.type);
-            Iterable<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
+            field.updateEntries(entries);
 
-            field.lockChunksByIds(chunkIds);
-            try {
-                LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = action.perform(field, clientMessage.cell);
-
-                field.updateEntries(entries);
-
-                HashMap<CellPosition, EndlessFieldCell> cloned = new LinkedHashMap<>(entries.size());
-                for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
-                    EndlessFieldCell cell = entry.getValue();
-                    cloned.put(entry.getKey(), cell.getFactory().clone(cell));
-                }
-
-                String userId = ((String) httpSession.getAttribute("user_id"));
-                // TODO: 17.06.2016 username from data source
-                serverMessage = new ActionServerMessage(cloned, clientMessage.cell, userId, "user #" + userId);
-            } finally {
-                field.unlockChunks();
+            HashMap<CellPosition, EndlessFieldCell> cloned = new LinkedHashMap<>(entries.size());
+            for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
+                EndlessFieldCell cell = entry.getValue();
+                cloned.put(entry.getKey(), cell.getFactory().clone(cell));
             }
 
-            String serialized = serializer.actionEndpointMessageToJSON(serverMessage);
+            String userId = ((String) httpSession.getAttribute("user_id"));
+            // TODO: 17.06.2016 username from data source
+            serverMessage = new ActionServerMessage(cloned, clientMessage.cell, userId, "user #" + userId);
+        } finally {
+            field.unlockChunks();
+        }
 
-            int c = 0;
-            for (Integer chunkId : chunkIds) {
-                if (scopes.lockEntry(chunkId)) {
-                    try {
-                        HashSet<ActionEndpoint> endpoints = scopes.getValue(chunkId);
+        String serialized = serializer.actionEndpointMessageToJSON(serverMessage);
 
-                        for (ActionEndpoint endpoint : endpoints) {
-                            endpoint.wsSession.getAsyncRemote().sendText(serialized);
+        HashSet<ActionEndpoint> recipients = new HashSet<>();
+
+        int c = 0;
+        for (Integer chunkId : chunkIds) {
+            if (scopes.lockEntry(chunkId)) {
+                try {
+                    HashSet<ActionEndpoint> endpoints = scopes.getValue(chunkId);
+//                    Set<ActionEndpoint> endpoints = Collections.singleton(this);
+
+                    for (ActionEndpoint endpoint : endpoints) {
+                        if (!recipients.contains(endpoint)) {
+                            endpoint.sendTextMessageAsync(serialized);
+
+                            recipients.add(endpoint);
                             c++;
                         }
-                    } finally {
-                        scopes.unlock();
                     }
-                };
+                } finally {
+                    scopes.unlock();
+                }
             }
-            System.out.println("message sent to " + c + " endpoints");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
+
+//        System.out.println("message sent to " + c + " endpoints, " + recipients.toString());
     }
+
+    //
 
     private void close() {
          if (wsSession != null) {
@@ -188,5 +197,45 @@ public class ActionEndpoint {
 //                LOGGER.warning(format("Error closing session: %s", e.getMessage()));
             }
         }
+    }
+
+    private void sendTextMessageAsync(String message) {
+        synchronized (messagesBuffer) {
+            if (isSending) {
+                if (messagesBuffer.size() < 10)
+                    messagesBuffer.add(message);
+                else {
+                    // TODO: 15.06.2016 specify close reason
+//                    System.out.println("buffer is full");
+                    close();
+                }
+            } else {
+                isSending = true;
+                internalSendTextMessageAsync(message);
+            }
+        }
+    }
+
+    private void internalSendTextMessageAsync(String message) {
+        wsSession.getAsyncRemote().sendText(message, sendHandler);
+    }
+
+    private final SendHandler sendHandler = sendResult -> {
+        if (!sendResult.isOK()) {
+            close();
+        }
+
+        synchronized (messagesBuffer) {
+            if (!messagesBuffer.isEmpty()) {
+                internalSendTextMessageAsync(messagesBuffer.remove());
+            } else {
+                isSending = false;
+            }
+        }
+    };
+
+    @Override
+    public String toString() {
+        return wsSession.getId();
     }
 }
