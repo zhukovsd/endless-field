@@ -35,6 +35,8 @@
     <script src="${pageContext.request.contextPath}/js/ActionMessage.js"></script>
 
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldManager.js"></script>
+    <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleMouseEventListener.js"></script>
+    <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleCellsFieldViewLayer.js"></script>
 
     <title>Title</title>
     <script>
@@ -42,10 +44,10 @@
 
         var fieldManager = new SimpleFieldManager(contextPath);
         var fieldView = new FieldView(fieldManager, 'field-canvas-container', new DrawSettings(25, 25));
-        fieldView.addLayer('cells-layer', new CellsFieldViewLayer(fieldView, 'field-cells-layer-canvas'));
+        fieldView.addLayer('cells-layer', new SimpleCellsFieldViewLayer(fieldView, 'field-cells-layer-canvas'));
         fieldView.addLayer('players-labels-layer', new PlayersLabelsFieldViewLayer(fieldView, 'field-players-labels-layer-canvas'));
 
-        var mouseEventListener = new MouseEventListener(fieldView, 'players-labels-layer');
+        var mouseEventListener = new SimpleMouseEventListener(fieldView, 'players-labels-layer');
         var uriManager = new AddressBarManager(contextPath + '/game/');
 
         window.addEventListener('load',
