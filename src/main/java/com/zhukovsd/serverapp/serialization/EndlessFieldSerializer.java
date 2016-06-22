@@ -17,7 +17,7 @@
 package com.zhukovsd.serverapp.serialization;
 
 import com.zhukovsd.serverapp.endpoints.http.FieldResponseData;
-import com.zhukovsd.serverapp.endpoints.websocket.ActionEndpointMessage;
+import com.zhukovsd.serverapp.endpoints.websocket.ServerMessage;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -35,5 +35,5 @@ public interface EndlessFieldSerializer {
 
     void fieldResponseDataToJSON(FieldResponseData data, Appendable out) throws IOException;
 
-    String actionEndpointMessageToJSON(ActionEndpointMessage message);
+    String actionEndpointMessageToJSON(ServerMessage message);
 }

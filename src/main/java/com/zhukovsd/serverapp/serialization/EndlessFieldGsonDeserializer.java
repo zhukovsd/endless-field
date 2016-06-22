@@ -18,6 +18,7 @@ package com.zhukovsd.serverapp.serialization;
 
 import com.google.gson.Gson;
 import com.zhukovsd.serverapp.endpoints.http.FieldRequestData;
+import com.zhukovsd.serverapp.endpoints.websocket.ClientMessage;
 
 /**
  * Created by ZhukovSD on 03.06.2016.
@@ -28,5 +29,10 @@ public class EndlessFieldGsonDeserializer implements EndlessFieldDeserializer {
     @Override
     public FieldRequestData fieldResponseDataFromJSON(String string) {
         return gson.fromJson(string, FieldRequestData.class);
+    }
+
+    @Override
+    public ClientMessage actionMessageDataFromJSON(String string) {
+        return gson.fromJson(string, ClientMessage.class);
     }
 }
