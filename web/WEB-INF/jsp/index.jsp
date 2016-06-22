@@ -37,12 +37,12 @@
 
         var fieldManager = new FieldManager(contextPath);
         var fieldView = new FieldView(fieldManager, new DrawSettings(25, 25));
-        var eventListener = new MouseEventListener(fieldView);
+        var mouseEventListener = new MouseEventListener(fieldView);
         var uriManager = new AddressBarManager(contextPath + '/game/');
 
         window.onload = function() {
             fieldView.init('field-canvas-container', 'field-canvas');
-            eventListener.init('field-canvas');
+            mouseEventListener.init('field-canvas');
 
             var canvas = document.getElementById('field-canvas');
 
@@ -110,7 +110,7 @@
     <%--Your websocket session ids = [<span id="web_socket_ids"></span>]<br/>--%>
     <%--Scope for this client = 123--%>
 
-    <div id="field-canvas-container">
+    <div class="unselectable" id="field-canvas-container">
         <canvas id="field-canvas"></canvas>
     </div>
 
