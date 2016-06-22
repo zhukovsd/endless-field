@@ -2,6 +2,7 @@ package com.zhukovsd.simplefield;
 
 import com.zhukovsd.endlessfield.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessField;
+import com.zhukovsd.endlessfield.field.EndlessFieldActionInvoker;
 import com.zhukovsd.endlessfield.field.EndlessFieldCellFactory;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 
@@ -13,8 +14,8 @@ public class SimpleField extends EndlessField<SimpleFieldCell> {
         super(stripes, chunkSize, dataSource, cellFactory);
     }
 
-    public static void main(String[] args) {
-        boolean f = SimpleField.class.isAssignableFrom(SimpleField.class);
-        System.out.println(f);
+    @Override
+    protected EndlessFieldActionInvoker createActionInvoker() {
+        return new SimpleFieldActionInvoker(this);
     }
 }

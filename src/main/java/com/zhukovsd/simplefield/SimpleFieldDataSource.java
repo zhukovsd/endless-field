@@ -73,7 +73,7 @@ public class SimpleFieldDataSource implements EndlessFieldDataSource<SimpleField
         // thread due to FixedExecutorService reject policy. If chunk is not exists in the map, we don't really
         // need to lock it, because it's already locked in EndlessField.provideAndLock() which is below this method
         // in call stack (only after rejection)
-        boolean isLocked = chunkMap.lockKey(chunkId);
+        boolean isLocked = chunkMap.lockEntry(chunkId);
         try {
             for (Map.Entry<CellPosition, SimpleFieldCell> entry : chunk.cellsMap().entrySet()) {
                 CellPosition position = entry.getKey();
