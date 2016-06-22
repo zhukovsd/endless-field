@@ -55,4 +55,14 @@ var Camera = function(fieldView) {
             height: cellSize.height
         };
     };
+
+    this.cellPositionByPoint = function(mousePosition) {
+        var chunkOrigin = this.position.getChunkOrigin();
+        var cellSize = this.fieldView.drawSettings.cellSize;
+
+        return new CellPosition(
+            Math.floor((mousePosition.y + this.position.shift.y) / cellSize.height) + chunkOrigin.row,
+            Math.floor((mousePosition.x + this.position.shift.x) / cellSize.width) + chunkOrigin.column
+        );
+    }    
 };

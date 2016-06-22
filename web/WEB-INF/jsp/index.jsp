@@ -22,13 +22,14 @@
 
     <script src="${pageContext.request.contextPath}/js/FieldManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/FieldView.js"></script>
-    <script src="${pageContext.request.contextPath}/js/EventListener.js"></script>
+    <script src="${pageContext.request.contextPath}/js/MouseEventListener.js"></script>
 
     <script src="${pageContext.request.contextPath}/js/ChunkIdGenerator.js"></script>
     <script src="${pageContext.request.contextPath}/js/Camera.js"></script>
     <script src="${pageContext.request.contextPath}/js/CameraPosition.js"></script>
     <script src="${pageContext.request.contextPath}/js/Scope.js"></script>
     <script src="${pageContext.request.contextPath}/js/URIManager.js"></script>
+    <script src="${pageContext.request.contextPath}/js/ActionMessage.js"></script>
 
     <title>Title</title>
     <script>
@@ -36,7 +37,7 @@
 
         var fieldManager = new FieldManager(contextPath);
         var fieldView = new FieldView(fieldManager, new DrawSettings(25, 25));
-        var eventListener = new EventListener(fieldView);
+        var eventListener = new MouseEventListener(fieldView);
         var uriManager = new URIManager(contextPath + '/game/');
 
         window.onload = function() {

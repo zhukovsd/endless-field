@@ -75,6 +75,13 @@ var FieldManager = function (applicationContextPath) {
 
     // todo: handle on close and on error events
 
+    this.sendMessage = function(message) {
+        if (this.state = FieldManagerState.CONNECTED) {
+            webSocket.send(JSON.stringify(message));
+            // alert(JSON.stringify(message));
+        }
+    };
+
     //
 
     this.requestChunks = function(chunkIds) {
