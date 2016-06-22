@@ -28,7 +28,7 @@
     <script src="${pageContext.request.contextPath}/js/Camera.js"></script>
     <script src="${pageContext.request.contextPath}/js/CameraPosition.js"></script>
     <script src="${pageContext.request.contextPath}/js/Scope.js"></script>
-    <script src="${pageContext.request.contextPath}/js/URIManager.js"></script>
+    <script src="${pageContext.request.contextPath}/js/AddressBarManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/ActionMessage.js"></script>
 
     <title>Title</title>
@@ -38,7 +38,7 @@
         var fieldManager = new FieldManager(contextPath);
         var fieldView = new FieldView(fieldManager, new DrawSettings(25, 25));
         var eventListener = new MouseEventListener(fieldView);
-        var uriManager = new URIManager(contextPath + '/game/');
+        var uriManager = new AddressBarManager(contextPath + '/game/');
 
         window.onload = function() {
             fieldView.init('field-canvas-container', 'field-canvas');
