@@ -106,6 +106,10 @@ var FieldView = function(fieldManager, drawSettings) {
     this.fieldManager.onChunksReceived = function(chunkIds) {
         view.drawCellsByChunkIds(chunkIds);
     };
+    
+    this.fieldManager.onCellsUpdated = function (positions) {
+        view.drawCellsByPositions(positions);
+    }
 };
 
 FieldView.prototype = {

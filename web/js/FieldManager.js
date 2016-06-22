@@ -32,8 +32,10 @@ ActionMessageType = {
 
 var FieldManager = function (applicationContextPath) {
     this.state = FieldManagerState.UNINITIALIZED;
+    
     this.onStateChange = null;
     this.onChunksReceived = null;
+    this.onCellsUpdated = null;
 
     this.cells = {};
 
@@ -68,8 +70,26 @@ var FieldManager = function (applicationContextPath) {
             this.manager.initialChunkId = msg.initialChunkId;
             
             this.manager.setState(FieldManagerState.CONNECTED);
-        } else {
+        } else if (msg.type === ActionMessageType.ACTION_MESSAGE) {
             // action message
+            var cells = msg.cells;
+            var positions = {};
+            
+            for (var key in cells) {
+                if (cells.hasOwnProperty(key)) {
+                    this.manager.cells[key] = this.manager.processResponseCell(cells[key]);
+                    
+                    // todo remove debug field
+                    this.manager.cells[key].text = key;
+                    
+                    var position = new CellPosition().fromKey(key);
+                    positions[position.toString()] = position;
+                }
+            }
+
+            if (this.manager.onCellsUpdated != null) {
+                this.manager.onCellsUpdated(positions);
+            }
         }
     };
 
@@ -78,7 +98,6 @@ var FieldManager = function (applicationContextPath) {
     this.sendMessage = function(message) {
         if (this.state = FieldManagerState.CONNECTED) {
             webSocket.send(JSON.stringify(message));
-            // alert(JSON.stringify(message));
         }
     };
 
@@ -177,10 +196,10 @@ FieldManager.prototype = {
         for (var row = 0; row < this.chunkSize.rowCount; row++) {
             for (var column = 0; column < this.chunkSize.columnCount; column++) {
                 var key = (chunkOrigin.row + row) + "," + (chunkOrigin.column + column);
-                //console.log(key);
+                // console.log(key);
                 this.cells[key] = this.processResponseCell(responseCells[index]);
                 
-                //todo remove debug field
+                // todo remove debug field
                 this.cells[key].text = key;
 
                 index++;
