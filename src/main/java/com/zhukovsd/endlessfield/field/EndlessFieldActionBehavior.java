@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.serverapp.endpoints.websocket;
+package com.zhukovsd.endlessfield.field;
+
+import com.zhukovsd.endlessfield.CellPosition;
+
+import java.util.LinkedHashMap;
 
 /**
- * Created by ZhukovSD on 05.05.2016.
+ * Created by ZhukovSD on 08.06.2016.
  */
-public class ActionEndpointMessage {
-    public final int type;
+public interface EndlessFieldActionBehavior {
+    Iterable<Integer> getChunkIds(EndlessField<? extends EndlessFieldCell> field, CellPosition position);
 
-    public ActionEndpointMessage(ActionEndpointMessageType type) {
-        this.type = type.value;
-    }
+    LinkedHashMap<CellPosition, ? extends EndlessFieldCell> perform(
+            EndlessField<? extends EndlessFieldCell> field, CellPosition position
+    );
 }

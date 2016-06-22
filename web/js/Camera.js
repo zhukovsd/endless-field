@@ -35,10 +35,10 @@ var Camera = function(fieldView) {
     
     this.cellsScope = function() {
         var view = this.fieldView;
-        var canvas = view.canvas;
+        var container = view.canvasContainer;
         
         return new Scope(
-            canvas.clientWidth, canvas.clientHeight, this.position, view.drawSettings.cellSize,
+            container.clientWidth, container.clientHeight, this.position, view.drawSettings.cellSize,
             view.fieldManager.chunkSize, view.fieldManager.chunkIdFactor
         );
     };
@@ -55,4 +55,14 @@ var Camera = function(fieldView) {
             height: cellSize.height
         };
     };
+
+    this.cellPositionByPoint = function(mousePosition) {
+        var chunkOrigin = this.position.getChunkOrigin();
+        var cellSize = this.fieldView.drawSettings.cellSize;
+
+        return new CellPosition(
+            Math.floor((mousePosition.y + this.position.shift.y) / cellSize.height) + chunkOrigin.row,
+            Math.floor((mousePosition.x + this.position.shift.x) / cellSize.width) + chunkOrigin.column
+        );
+    }
 };

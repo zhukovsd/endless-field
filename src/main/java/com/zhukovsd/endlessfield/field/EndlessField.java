@@ -37,8 +37,9 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class EndlessField<T extends EndlessFieldCell> {
     public ChunkSize chunkSize;
-    private EndlessFieldDataSource<T> dataSource;
-    private EndlessFieldCellFactory<T> cellFactory;
+    private final EndlessFieldDataSource<T> dataSource;
+    private final EndlessFieldCellFactory<T> cellFactory;
+    public final EndlessFieldActionInvoker actionInvoker;
     // TODO: 21.03.2016 add field size constraints
 
     // TODO: 25.03.2016 hide to private
@@ -68,7 +69,11 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         this.chunkSize = chunkSize;
         this.dataSource = dataSource;
         this.cellFactory = cellFactory;
+
+        actionInvoker = createActionInvoker();
     }
+
+    protected abstract EndlessFieldActionInvoker createActionInvoker();
 
     public static EndlessField instantiate(
             String className, int stripes, ChunkSize chunkSize, EndlessFieldDataSource dataSource,
@@ -82,41 +87,6 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 
         return (EndlessField) constructor.newInstance(stripes, chunkSize, dataSource, cellFactory);
     }
-
-//    public EndlessFieldChunk<T> provideAndLockChunk(Integer chunkId) {
-//        // lock on chunkId to prevent simultaneous creating / removing of chunk with same id by different threads.
-//        // if one thread entered this lambda, another thread, requesting chunk with same id will have to wait.
-//        return lockManager.executeLocked(chunkId, () -> {
-//            EndlessFieldChunk<T> chunk = null;
-//
-//            try {
-//                // get already loaded chunk
-//                if (chunkMap.containsKey(chunkId))
-//                    chunk = chunkMap.get(chunkId);
-//                // get stored, but not loaded chunk
-//                else if (dataSource.containsChunk(chunkId)) {
-//                    chunk = dataSource.getChunk(chunkId, chunkSize);
-//                    // TODO: 21.03.2016 check if chunk has correct size
-//                    chunk.setStored(true);
-//                    chunkMap.put(chunkId, chunk);
-//                // generate new chunk and store it
-//                } else {
-//                    chunk = generateChunk(chunkId);
-//                    chunkMap.put(chunkId, chunk);
-//
-//                    chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunk, chunkId));
-//                }
-//
-//                // lock on chunk's lock object to protect it from being deleted after exiting from locked lambda,
-//                // but before locking on lock object, which will cause exception in reader thread
-//                chunk.lock.lock();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//
-//            return chunk;
-//        });
-//    }
 
     // TODO: 25.04.2016 this method might throw exception
     EndlessFieldChunk<T> instantiateChunk(Integer chunkId) {
@@ -218,17 +188,22 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     // It is possible that some of entries to update belongs to currently storing, or queued to store chunk.
     // In that case update actions will have no effect (we update existing db record here),
     // in this case cell will be stored with entire chunk during StoreChunkTask execution
-    public void updateEntries(Map<CellPosition, T> entries) {
+    public void updateEntries(Map<CellPosition, ? extends EndlessFieldCell> entries) {
         // get chunk ids for updating cells
         Set<Integer> chunkIds = new HashSet<>();
-        for (Map.Entry<CellPosition, T> entry : entries.entrySet()) {
+        for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
             chunkIds.add(ChunkIdGenerator.generateID(chunkSize, entry.getKey()));
         }
 
         // increment update task counts used to prevent chunk removing before all its tasks are finished
         for (Integer chunkId : chunkIds) chunkMap.getValue(chunkId).updateTaskCount.incrementAndGet();
 
-        cellUpdateExec.submit(new UpdateCellTask<>(dataSource, chunkMap, entries, chunkIds));
+        LinkedHashMap<CellPosition, T> casted = new LinkedHashMap<>(entries.size());
+        for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
+            casted.put(entry.getKey(), ((T) entry.getValue()));
+        }
+
+        cellUpdateExec.submit(new UpdateCellTask<>(dataSource, chunkMap, casted, chunkIds));
     }
 
     public void removeChunk(Integer chunkId) throws InterruptedException {
