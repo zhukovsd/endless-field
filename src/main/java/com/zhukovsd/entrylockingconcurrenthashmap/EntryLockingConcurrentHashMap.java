@@ -18,12 +18,10 @@ package com.zhukovsd.entrylockingconcurrenthashmap;
 
 import com.google.common.util.concurrent.Striped;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -90,31 +88,127 @@ public class EntryLockingConcurrentHashMap<K, V> {
         return lockEntry(key, null);
     }
 
-    public boolean lockEntries(Iterable<K> keys, Function<K, V> instaniator) throws InterruptedException {
+
+//    public boolean lockEntries(Iterable<K> keys, Function<K, V> instaniator) throws InterruptedException {
+//        Set<K> lockSet = lockedKeys.get();
+//        // TODO: 25.03.2016 provide proper exception type
+//        if (lockSet.size() > 0) throw new RuntimeException("striped set has to be empty before locking!");
+//
+//        boolean result = true;
+//        for (K key : keys) {
+//            result = (provideAndLock(key, instaniator) != null);
+//
+//            // add to set only on successful lock
+//            if (result)
+//                lockSet.add(key);
+//            if (!result)
+//                break;
+//        }
+//
+//        // if we unable to lock all requested entries, unlock already locked ones
+//        if (!result)
+//            unlock();
+//
+//        return result;
+//    }
+
+    public boolean lockEntries(
+            Collection<K> keys, Function<Collection<K>, Set<K>> relatedKeysFunction,
+            BiFunction<K, Boolean, V> instantiator
+    ) throws InterruptedException {
         Set<K> lockSet = lockedKeys.get();
         // TODO: 25.03.2016 provide proper exception type
         if (lockSet.size() > 0) throw new RuntimeException("striped set has to be empty before locking!");
 
         boolean result = true;
-        for (K key : keys) {
-            result = (provideAndLock(key, instaniator) != null);
 
-            // add to set only on successful lock
-            if (result)
-                lockSet.add(key);
-            if (!result)
-                break;
+        Set<K> relatedKeys;
+        if (relatedKeysFunction != null) {
+            relatedKeys = relatedKeysFunction.apply(keys);
+        } else {
+            relatedKeys = Collections.emptySet();
         }
 
-        // if we unable to lock all requested entries, unlock already locked ones
-        if (!result)
-            unlock();
+        Iterable<K> keySet;
+        if (relatedKeys.size() != 0) {
+            HashSet<K> s = new HashSet<>(keys.size() + relatedKeys.size());
+            s.addAll(keys);
+            s.addAll(relatedKeys);
+
+            keySet = s;
+        } else {
+            keySet = keys;
+        }
+
+        Iterable<Lock> locks = striped.bulkGet(keySet);
+        for (Lock lock : locks) {
+            lock.lockInterruptibly();
+        }
+
+        try {
+            // provide
+            for (K key : keySet) {
+                boolean isRelated = relatedKeys.contains(key);
+
+                V value = provide(key, isRelated, instantiator);
+
+                if (!isRelated) {
+                    if (value != null) {
+                        // don't add related keys to lockSet, since related keys will be unlocked
+                        lockSet.add(key);
+                    } else {
+                        result = false;
+                        break;
+                    }
+                }
+            }
+
+            // if we unable to lock all requested entries, unlock all and clear lockSet
+            if (!result) {
+                for (Lock lock : locks) {
+                    lock.unlock();
+                }
+
+                lockedKeys.remove();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                Iterable<Lock> relatedKeysLocks = striped.bulkGet(relatedKeys);
+
+                for (Lock relatedKeyLock : relatedKeysLocks) {
+                    relatedKeyLock.unlock();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         return result;
     }
 
-    public boolean lockEntries(Iterable<K> keys) throws InterruptedException {
-        return lockEntries(keys, null);
+    public V provide(K key, Boolean isRelated, BiFunction<K, Boolean, V> instantiator) {
+        V value = null;
+
+        if (map.containsKey(key)) {
+            value = map.get(key);
+        }
+        else {
+            if (instantiator != null) {
+                value = instantiator.apply(key, isRelated);
+
+                if (value != null) {
+                    map.put(key, value);
+                }
+            }
+        }
+
+        return value;
+    }
+
+    public boolean lockEntries(Collection<K> keys) throws InterruptedException {
+        return lockEntries(keys, null, null);
     }
 
     public void unlock() {

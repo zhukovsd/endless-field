@@ -17,6 +17,7 @@
 package com.zhukovsd.endlessfield;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Created by ZhukovSD on 19.03.2016.
@@ -36,7 +37,7 @@ public class ChunkIdGenerator {
         );
     }
 
-    public static Iterable<Integer> chunkIdsByArea(ChunkSize chunkSize, EndlessFieldArea area) {
+    public static Collection<Integer> chunkIdsByArea(ChunkSize chunkSize, EndlessFieldArea area) {
         ArrayList<Integer> chunkIds = new ArrayList<>();
 
         Integer originChunkId = ChunkIdGenerator.generateID(chunkSize, new CellPosition(area.origin.row, area.origin.column));

@@ -18,13 +18,14 @@ package com.zhukovsd.endlessfield.field;
 
 import com.zhukovsd.endlessfield.CellPosition;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 
 /**
  * Created by ZhukovSD on 08.06.2016.
  */
 public interface EndlessFieldActionBehavior {
-    Iterable<Integer> getChunkIds(EndlessField<? extends EndlessFieldCell> field, CellPosition position);
+    Collection<Integer> getChunkIds(EndlessField<? extends EndlessFieldCell> field, CellPosition position);
 
     LinkedHashMap<CellPosition, ? extends EndlessFieldCell> perform(
             EndlessField<? extends EndlessFieldCell> field, CellPosition position

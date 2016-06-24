@@ -133,7 +133,7 @@ public class ActionEndpoint {
         ActionServerMessage serverMessage = null;
 
         EndlessFieldAction action = field.actionInvoker.selectActionByNumber(clientMessage.type);
-        Iterable<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
+        Collection<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
 
         field.lockChunksByIds(chunkIds);
         try {

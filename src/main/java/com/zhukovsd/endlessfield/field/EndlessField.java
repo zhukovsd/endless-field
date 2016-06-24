@@ -88,9 +88,13 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return (EndlessField) constructor.newInstance(stripes, chunkSize, dataSource, cellFactory);
     }
 
+    protected Set<Integer> relatedChunks(Collection<Integer> keys) {
+        return Collections.emptySet();
+    }
+
     // TODO: 25.04.2016 this method might throw exception
-    EndlessFieldChunk<T> instantiateChunk(Integer chunkId) {
-        EndlessFieldChunk<T> chunk;
+    private EndlessFieldChunk<T> instantiateChunk(Integer chunkId, Boolean isRelated) {
+        EndlessFieldChunk<T> chunk = null;
 
         // get stored, but not loaded chunk
         if (dataSource.containsChunk(chunkId)) {
@@ -98,7 +102,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
             // TODO: 21.03.2016 check if chunk has correct size
             chunk.setStored(true);
         // generate new chunk and store it
-        } else {
+        } else if (!isRelated) {
             chunk = generateChunk(chunkId);
             chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunkMap, chunkId, chunk));
         }
@@ -119,8 +123,8 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return chunk;
     }
 
-    public boolean lockChunksByIds(Iterable<Integer> chunkIds) throws InterruptedException {
-        return chunkMap.lockEntries(chunkIds, this::instantiateChunk);
+    public boolean lockChunksByIds(Collection<Integer> chunkIds) throws InterruptedException {
+        return chunkMap.lockEntries(chunkIds, this::relatedChunks, this::instantiateChunk);
     }
 
     public boolean lockChunksByPositions(Iterable<CellPosition> positions) throws InterruptedException {
