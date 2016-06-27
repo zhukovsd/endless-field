@@ -23,14 +23,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Created by ZhukovSD on 23.04.2016.
  */
 public class EntryLockingConcurrentHashMap<K, V> {
-    private ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>();
-    public Striped<Lock> striped;
+    private final ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>();
+    private final Striped<Lock> striped;
+    private final Supplier<V> nullSupplier;
+    private Class<?> nullClass;
 
+    // switch to hash set?
     private ThreadLocal<TreeSet<K>> lockedKeys = new ThreadLocal<TreeSet<K>>() {
         @Override
         protected TreeSet<K> initialValue() {
@@ -38,8 +43,25 @@ public class EntryLockingConcurrentHashMap<K, V> {
         }
     };
 
-    public EntryLockingConcurrentHashMap(int stripes) {
+    private ThreadLocal<HashSet<K>> reprovideKeys = new ThreadLocal<HashSet<K>>() {
+        @Override
+        protected HashSet<K> initialValue() {
+            return new HashSet<K>();
+        }
+    };
+
+    public EntryLockingConcurrentHashMap(int stripes, Supplier<V> nullSupplier) {
         striped = Striped.lock(stripes);
+        this.nullSupplier = nullSupplier;
+
+        if (nullSupplier != null)
+            nullClass = nullSupplier.get().getClass();
+        else
+            nullClass = null;
+    }
+
+    public EntryLockingConcurrentHashMap(int stripes) {
+        this(stripes, null);
     }
 
     // TODO: 24.04.2016 return boolean
@@ -113,8 +135,8 @@ public class EntryLockingConcurrentHashMap<K, V> {
 //    }
 
     public boolean lockEntries(
-            Collection<K> keys, Function<Collection<K>, Set<K>> relatedKeysFunction,
-            BiFunction<K, Boolean, V> instantiator
+            Collection<K> keys, Function<K, Set<K>> relatedKeysFunction,
+            BiFunction<K, InstantiationData<K>, InstantiationResult<V>> instantiator
     ) throws InterruptedException {
         Set<K> lockSet = lockedKeys.get();
         // TODO: 25.03.2016 provide proper exception type
@@ -124,7 +146,10 @@ public class EntryLockingConcurrentHashMap<K, V> {
 
         Set<K> relatedKeys;
         if (relatedKeysFunction != null) {
-            relatedKeys = relatedKeysFunction.apply(keys);
+            relatedKeys = new HashSet<>();
+            for (K key : keys) {
+                relatedKeys.addAll(relatedKeysFunction.apply(key));
+            }
         } else {
             relatedKeys = Collections.emptySet();
         }
@@ -146,22 +171,51 @@ public class EntryLockingConcurrentHashMap<K, V> {
         }
 
         try {
+            HashSet<K> reprovideSet = reprovideKeys.get();
+
             // provide
             for (K key : keySet) {
-                boolean isRelated = relatedKeys.contains(key);
+                boolean isRelated = !(keys.contains(key));
 
-                V value = provide(key, isRelated, instantiator);
+                V value = provide(
+                        key, new InstantiationData<>(isRelated, map.containsKey(key), false, lockSet), instantiator
+                );
 
-                if (!isRelated) {
+//                if (!isRelated) {
                     if (value != null) {
                         // don't add related keys to lockSet, since related keys will be unlocked
                         lockSet.add(key);
-                    } else {
+                    } else if (!reprovideSet.contains(key) && !isRelated) {
                         result = false;
                         break;
-                    }
+//                    }
                 }
             }
+
+            if (result) {
+                // reprovide
+                for (K key : reprovideSet) {
+                    boolean isRelated = !(keys.contains(key));
+
+                    V value = provide(
+                            key, new InstantiationData<>(isRelated, map.containsKey(key), true, lockSet), instantiator
+                    );
+
+//                    if (!isRelated) {
+                        if (value != null) {
+                            // don't add related keys to lockSet, since related keys will be unlocked
+                            lockSet.add(key);
+                        } else if (!isRelated) {
+                            result = false;
+                            break;
+                        }
+//                    }
+                }
+            }
+
+            reprovideKeys.remove();
+
+            // TODO: 25.06.2016 react to exceptions in instantiator
 
             // if we unable to lock all requested entries, unlock all and clear lockSet
             if (!result) {
@@ -174,32 +228,54 @@ public class EntryLockingConcurrentHashMap<K, V> {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            try {
+//            try {
+                relatedKeys.removeAll(keys);
                 Iterable<Lock> relatedKeysLocks = striped.bulkGet(relatedKeys);
 
                 for (Lock relatedKeyLock : relatedKeysLocks) {
                     relatedKeyLock.unlock();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+
+                lockSet.removeAll(relatedKeys);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
         }
 
         return result;
     }
 
-    public V provide(K key, Boolean isRelated, BiFunction<K, Boolean, V> instantiator) {
+    public V provide(
+            K key, InstantiationData<K> data, BiFunction<K, InstantiationData<K>, InstantiationResult<V>> instantiator
+    ) {
         V value = null;
 
-        if (map.containsKey(key)) {
+        if (map.containsKey(key) && ((nullClass != null) && !(nullClass.isInstance(map.get(key))) || (nullClass == null))) {
             value = map.get(key);
         }
         else {
-            if (instantiator != null) {
-                value = instantiator.apply(key, isRelated);
+//            boolean isNull = map.containsKey(key);
 
-                if (value != null) {
-                    map.put(key, value);
+            if (data.isNull && data.isRelated) {
+//                System.out.println("isNull");
+            } else if (data.isNull && !data.isRelated){
+                System.out.println("null but not related");
+            }
+
+//            if ((nullClass != null) && (nullClass.isInstance(map.get(key)))) {
+//                System.out.println("null instance");
+//            }
+
+            if (instantiator != null) {
+                InstantiationResult<V> result = instantiator.apply(key, data);
+
+                if (result.type == InstantiationResultType.PROVIDED) {
+                    map.put(key, result.value);
+                    value = result.value;
+                } else if (result.type == InstantiationResultType.NULL) {
+                    map.put(key, nullSupplier.get());
+                } else if (result.type == InstantiationResultType.NEED_RELATED_VALUE){
+                    reprovideKeys.get().add(key);
                 }
             }
         }
@@ -249,7 +325,7 @@ public class EntryLockingConcurrentHashMap<K, V> {
         return map.get(key);
     }
 
-    public boolean removeIf(K key, Function<V, Boolean> condition) throws InterruptedException {
+    public boolean removeIf(K key, Predicate<V> condition) throws InterruptedException {
 //        V value = provideAndLock(key, null);
         Lock lock = null;
 
@@ -262,8 +338,9 @@ public class EntryLockingConcurrentHashMap<K, V> {
                 V value = map.get(key);
 
                 boolean isRemove = true;
-                if (condition != null)
-                    isRemove = condition.apply(value);
+                // if value is "null" - always remove, otherwise evaluate condition
+                if (!((nullClass != null) && (nullClass.isInstance(value))) && (condition != null))
+                    isRemove = condition.test(value);
 
                 if (isRemove)
                     map.remove(key, value);

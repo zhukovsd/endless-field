@@ -17,18 +17,20 @@
 package com.zhukovsd.experiments.concurrency.concurrentchunkproviding;
 
 import com.zhukovsd.endlessfield.CellPosition;
-import com.zhukovsd.endlessfield.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.ChunkSize;
+import com.zhukovsd.endlessfield.EndlessFieldArea;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
-import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
-import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
+import com.zhukovsd.endlessfield.field.EndlessFieldChunkFactory;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
 import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 import com.zhukovsd.simplefield.SimpleFieldDataSource;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,12 +50,24 @@ public class ConcurrentExtendedChunkSetProviding {
                 new SimpleFieldCellFactory()
         ) {
             @Override
-            protected Set<Integer> relatedChunks(Collection<Integer> keys) {
+            protected Set<Integer> relatedChunks(Integer chunkId) {
                 return Collections.singleton(10);
             }
+
+//            @Override
+//            protected EndlessFieldChunkFactory<SimpleFieldCell> createChunkFactory() {
+//                return new EndlessFieldChunkFactory<SimpleFieldCell>(this) {
+//                    @Override
+//                    protected EndlessFieldChunk<SimpleFieldCell> generateChunk(Integer chunkId, Collection<Integer> lockedChunkIds) {
+//                        new EndlessFieldArea()
+//
+//                        return null;
+//                    }
+//                };
+//            }
         };
 
-        int count = 2;
+        int count = 9;
         int setSize = 2;
 
         AtomicInteger counter = new AtomicInteger();
@@ -103,6 +117,8 @@ public class ConcurrentExtendedChunkSetProviding {
         TimeUnit.SECONDS.sleep(1);
 
         exec.shutdownNow();
+
+//        field.removeChunk(10);
 
         System.out.println("counter = " + counter);
     }

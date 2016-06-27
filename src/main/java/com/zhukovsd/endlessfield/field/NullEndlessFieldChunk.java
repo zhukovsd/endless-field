@@ -16,19 +16,11 @@
 
 package com.zhukovsd.endlessfield.field;
 
-import java.util.Collection;
-
 /**
- * Created by ZhukovSD on 24.06.2016.
+ * Created by ZhukovSD on 25.06.2016.
  */
-public abstract class EndlessFieldChunkFactory<T extends EndlessFieldCell> {
-    protected final EndlessField<T> field;
-
-    public EndlessFieldChunkFactory(EndlessField<T> field) {
-        this.field = field;
+public class NullEndlessFieldChunk<T extends EndlessFieldCell> extends EndlessFieldChunk<T> {
+    NullEndlessFieldChunk() {
+        super(0);
     }
-
-    protected EndlessFieldChunk<T> generateChunk(Integer chunkId, Collection<Integer> lockedChunkIds) {
-        return new EndlessFieldChunk<>(field.chunkSize.cellCount());
-    };
 }

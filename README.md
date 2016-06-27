@@ -16,6 +16,7 @@ Core
 Server
 - [ ] don't resend same chunks on partial user's scope changing ([0,1] -> [1,2] - send chunk with id = 2)
 - [ ] statistics (server performance parameters)
+- [ ] loaded chunk cap, exceeding chunks removing
 
 Client
 - [ ] resize events

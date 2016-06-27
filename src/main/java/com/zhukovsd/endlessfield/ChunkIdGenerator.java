@@ -62,4 +62,10 @@ public class ChunkIdGenerator {
 
         return chunkIds;
     }
+
+    public static EndlessFieldArea chunkAreaById(int chunkId, ChunkSize chunkSize) {
+        return new EndlessFieldArea(
+                ChunkIdGenerator.chunkOrigin(chunkSize, chunkId), chunkSize.rowCount, chunkSize.columnCount
+        );
+    }
 }

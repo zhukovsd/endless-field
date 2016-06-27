@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.endlessfield.field;
+package com.zhukovsd.entrylockingconcurrenthashmap;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
- * Created by ZhukovSD on 24.06.2016.
+ * Created by ZhukovSD on 25.06.2016.
  */
-public abstract class EndlessFieldChunkFactory<T extends EndlessFieldCell> {
-    protected final EndlessField<T> field;
+public class InstantiationData<K> {
+    public final boolean isRelated;
+    public final boolean isNull;
+    public final boolean isReproviding;
+    public final Set<K> lockedKeys;
 
-    public EndlessFieldChunkFactory(EndlessField<T> field) {
-        this.field = field;
+    InstantiationData(boolean isRelated, boolean isNull, boolean isReproviding, Set<K> lockedKeys) {
+        this.isRelated = isRelated;
+        this.isNull = isNull;
+        this.isReproviding = isReproviding;
+        this.lockedKeys = lockedKeys;
     }
-
-    protected EndlessFieldChunk<T> generateChunk(Integer chunkId, Collection<Integer> lockedChunkIds) {
-        return new EndlessFieldChunk<>(field.chunkSize.cellCount());
-    };
 }

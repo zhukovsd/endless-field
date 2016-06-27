@@ -17,6 +17,8 @@
 package com.zhukovsd.endlessfield;
 
 import java.util.Iterator;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Created by ZhukovSD on 09.06.2016.
@@ -47,6 +49,14 @@ public class EndlessFieldArea implements Iterable<CellPosition> {
         return this;
     };
 
+    public EndlessFieldArea narrowToCenter(int amount) {
+        if ((amount * 2 + 1 <= columnCount) && (amount * 2 + 1 <= rowCount)) {
+            return this.expandFromCenter(-amount);
+        } else {
+            throw new RuntimeException("can't narrow given area with given amount");
+        }
+    }
+
     @Override
     public Iterator<CellPosition> iterator() {
         return new Iterator<CellPosition>() {
@@ -67,5 +77,11 @@ public class EndlessFieldArea implements Iterable<CellPosition> {
                 return new CellPosition(row, column);
             }
         };
+    }
+
+
+
+    Stream<CellPosition> stream() {
+        return StreamSupport.stream(spliterator(), false);
     }
 }

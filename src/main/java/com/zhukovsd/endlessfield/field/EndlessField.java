@@ -23,6 +23,8 @@ import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.endlessfield.fielddatasource.StoreChunkTask;
 import com.zhukovsd.endlessfield.fielddatasource.UpdateCellTask;
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
+import com.zhukovsd.entrylockingconcurrenthashmap.InstantiationData;
+import com.zhukovsd.entrylockingconcurrenthashmap.InstantiationResult;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -39,6 +41,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     public ChunkSize chunkSize;
     private final EndlessFieldDataSource<T> dataSource;
     private final EndlessFieldCellFactory<T> cellFactory;
+    private final EndlessFieldChunkFactory<T> chunkFactory;
     public final EndlessFieldActionInvoker actionInvoker;
     // TODO: 21.03.2016 add field size constraints
 
@@ -65,15 +68,18 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 //    };
 
     public EndlessField(int stripes, ChunkSize chunkSize, EndlessFieldDataSource<T> dataSource, EndlessFieldCellFactory<T> cellFactory) {
-        chunkMap = new EntryLockingConcurrentHashMap<>(stripes);
+        chunkMap = new EntryLockingConcurrentHashMap<>(stripes, NullEndlessFieldChunk::new);
         this.chunkSize = chunkSize;
         this.dataSource = dataSource;
         this.cellFactory = cellFactory;
 
+        chunkFactory = createChunkFactory();
         actionInvoker = createActionInvoker();
+
     }
 
     protected abstract EndlessFieldActionInvoker createActionInvoker();
+    protected abstract EndlessFieldChunkFactory<T> createChunkFactory();
 
     public static EndlessField instantiate(
             String className, int stripes, ChunkSize chunkSize, EndlessFieldDataSource dataSource,
@@ -88,26 +94,52 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return (EndlessField) constructor.newInstance(stripes, chunkSize, dataSource, cellFactory);
     }
 
-    protected Set<Integer> relatedChunks(Collection<Integer> keys) {
+    protected Set<Integer> relatedChunks(Integer chunkId) {
         return Collections.emptySet();
     }
 
     // TODO: 25.04.2016 this method might throw exception
-    private EndlessFieldChunk<T> instantiateChunk(Integer chunkId, Boolean isRelated) {
-        EndlessFieldChunk<T> chunk = null;
+    private InstantiationResult<EndlessFieldChunk<T>> instantiateChunk(
+            Integer chunkId, InstantiationData<Integer> data
+    ) {
+        EndlessFieldChunk<T> chunk;
+        InstantiationResult<EndlessFieldChunk<T>> result;
+
+//        System.out.format(
+//                "chunk id = %s, isRelated = %s, isNull = %s, set = %s, related ids = %s\n",
+//                chunkId, data.isRelated, data.isNull, data.lockedKeys.toString(), relatedChunks(chunkId)
+//        );
 
         // get stored, but not loaded chunk
-        if (dataSource.containsChunk(chunkId)) {
+        if (!data.isNull && dataSource.containsChunk(chunkId)) {
             chunk = dataSource.getChunk(chunkId, chunkSize);
             // TODO: 21.03.2016 check if chunk has correct size
             chunk.setStored(true);
-        // generate new chunk and store it
-        } else if (!isRelated) {
-            chunk = generateChunk(chunkId);
-            chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunkMap, chunkId, chunk));
+
+            result = InstantiationResult.provided(chunk);
+        } else if (!data.isRelated) {
+            // generate new chunk and store it
+            Set<Integer> relatedChunks = relatedChunks(chunkId);
+
+            if (relatedChunks.contains(chunkId)) {
+                throw new RuntimeException("related chunks can't contain current chunk id");
+            }
+
+            if (data.lockedKeys.containsAll(relatedChunks) || data.isReproviding) {
+//                chunk = generateChunk(chunkId);
+                chunk = chunkFactory.generateChunk(chunkId, data.lockedKeys);
+
+                chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunkMap, chunkId, chunk));
+
+                result = InstantiationResult.provided(chunk);
+            } else {
+                result = InstantiationResult.needRelated();
+            }
+        } else {
+            result = InstantiationResult.nullValue();
         }
 
-        return chunk;
+        return result;
     }
 
     private EndlessFieldChunk<T> generateChunk(int chunkId) {
