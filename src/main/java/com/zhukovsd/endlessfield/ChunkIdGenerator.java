@@ -16,6 +16,8 @@
 
 package com.zhukovsd.endlessfield;
 
+import com.zhukovsd.endlessfield.field.EndlessField;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -63,9 +65,11 @@ public class ChunkIdGenerator {
         return chunkIds;
     }
 
-    public static EndlessFieldArea chunkAreaById(int chunkId, ChunkSize chunkSize) {
+    // TODO: 28.06.2016 move to EndlessFieldArea class
+    public static EndlessFieldArea chunkAreaById(EndlessField<?> field, int chunkId) {
+        ChunkSize chunkSize = field.chunkSize;
         return new EndlessFieldArea(
-                ChunkIdGenerator.chunkOrigin(chunkSize, chunkId), chunkSize.rowCount, chunkSize.columnCount
+                field, ChunkIdGenerator.chunkOrigin(chunkSize, chunkId), chunkSize.rowCount, chunkSize.columnCount
         );
     }
 }

@@ -2,6 +2,7 @@ package com.zhukovsd.experiments.concurrency.concurrentchunkdeleting;
 
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.ChunkSize;
+import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.endlessfield.fielddatasource.StoreChunkTask;
 import com.zhukovsd.endlessfield.fielddatasource.UpdateCellTask;
 import com.zhukovsd.simplefield.SimpleField;
@@ -22,7 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ConcurrentChunkDeleting {
     public static void main(String[] args) throws InterruptedException {
         ChunkSize chunkSize = new ChunkSize(50, 50);
-        final SimpleField field = new SimpleField(16, chunkSize, new SimpleFieldDataSource(), new SimpleFieldCellFactory());
+        EndlessFieldSizeConstraints constraints = new EndlessFieldSizeConstraints(40000, 40000);
+        final SimpleField field = new SimpleField(16, chunkSize, constraints, new SimpleFieldDataSource(), new SimpleFieldCellFactory());
 
         ThreadPoolExecutor chunkStoreExec = ((ThreadPoolExecutor) field.chunkStoreExec);
         ThreadPoolExecutor cellUpdateExec = ((ThreadPoolExecutor) field.cellUpdateExec);

@@ -19,6 +19,7 @@ package com.zhukovsd.endlessfield.field;
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.ChunkSize;
+import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.endlessfield.fielddatasource.StoreChunkTask;
 import com.zhukovsd.endlessfield.fielddatasource.UpdateCellTask;
@@ -38,15 +39,14 @@ import java.util.concurrent.TimeUnit;
  * Created by ZhukovSD on 13.03.2016.
  */
 public abstract class EndlessField<T extends EndlessFieldCell> {
-    public ChunkSize chunkSize;
+    public final ChunkSize chunkSize;
+    public final EndlessFieldSizeConstraints sizeConstraints;
+
     private final EndlessFieldDataSource<T> dataSource;
     private final EndlessFieldCellFactory<T> cellFactory;
     private final EndlessFieldChunkFactory<T> chunkFactory;
     public final EndlessFieldActionInvoker actionInvoker;
-    // TODO: 21.03.2016 add field size constraints
 
-    // TODO: 25.03.2016 hide to private
-//    public ConcurrentHashMap<Integer, EndlessFieldChunk<T>> chunkMap = new ConcurrentHashMap<>();
     private EntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<T>> chunkMap;
 
     // TODO: 22.03.2016 proper shutdown
@@ -67,11 +67,13 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 //        }
 //    };
 
-    public EndlessField(int stripes, ChunkSize chunkSize, EndlessFieldDataSource<T> dataSource, EndlessFieldCellFactory<T> cellFactory) {
-        chunkMap = new EntryLockingConcurrentHashMap<>(stripes, NullEndlessFieldChunk::new);
+    public EndlessField(int stripes, ChunkSize chunkSize, EndlessFieldSizeConstraints sizeConstraints, EndlessFieldDataSource<T> dataSource, EndlessFieldCellFactory<T> cellFactory) {
         this.chunkSize = chunkSize;
+        this.sizeConstraints = sizeConstraints;
         this.dataSource = dataSource;
         this.cellFactory = cellFactory;
+
+        chunkMap = new EntryLockingConcurrentHashMap<>(stripes, NullEndlessFieldChunk::new);
 
         chunkFactory = createChunkFactory();
         actionInvoker = createActionInvoker();
@@ -105,10 +107,10 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         EndlessFieldChunk<T> chunk;
         InstantiationResult<EndlessFieldChunk<T>> result;
 
-//        System.out.format(
-//                "chunk id = %s, isRelated = %s, isNull = %s, set = %s, related ids = %s\n",
-//                chunkId, data.isRelated, data.isNull, data.lockedKeys.toString(), relatedChunks(chunkId)
-//        );
+        System.out.format(
+                "chunk id = %s, isRelated = %s, isNull = %s, set = %s, related ids = %s\n",
+                chunkId, data.isRelated, data.isNull, data.lockedKeys.toString(), relatedChunks(chunkId)
+        );
 
         // get stored, but not loaded chunk
         if (!data.isNull && dataSource.containsChunk(chunkId)) {
@@ -142,20 +144,8 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return result;
     }
 
-    private EndlessFieldChunk<T> generateChunk(int chunkId) {
-        EndlessFieldChunk<T> chunk = new EndlessFieldChunk<>(chunkSize.cellCount());
-        CellPosition chunkOrigin = ChunkIdGenerator.chunkOrigin(chunkSize, chunkId);
-
-        for (int row = 0; row < chunkSize.rowCount; row++) {
-            for (int column = 0; column < chunkSize.columnCount; column++) {
-                chunk.put(new CellPosition(chunkOrigin.row + row, chunkOrigin.column + column), cellFactory.create());
-            }
-        }
-
-        return chunk;
-    }
-
     public boolean lockChunksByIds(Collection<Integer> chunkIds) throws InterruptedException {
+        // TODO: 28.06.2016 check constraints (chunk row/column count)
         return chunkMap.lockEntries(chunkIds, this::relatedChunks, this::instantiateChunk);
     }
 

@@ -2,6 +2,7 @@ package com.zhukovsd.experiments.performance;
 
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.ChunkSize;
+import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
@@ -24,6 +25,7 @@ public class ConcurrentChunkAccessExperiment {
 
         SimpleField field = new SimpleField(
                 1000, chunkSize,
+                new EndlessFieldSizeConstraints(40000, 40000),
                 new EndlessFieldDataSource<SimpleFieldCell>() {
                     @Override
                     public boolean containsChunk(Integer chunkId) {

@@ -1,21 +1,23 @@
 package com.zhukovsd.simplefield;
 
 import com.zhukovsd.endlessfield.ChunkSize;
+import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldActionInvoker;
 import com.zhukovsd.endlessfield.field.EndlessFieldCellFactory;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunkFactory;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 
-import java.util.Collections;
-import java.util.Set;
-
 /**
  * Created by ZhukovSD on 20.03.2016.
  */
 public class SimpleField extends EndlessField<SimpleFieldCell> {
-    public SimpleField(int stripes, ChunkSize chunkSize, EndlessFieldDataSource<SimpleFieldCell> dataSource, EndlessFieldCellFactory<SimpleFieldCell> cellFactory) {
-        super(stripes, chunkSize, dataSource, cellFactory);
+    public SimpleField(
+            int stripes, ChunkSize chunkSize, EndlessFieldSizeConstraints sizeConstraints,
+            EndlessFieldDataSource<SimpleFieldCell> dataSource,
+            EndlessFieldCellFactory<SimpleFieldCell> cellFactory
+    ) {
+        super(stripes, chunkSize, sizeConstraints, dataSource, cellFactory);
     }
 
     @Override

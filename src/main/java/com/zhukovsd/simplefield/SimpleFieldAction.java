@@ -53,12 +53,12 @@ enum SimpleFieldAction implements EndlessFieldAction {
     TOGGLE_SQUARE_REGION(new EndlessFieldActionBehavior() {
         @Override
         public Collection<Integer> getChunkIds(EndlessField<? extends EndlessFieldCell> field, CellPosition position) {
-            return ChunkIdGenerator.chunkIdsByArea(field.chunkSize, new EndlessFieldArea(position, 1, 1).expandFromCenter(1));
+            return ChunkIdGenerator.chunkIdsByArea(field.chunkSize, new EndlessFieldArea(field, position, 1, 1).expandFromCenter(1));
         }
 
         @Override
         public LinkedHashMap<CellPosition, ? extends EndlessFieldCell> perform(EndlessField<? extends EndlessFieldCell> field, CellPosition position) {
-            EndlessFieldArea area = new EndlessFieldArea(position, 1, 1).expandFromCenter(1);
+            EndlessFieldArea area = new EndlessFieldArea(field, position, 1, 1).expandFromCenter(1);
             LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = field.getEntries(area);
 
             boolean value = !((SimpleFieldCell) entries.get(position)).isChecked();
@@ -80,12 +80,12 @@ enum SimpleFieldAction implements EndlessFieldAction {
 
         @Override
         public Collection<Integer> getChunkIds(EndlessField<? extends EndlessFieldCell> field, CellPosition position) {
-            return ChunkIdGenerator.chunkIdsByArea(field.chunkSize, new EndlessFieldArea(position, 1, 1).expandFromCenter(radius));
+            return ChunkIdGenerator.chunkIdsByArea(field.chunkSize, new EndlessFieldArea(field, position, 1, 1).expandFromCenter(radius));
         }
 
         @Override
         public LinkedHashMap<CellPosition, ? extends EndlessFieldCell> perform(EndlessField<? extends EndlessFieldCell> field, CellPosition position) {
-            EndlessFieldArea area = new EndlessFieldArea(position, 1, 1).expandFromCenter(radius);
+            EndlessFieldArea area = new EndlessFieldArea(field, position, 1, 1).expandFromCenter(radius);
             LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = field.getEntries(area);
             LinkedHashMap<CellPosition, EndlessFieldCell> result = new LinkedHashMap<>();
 

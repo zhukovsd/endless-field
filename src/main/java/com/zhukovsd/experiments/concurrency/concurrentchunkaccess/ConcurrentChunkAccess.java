@@ -1,5 +1,6 @@
 package com.zhukovsd.experiments.concurrency.concurrentchunkaccess;
 
+import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 import com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockCheckTask;
 import com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockReadTask;
@@ -54,6 +55,7 @@ public class ConcurrentChunkAccess {
         SimpleField field = new SimpleField(
                 16,
                 new ChunkSize(50, 50),
+                new EndlessFieldSizeConstraints(40000, 40000),
                 new EndlessFieldDataSource<SimpleFieldCell>() {
                     @Override
                     public boolean containsChunk(Integer chunkId) {

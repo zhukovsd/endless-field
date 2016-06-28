@@ -19,6 +19,7 @@ package com.zhukovsd.experiments.concurrency.concurrentchunkproviding;
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.ChunkSize;
 import com.zhukovsd.endlessfield.EndlessFieldArea;
+import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunkFactory;
@@ -45,7 +46,7 @@ public class ConcurrentExtendedChunkSetProviding {
         ExecutorService exec = Executors.newCachedThreadPool();
 
         SimpleField field = new SimpleField(
-                16, new ChunkSize(50, 50),
+                16, new ChunkSize(50, 50), new EndlessFieldSizeConstraints(40000, 40000),
                 new SimpleFieldDataSource(),
                 new SimpleFieldCellFactory()
         ) {
