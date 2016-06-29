@@ -259,7 +259,7 @@ public class EntryLockingConcurrentHashMap<K, V> {
             if (data.isNull && data.isRelated) {
 //                System.out.println("isNull");
             } else if (data.isNull && !data.isRelated){
-                System.out.println("null but not related");
+//                System.out.println("null but not related");
             }
 
 //            if ((nullClass != null) && (nullClass.isInstance(map.get(key)))) {

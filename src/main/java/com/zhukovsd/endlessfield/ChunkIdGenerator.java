@@ -27,9 +27,14 @@ import java.util.Collection;
 public class ChunkIdGenerator {
     public static int idFactor = 40000;
 
-    public static int generateID(ChunkSize chunkSize, CellPosition position) {
+    public static int chunkIdByChunkRowAndColumn(int chunkRow, int chunkColumn) {
+        return chunkRow * idFactor + chunkColumn;
+    }
+
+    public static int chunkIdByPosition(ChunkSize chunkSize, CellPosition position) {
 //        return 0;
-        return (position.row / chunkSize.rowCount) * idFactor + (position.column / chunkSize.columnCount);
+//        return (position.row / chunkSize.rowCount) * idFactor + (position.column / chunkSize.columnCount);
+        return chunkIdByChunkRowAndColumn(position.row / chunkSize.rowCount, position.column / chunkSize.columnCount);
     }
 
     public static CellPosition chunkOrigin(ChunkSize chunkSize, int chunkId) {
@@ -39,20 +44,38 @@ public class ChunkIdGenerator {
         );
     }
 
+    public static int chunkRow(Integer chunkId) {
+        return chunkId / idFactor;
+    }
+
+    public static int chunkColumn(Integer chunkId) {
+        return chunkId % idFactor;
+    }
+
     public static Collection<Integer> chunkIdsByArea(ChunkSize chunkSize, EndlessFieldArea area) {
+        // TODO: 29.06.2016 area (0, 9, 6, 6) with chunk size (5, 5) gives incorrect result (fix in js too!)
+
         ArrayList<Integer> chunkIds = new ArrayList<>();
 
-        Integer originChunkId = ChunkIdGenerator.generateID(chunkSize, new CellPosition(area.origin.row, area.origin.column));
+        Integer originChunkId = ChunkIdGenerator.chunkIdByPosition(chunkSize, new CellPosition(area.origin.row, area.origin.column));
 
-        int vChunkCount = (area.origin.row / chunkSize.rowCount) * chunkSize.rowCount;
-        vChunkCount = area.origin.row + area.rowCount - vChunkCount;
-        vChunkCount = vChunkCount / chunkSize.rowCount;
+//        int vChunkCount = (area.origin.row / chunkSize.rowCount) * chunkSize.rowCount;
+//        vChunkCount = area.origin.row + area.rowCount - vChunkCount;
+//        vChunkCount = vChunkCount / chunkSize.rowCount;
+        int vChunkCount = area.rowCount / chunkSize.rowCount;
+        if (area.rowCount % chunkSize.rowCount == 0)
+            vChunkCount++;
+
         if (!((area.origin.row % chunkSize.rowCount == 0) && (area.rowCount % chunkSize.rowCount == 0)))
             vChunkCount++;
 
-        int hChunkCount = (area.origin.column / chunkSize.columnCount) * chunkSize.columnCount;
-        hChunkCount = area.origin.column + area.columnCount - hChunkCount;
-        hChunkCount = hChunkCount / chunkSize.columnCount;
+//        int hChunkCount = (area.origin.column / chunkSize.columnCount) * chunkSize.columnCount;
+//        hChunkCount = area.origin.column + area.columnCount - hChunkCount;
+//        hChunkCount = hChunkCount / chunkSize.columnCount;
+        int hChunkCount = area.columnCount / chunkSize.rowCount;
+        if (area.columnCount % chunkSize.rowCount == 0)
+            hChunkCount++;
+
         if (!((area.origin.column % chunkSize.columnCount == 0) && (area.columnCount % chunkSize.columnCount == 0)))
             hChunkCount++;
 

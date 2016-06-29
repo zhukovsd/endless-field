@@ -26,6 +26,7 @@ import com.zhukovsd.endlessfield.fielddatasource.UpdateCellTask;
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 import com.zhukovsd.entrylockingconcurrenthashmap.InstantiationData;
 import com.zhukovsd.entrylockingconcurrenthashmap.InstantiationResult;
+import com.zhukovsd.entrylockingconcurrenthashmap.InstantiationResultType;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -100,17 +101,14 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return Collections.emptySet();
     }
 
+    int c = 0;
+
     // TODO: 25.04.2016 this method might throw exception
     private InstantiationResult<EndlessFieldChunk<T>> instantiateChunk(
             Integer chunkId, InstantiationData<Integer> data
     ) {
         EndlessFieldChunk<T> chunk;
         InstantiationResult<EndlessFieldChunk<T>> result;
-
-        System.out.format(
-                "chunk id = %s, isRelated = %s, isNull = %s, set = %s, related ids = %s\n",
-                chunkId, data.isRelated, data.isNull, data.lockedKeys.toString(), relatedChunks(chunkId)
-        );
 
         // get stored, but not loaded chunk
         if (!data.isNull && dataSource.containsChunk(chunkId)) {
@@ -141,6 +139,13 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
             result = InstantiationResult.nullValue();
         }
 
+        System.out.format(
+                "id = %s, isRelated = %s, isNull = %s, set = %s, related ids = %s %s\n",
+                chunkId, data.isRelated, data.isNull, data.lockedKeys.toString(), relatedChunks(chunkId),
+                (result.type == InstantiationResultType.PROVIDED) ? "PROVIDED" : ((result.type == InstantiationResultType.NULL) ? "NULL" : "DELAYED")
+        );
+//        String s = (result.type == InstantiationResultType.PROVIDED) ? "PROVIDED" : ((result.type == InstantiationResultType.NULL) ? "NULL" : "DELAYED");
+
         return result;
     }
 
@@ -152,7 +157,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     public boolean lockChunksByPositions(Iterable<CellPosition> positions) throws InterruptedException {
         Set<Integer> chunkIds = new HashSet<>();
 
-        for (CellPosition position : positions) chunkIds.add(ChunkIdGenerator.generateID(chunkSize, position));
+        for (CellPosition position : positions) chunkIds.add(ChunkIdGenerator.chunkIdByPosition(chunkSize, position));
 
         return lockChunksByIds(chunkIds);
     }
@@ -162,7 +167,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     }
 
     public T getCell(CellPosition position) {
-        Integer chunkId = ChunkIdGenerator.generateID(chunkSize, position);
+        Integer chunkId = ChunkIdGenerator.chunkIdByPosition(chunkSize, position);
         EndlessFieldChunk<T> chunk = chunkMap.getValue(chunkId);
 
         return chunk.get(position);
@@ -218,7 +223,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         // get chunk ids for updating cells
         Set<Integer> chunkIds = new HashSet<>();
         for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
-            chunkIds.add(ChunkIdGenerator.generateID(chunkSize, entry.getKey()));
+            chunkIds.add(ChunkIdGenerator.chunkIdByPosition(chunkSize, entry.getKey()));
         }
 
         // increment update task counts used to prevent chunk removing before all its tasks are finished

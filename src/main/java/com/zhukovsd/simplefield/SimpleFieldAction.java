@@ -33,7 +33,7 @@ enum SimpleFieldAction implements EndlessFieldAction {
     TOGGLE_CELL(new EndlessFieldActionBehavior() {
         @Override
         public Collection<Integer> getChunkIds(EndlessField<? extends EndlessFieldCell> field, CellPosition position) {
-            return Collections.singleton(ChunkIdGenerator.generateID(field.chunkSize, position));
+            return Collections.singleton(ChunkIdGenerator.chunkIdByPosition(field.chunkSize, position));
         }
 
         @Override

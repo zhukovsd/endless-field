@@ -20,8 +20,8 @@ package com.zhukovsd.entrylockingconcurrenthashmap;
  * Created by ZhukovSD on 25.06.2016.
  */
 public class InstantiationResult<V> {
-    final InstantiationResultType type;
-    final V value;
+    final public InstantiationResultType type;
+    final public V value;
 
     private InstantiationResult(InstantiationResultType type, V value) {
         this.type = type;
