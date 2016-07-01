@@ -129,7 +129,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 //                chunk = generateChunk(chunkId);
                 chunk = chunkFactory.generateChunk(chunkId, data.lockedKeys);
 
-                chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunkMap, chunkId, chunk));
+//                chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunkMap, chunkId, chunk));
 
                 result = InstantiationResult.provided(chunk);
             } else {
@@ -139,12 +139,11 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
             result = InstantiationResult.nullValue();
         }
 
-        System.out.format(
-                "id = %s, isRelated = %s, isNull = %s, set = %s, related ids = %s %s\n",
-                chunkId, data.isRelated, data.isNull, data.lockedKeys.toString(), relatedChunks(chunkId),
-                (result.type == InstantiationResultType.PROVIDED) ? "PROVIDED" : ((result.type == InstantiationResultType.NULL) ? "NULL" : "DELAYED")
-        );
-//        String s = (result.type == InstantiationResultType.PROVIDED) ? "PROVIDED" : ((result.type == InstantiationResultType.NULL) ? "NULL" : "DELAYED");
+//        System.out.format(
+//                "id = %s, isRelated = %s, isNull = %s, set = %s, related ids = %s %s\n",
+//                chunkId, data.isRelated, data.isNull, data.lockedKeys.toString(), relatedChunks(chunkId),
+//                (result.type == InstantiationResultType.PROVIDED) ? "PROVIDED" : ((result.type == InstantiationResultType.NULL) ? "NULL" : "DELAYED")
+//        );
 
         return result;
     }
@@ -234,7 +233,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
             casted.put(entry.getKey(), ((T) entry.getValue()));
         }
 
-        cellUpdateExec.submit(new UpdateCellTask<>(dataSource, chunkMap, casted, chunkIds));
+//        cellUpdateExec.submit(new UpdateCellTask<>(dataSource, chunkMap, casted, chunkIds));
     }
 
     public void removeChunk(Integer chunkId) throws InterruptedException {
