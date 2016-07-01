@@ -67,29 +67,6 @@ public class ChunkIdGenerator {
         );
         Integer rightBottomChunkId = chunkIdByPosition(chunkSize, rightBottomAreaPosition);
 
-//        int vChunkCount = (area.origin.row / chunkSize.rowCount) * chunkSize.rowCount;
-//        vChunkCount = area.origin.row + area.rowCount - vChunkCount;
-//        vChunkCount = vChunkCount / chunkSize.rowCount;
-
-//        int vChunkCount = area.rowCount / chunkSize.rowCount;
-
-//        if (area.rowCount % chunkSize.rowCount == 0)
-//            vChunkCount++;
-
-//        if (!((area.origin.row % chunkSize.rowCount == 0) && (area.rowCount % chunkSize.rowCount == 0)))
-//            vChunkCount++;
-
-//        int hChunkCount = (area.origin.column / chunkSize.columnCount) * chunkSize.columnCount;
-//        hChunkCount = area.origin.column + area.columnCount - hChunkCount;
-//        hChunkCount = hChunkCount / chunkSize.columnCount;
-
-//        int hChunkCount = area.columnCount / chunkSize.rowCount;
-//        if (area.columnCount % chunkSize.rowCount == 0)
-//            hChunkCount++;
-
-//        if (!((area.origin.column % chunkSize.columnCount == 0) && (area.columnCount % chunkSize.columnCount == 0)))
-//            hChunkCount++;
-
         int vChunkCount = chunkRow(rightBottomChunkId) - chunkRow(originChunkId) + 1;
         int hChunkCount = chunkColumn(rightBottomChunkId) - chunkColumn(originChunkId) + 1;
 

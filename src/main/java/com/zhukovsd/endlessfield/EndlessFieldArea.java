@@ -36,15 +36,15 @@ public class EndlessFieldArea implements Iterable<CellPosition> {
         this.columnCount = columnCount;
     }
 
-    public EndlessFieldArea expandFromCenter(int amount) {
-        int leftBoundary = Math.max(origin.column - amount, 0);
-        int topBoundary = Math.max(origin.row - amount, 0);
+    public EndlessFieldArea expandFromCenter(int rowAmount, int columnAmount) {
+        int leftBoundary = Math.max(origin.column - columnAmount, 0);
+        int topBoundary = Math.max(origin.row - rowAmount, 0);
 
         int rightBoundary = Math.min(
-                (origin.column + columnCount - 1) + amount, field.sizeConstraints.maxColumn(field.chunkSize)
+                (origin.column + columnCount - 1) + columnAmount, field.sizeConstraints.maxColumn(field.chunkSize)
         );
         int bottomBoundary = Math.min(
-                (origin.row + rowCount -1) + amount, field.sizeConstraints.maxRow(field.chunkSize)
+                (origin.row + rowCount -1) + rowAmount, field.sizeConstraints.maxRow(field.chunkSize)
         );
 
         origin = new CellPosition(topBoundary, leftBoundary);
@@ -54,6 +54,10 @@ public class EndlessFieldArea implements Iterable<CellPosition> {
 
         return this;
     };
+
+    public EndlessFieldArea expandFromCenter(int amount) {
+        return expandFromCenter(amount, amount);
+    }
 
     public EndlessFieldArea narrowToCenter(int amount) {
         if ((amount * 2 + 1 <= columnCount) && (amount * 2 + 1 <= rowCount)) {
