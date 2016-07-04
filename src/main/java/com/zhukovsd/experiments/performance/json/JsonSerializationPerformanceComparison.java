@@ -13,7 +13,6 @@ import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 import com.zhukovsd.serverapp.endpoints.http.FieldResponseData;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 import org.bson.*;
 
 import java.io.*;
@@ -78,8 +77,7 @@ public class JsonSerializationPerformanceComparison {
                     public void modifyEntries(Map<CellPosition, SimpleFieldCell> entries) {
                         //
                     }
-                },
-                new SimpleFieldCellFactory()
+                }
         );
 
         int chunkId = 0;

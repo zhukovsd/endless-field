@@ -8,7 +8,6 @@ import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,8 +50,7 @@ public class ConcurrentChunkProviding {
                     public void modifyEntries(Map<CellPosition, SimpleFieldCell> entries) {
 
                     }
-                },
-                new SimpleFieldCellFactory()
+                }
         );
 
         CompletionService<SimpleFieldCell> completionService = new ExecutorCompletionService<>(exec);

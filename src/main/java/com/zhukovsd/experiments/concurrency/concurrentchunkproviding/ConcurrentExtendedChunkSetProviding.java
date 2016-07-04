@@ -18,18 +18,12 @@ package com.zhukovsd.experiments.concurrency.concurrentchunkproviding;
 
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.ChunkSize;
-import com.zhukovsd.endlessfield.EndlessFieldArea;
 import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
-import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
-import com.zhukovsd.endlessfield.field.EndlessFieldChunkFactory;
 import com.zhukovsd.simplefield.SimpleField;
-import com.zhukovsd.simplefield.SimpleFieldCell;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 import com.zhukovsd.simplefield.SimpleFieldDataSource;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,8 +41,7 @@ public class ConcurrentExtendedChunkSetProviding {
 
         SimpleField field = new SimpleField(
                 16, new ChunkSize(50, 50), new EndlessFieldSizeConstraints(40000, 40000),
-                new SimpleFieldDataSource(),
-                new SimpleFieldCellFactory()
+                new SimpleFieldDataSource()
         ) {
             @Override
             protected Set<Integer> relatedChunks(Integer chunkId) {

@@ -44,7 +44,6 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     public final EndlessFieldSizeConstraints sizeConstraints;
 
     private final EndlessFieldDataSource<T> dataSource;
-    private final EndlessFieldCellFactory<T> cellFactory;
     private final EndlessFieldChunkFactory<T> chunkFactory;
     public final EndlessFieldActionInvoker actionInvoker;
 
@@ -68,11 +67,10 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 //        }
 //    };
 
-    public EndlessField(int stripes, ChunkSize chunkSize, EndlessFieldSizeConstraints sizeConstraints, EndlessFieldDataSource<T> dataSource, EndlessFieldCellFactory<T> cellFactory) {
+    public EndlessField(int stripes, ChunkSize chunkSize, EndlessFieldSizeConstraints sizeConstraints, EndlessFieldDataSource<T> dataSource) {
         this.chunkSize = chunkSize;
         this.sizeConstraints = sizeConstraints;
         this.dataSource = dataSource;
-        this.cellFactory = cellFactory;
 
         chunkMap = new EntryLockingConcurrentHashMap<>(stripes, NullEndlessFieldChunk::new);
 
@@ -85,16 +83,16 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     protected abstract EndlessFieldChunkFactory<T> createChunkFactory();
 
     public static EndlessField instantiate(
-            String className, int stripes, ChunkSize chunkSize, EndlessFieldDataSource dataSource,
-            EndlessFieldCellFactory cellFactory
+            String className, int stripes, ChunkSize chunkSize, EndlessFieldDataSource dataSource
     ) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         Class<?> fieldType = Class.forName(className);
 
         Constructor<?> constructor = fieldType.getConstructor(
-                int.class, ChunkSize.class, EndlessFieldDataSource.class, EndlessFieldCellFactory.class
+                int.class, ChunkSize.class, EndlessFieldSizeConstraints.class, EndlessFieldDataSource.class
         );
 
-        return (EndlessField) constructor.newInstance(stripes, chunkSize, dataSource, cellFactory);
+        // TODO: 04.07.2016 set constraints in config
+        return (EndlessField) constructor.newInstance(stripes, chunkSize, new EndlessFieldSizeConstraints(40000, 40000), dataSource);
     }
 
     protected Set<Integer> relatedChunks(Integer chunkId) {
@@ -129,7 +127,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 //                chunk = generateChunk(chunkId);
                 chunk = chunkFactory.generateChunk(chunkId, data.lockedKeys);
 
-//                chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunkMap, chunkId, chunk));
+                chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunkMap, chunkId, chunk));
 
                 result = InstantiationResult.provided(chunk);
             } else {
@@ -233,7 +231,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
             casted.put(entry.getKey(), ((T) entry.getValue()));
         }
 
-//        cellUpdateExec.submit(new UpdateCellTask<>(dataSource, chunkMap, casted, chunkIds));
+        cellUpdateExec.submit(new UpdateCellTask<>(dataSource, chunkMap, casted, chunkIds));
     }
 
     public void removeChunk(Integer chunkId) throws InterruptedException {

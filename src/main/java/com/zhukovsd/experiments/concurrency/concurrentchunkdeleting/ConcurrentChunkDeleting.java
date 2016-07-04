@@ -7,7 +7,6 @@ import com.zhukovsd.endlessfield.fielddatasource.StoreChunkTask;
 import com.zhukovsd.endlessfield.fielddatasource.UpdateCellTask;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 import com.zhukovsd.simplefield.SimpleFieldDataSource;
 
 import java.util.*;
@@ -24,7 +23,7 @@ public class ConcurrentChunkDeleting {
     public static void main(String[] args) throws InterruptedException {
         ChunkSize chunkSize = new ChunkSize(50, 50);
         EndlessFieldSizeConstraints constraints = new EndlessFieldSizeConstraints(40000, 40000);
-        final SimpleField field = new SimpleField(16, chunkSize, constraints, new SimpleFieldDataSource(), new SimpleFieldCellFactory());
+        final SimpleField field = new SimpleField(16, chunkSize, constraints, new SimpleFieldDataSource());
 
         ThreadPoolExecutor chunkStoreExec = ((ThreadPoolExecutor) field.chunkStoreExec);
         ThreadPoolExecutor cellUpdateExec = ((ThreadPoolExecutor) field.cellUpdateExec);

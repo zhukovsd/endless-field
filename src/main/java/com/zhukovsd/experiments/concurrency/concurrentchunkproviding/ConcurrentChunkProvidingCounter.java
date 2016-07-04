@@ -8,7 +8,6 @@ import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 
 import java.util.Collections;
 import java.util.Map;
@@ -52,8 +51,7 @@ public class ConcurrentChunkProvidingCounter {
                     public void modifyEntries(Map<CellPosition, SimpleFieldCell> entries) {
                         //
                     }
-            },
-            new SimpleFieldCellFactory()
+            }
         );
 
         long time = System.nanoTime();

@@ -4,7 +4,6 @@ import com.zhukovsd.endlessfield.ChunkSize;
 import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldActionInvoker;
-import com.zhukovsd.endlessfield.field.EndlessFieldCellFactory;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunkFactory;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 
@@ -14,10 +13,9 @@ import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 public class SimpleField extends EndlessField<SimpleFieldCell> {
     public SimpleField(
             int stripes, ChunkSize chunkSize, EndlessFieldSizeConstraints sizeConstraints,
-            EndlessFieldDataSource<SimpleFieldCell> dataSource,
-            EndlessFieldCellFactory<SimpleFieldCell> cellFactory
+            EndlessFieldDataSource<SimpleFieldCell> dataSource
     ) {
-        super(stripes, chunkSize, sizeConstraints, dataSource, cellFactory);
+        super(stripes, chunkSize, sizeConstraints, dataSource);
     }
 
     @Override

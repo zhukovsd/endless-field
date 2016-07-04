@@ -5,7 +5,6 @@ import com.zhukovsd.endlessfield.ChunkSize;
 import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 import com.zhukovsd.simplefield.SimpleFieldDataSource;
 
 import java.util.ArrayList;
@@ -25,7 +24,7 @@ public class ConcurrentCellUpdating {
     public static void main(String[] args) throws InterruptedException {
         SimpleField field = new SimpleField(
                 16, new ChunkSize(50, 50), new EndlessFieldSizeConstraints(40000, 40000),
-                new SimpleFieldDataSource(), new SimpleFieldCellFactory()
+                new SimpleFieldDataSource()
         );
 
         ExecutorService updateExec = Executors.newCachedThreadPool();

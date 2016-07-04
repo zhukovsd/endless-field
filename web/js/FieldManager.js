@@ -90,18 +90,21 @@ var FieldManager = function (applicationContextPath) {
             // action message
             var cells = msg.cells;
             var positions = {};
-            
+
+            var c = 0;
             for (var key in cells) {
                 if (cells.hasOwnProperty(key)) {
-                    this.manager.cells[key] = this.manager.processResponseCell(cells[key]);
-                    
-                    // todo remove debug field
-                    this.manager.cells[key].text = key;
-                    
+                    c++;
+
                     var position = new CellPosition().fromKey(key);
+                    this.manager.cells[position.toString()] = this.manager.processResponseCell(cells[key]);
+                    // todo remove debug field
+                    this.manager.cells[position.toString()].text = key + "!";
+
                     positions[position.toString()] = position;
                 }
             }
+            console.log(c + "cells updated");
 
             var player = new Player(msg.player.id, msg.player.name);
             if (player.id !== this.manager.userId) {                

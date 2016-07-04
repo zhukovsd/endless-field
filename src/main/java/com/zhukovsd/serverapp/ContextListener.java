@@ -18,7 +18,6 @@ package com.zhukovsd.serverapp;
 
 import com.zhukovsd.endlessfield.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessField;
-import com.zhukovsd.endlessfield.field.EndlessFieldCellFactory;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.serverapp.serialization.EndlessFieldDeserializer;
 import com.zhukovsd.serverapp.serialization.EndlessFieldSerializer;
@@ -68,8 +67,7 @@ public class ContextListener implements ServletContextListener {
 
             EndlessField field = EndlessField.instantiate(
                     fieldClassName, stripes, chunkSize,
-                    EndlessFieldDataSource.instantiate(context.getInitParameter("EndlessFieldDataSourceClassName")),
-                    EndlessFieldCellFactory.instantiate(context.getInitParameter("EndlessFieldCellFactoryClassName"))
+                    EndlessFieldDataSource.instantiate(context.getInitParameter("EndlessFieldDataSourceClassName"))
             );
 
             context.setAttribute("field", field);

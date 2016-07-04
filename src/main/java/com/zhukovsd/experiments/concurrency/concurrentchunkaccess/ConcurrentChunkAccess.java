@@ -11,7 +11,6 @@ import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -76,8 +75,7 @@ public class ConcurrentChunkAccess {
                     public void modifyEntries(Map<CellPosition, SimpleFieldCell> entries) {
 
                     }
-                },
-                new SimpleFieldCellFactory()
+                }
         );
 
         ExecutorService exec = Executors.newCachedThreadPool();
