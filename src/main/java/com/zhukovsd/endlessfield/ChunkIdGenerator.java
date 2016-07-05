@@ -73,4 +73,12 @@ public class ChunkIdGenerator {
 
         return chunkIds;
     }
+
+    // TODO: 28.06.2016 move to EndlessFieldArea class
+    public static EndlessFieldArea chunkAreaById(EndlessField<?> field, int chunkId) {
+        ChunkSize chunkSize = field.chunkSize;
+        return new EndlessFieldArea(
+                field, ChunkIdGenerator.chunkOrigin(chunkSize, chunkId), chunkSize.rowCount, chunkSize.columnCount
+        );
+    }
 }
