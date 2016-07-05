@@ -55,6 +55,18 @@ public class EndlessFieldArea implements Iterable<CellPosition> {
         return this;
     };
 
+    public EndlessFieldArea expandFromCenter(int amount) {
+        return expandFromCenter(amount, amount);
+    }
+
+    public EndlessFieldArea narrowToCenter(int amount) {
+        if ((amount * 2 + 1 <= columnCount) && (amount * 2 + 1 <= rowCount)) {
+            return this.expandFromCenter(-amount);
+        } else {
+            throw new RuntimeException("can't narrow given area with given amount");
+        }
+    }
+
     public boolean contains(CellPosition position) {
         boolean result = true;
 
