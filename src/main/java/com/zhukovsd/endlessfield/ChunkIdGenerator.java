@@ -24,9 +24,12 @@ import java.util.ArrayList;
 public class ChunkIdGenerator {
     public static int idFactor = 40000;
 
+    public static int chunkIdByChunkRowAndColumn(int chunkRow, int chunkColumn) {
+        return chunkRow * idFactor + chunkColumn;
+    }
+
     public static int generateID(ChunkSize chunkSize, CellPosition position) {
-//        return 0;
-        return (position.row / chunkSize.rowCount) * idFactor + (position.column / chunkSize.columnCount);
+        return chunkIdByChunkRowAndColumn(position.row / chunkSize.rowCount, position.column / chunkSize.columnCount);
     }
 
     public static CellPosition chunkOrigin(ChunkSize chunkSize, int chunkId) {
