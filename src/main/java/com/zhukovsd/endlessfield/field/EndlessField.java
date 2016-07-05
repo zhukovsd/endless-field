@@ -43,7 +43,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     public final EndlessFieldSizeConstraints sizeConstraints;
 
     private final EndlessFieldDataSource<T> dataSource;
-    private final EndlessFieldCellFactory<T> cellFactory;
+    private final EndlessFieldChunkFactory<T> chunkFactory;
     public final EndlessFieldActionInvoker actionInvoker;
 
     private EntryLockingConcurrentHashMap<Integer, EndlessFieldChunk<T>> chunkMap;
@@ -67,33 +67,32 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 //    };
 
     public EndlessField(int stripes, ChunkSize chunkSize, EndlessFieldSizeConstraints sizeConstraints,
-                        EndlessFieldDataSource<T> dataSource, EndlessFieldCellFactory<T> cellFactory) {
+                        EndlessFieldDataSource<T> dataSource) {
         this.chunkSize = chunkSize;
         this.sizeConstraints = sizeConstraints;
         this.dataSource = dataSource;
-        this.cellFactory = cellFactory;
 
         chunkMap = new EntryLockingConcurrentHashMap<>(stripes, NullEndlessFieldChunk::new);
 
+        chunkFactory = createChunkFactory();
         actionInvoker = createActionInvoker();
     }
 
+    protected abstract EndlessFieldChunkFactory<T> createChunkFactory();
     protected abstract EndlessFieldActionInvoker createActionInvoker();
 
     public static EndlessField instantiate(
-            String className, int stripes, ChunkSize chunkSize, EndlessFieldDataSource dataSource,
-            EndlessFieldCellFactory cellFactory
+            String className, int stripes, ChunkSize chunkSize, EndlessFieldDataSource dataSource
     ) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         Class<?> fieldType = Class.forName(className);
 
         Constructor<?> constructor = fieldType.getConstructor(
-                int.class, ChunkSize.class, EndlessFieldSizeConstraints.class, EndlessFieldDataSource.class,
-                EndlessFieldCellFactory.class
+                int.class, ChunkSize.class, EndlessFieldSizeConstraints.class, EndlessFieldDataSource.class
         );
 
         // TODO: 04.07.2016 set constraints in config
         return (EndlessField) constructor.newInstance(
-                stripes, chunkSize, new EndlessFieldSizeConstraints(40000, 40000), dataSource, cellFactory
+                stripes, chunkSize, new EndlessFieldSizeConstraints(40000, 40000), dataSource
         );
     }
 
@@ -124,7 +123,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
             }
 
             if (data.lockedKeys.containsAll(relatedChunks) || data.isReproviding) {
-                chunk = generateChunk(chunkId);
+                chunk = chunkFactory.generateChunk(chunkId, data.lockedKeys);
                 chunkStoreExec.submit(new StoreChunkTask<>(dataSource, chunkMap, chunkId, chunk));
 
                 result = InstantiationResult.provided(chunk);
@@ -144,19 +143,6 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         return result;
     }
 
-    private EndlessFieldChunk<T> generateChunk(int chunkId) {
-        EndlessFieldChunk<T> chunk = new EndlessFieldChunk<>(chunkSize.cellCount());
-        CellPosition chunkOrigin = ChunkIdGenerator.chunkOrigin(chunkSize, chunkId);
-
-        for (int row = 0; row < chunkSize.rowCount; row++) {
-            for (int column = 0; column < chunkSize.columnCount; column++) {
-                chunk.put(new CellPosition(chunkOrigin.row + row, chunkOrigin.column + column), cellFactory.create());
-            }
-        }
-
-        return chunk;
-    }
-
     public boolean lockChunksByIds(Collection<Integer> chunkIds) throws InterruptedException {
         // TODO: 28.06.2016 check constraints (chunk row/column count)
         return chunkMap.lockEntries(chunkIds, this::instantiateChunk, this::relatedChunks);
@@ -165,7 +151,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     public boolean lockChunksByPositions(Iterable<CellPosition> positions) throws InterruptedException {
         Set<Integer> chunkIds = new HashSet<>();
 
-        for (CellPosition position : positions) chunkIds.add(ChunkIdGenerator.generateID(chunkSize, position));
+        for (CellPosition position : positions) chunkIds.add(ChunkIdGenerator.chunkIdByPosition(chunkSize, position));
 
         return lockChunksByIds(chunkIds);
     }
@@ -175,7 +161,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
     }
 
     public T getCell(CellPosition position) {
-        Integer chunkId = ChunkIdGenerator.generateID(chunkSize, position);
+        Integer chunkId = ChunkIdGenerator.chunkIdByPosition(chunkSize, position);
         EndlessFieldChunk<T> chunk = chunkMap.getValue(chunkId);
 
         return chunk.get(position);
@@ -231,7 +217,7 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         // get chunk ids for updating cells
         Set<Integer> chunkIds = new HashSet<>();
         for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
-            chunkIds.add(ChunkIdGenerator.generateID(chunkSize, entry.getKey()));
+            chunkIds.add(ChunkIdGenerator.chunkIdByPosition(chunkSize, entry.getKey()));
         }
 
         // increment update task counts used to prevent chunk removing before all its tasks are finished

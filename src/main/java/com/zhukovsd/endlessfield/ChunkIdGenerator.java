@@ -31,7 +31,7 @@ public class ChunkIdGenerator {
         return chunkRow * idFactor + chunkColumn;
     }
 
-    public static int generateID(ChunkSize chunkSize, CellPosition position) {
+    public static int chunkIdByPosition(ChunkSize chunkSize, CellPosition position) {
         return chunkIdByChunkRowAndColumn(position.row / chunkSize.rowCount, position.column / chunkSize.columnCount);
     }
 
@@ -55,12 +55,12 @@ public class ChunkIdGenerator {
 
         ArrayList<Integer> chunkIds = new ArrayList<>();
 
-        Integer originChunkId = ChunkIdGenerator.generateID(chunkSize, new CellPosition(area.origin.row, area.origin.column));
+        Integer originChunkId = ChunkIdGenerator.chunkIdByPosition(chunkSize, new CellPosition(area.origin.row, area.origin.column));
 
         CellPosition rightBottomAreaPosition = new CellPosition(
                 area.origin.row + area.rowCount - 1, area.origin.column + area.columnCount - 1
         );
-        Integer rightBottomChunkId = generateID(chunkSize, rightBottomAreaPosition);
+        Integer rightBottomChunkId = chunkIdByPosition(chunkSize, rightBottomAreaPosition);
 
         int vChunkCount = chunkRow(rightBottomChunkId) - chunkRow(originChunkId) + 1;
         int hChunkCount = chunkColumn(rightBottomChunkId) - chunkColumn(originChunkId) + 1;
