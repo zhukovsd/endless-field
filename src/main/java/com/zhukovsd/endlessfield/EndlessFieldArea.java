@@ -47,6 +47,25 @@ public class EndlessFieldArea implements Iterable<CellPosition> {
         return this;
     };
 
+    public boolean contains(CellPosition position) {
+        boolean result = true;
+
+        // check left border
+        if (position.row < origin.row)
+            result = false;
+        // check right border
+        else if (position.row > origin.row + rowCount - 1)
+            result = false;
+        // check top border
+        else if (position.column < origin.column)
+            result = false;
+        // check bottom border
+        else if (position.column > origin.column + columnCount - 1)
+            result = false;
+
+        return result;
+    }
+
     @Override
     public Iterator<CellPosition> iterator() {
         return new Iterator<CellPosition>() {
