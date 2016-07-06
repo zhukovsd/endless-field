@@ -19,6 +19,7 @@ package com.zhukovsd.endlessfield.field;
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.ChunkSize;
+import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.endlessfield.fielddatasource.StoreChunkTask;
 import com.zhukovsd.endlessfield.fielddatasource.UpdateCellTask;
@@ -39,6 +40,7 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class EndlessField<T extends EndlessFieldCell> {
     public final ChunkSize chunkSize;
+    public final EndlessFieldSizeConstraints sizeConstraints;
 
     private final EndlessFieldDataSource<T> dataSource;
     private final EndlessFieldCellFactory<T> cellFactory;
@@ -64,8 +66,10 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
 //        }
 //    };
 
-    public EndlessField(int stripes, ChunkSize chunkSize, EndlessFieldDataSource<T> dataSource, EndlessFieldCellFactory<T> cellFactory) {
+    public EndlessField(int stripes, ChunkSize chunkSize, EndlessFieldSizeConstraints sizeConstraints,
+                        EndlessFieldDataSource<T> dataSource, EndlessFieldCellFactory<T> cellFactory) {
         this.chunkSize = chunkSize;
+        this.sizeConstraints = sizeConstraints;
         this.dataSource = dataSource;
         this.cellFactory = cellFactory;
 
@@ -83,10 +87,14 @@ public abstract class EndlessField<T extends EndlessFieldCell> {
         Class<?> fieldType = Class.forName(className);
 
         Constructor<?> constructor = fieldType.getConstructor(
-                int.class, ChunkSize.class, EndlessFieldDataSource.class, EndlessFieldCellFactory.class
+                int.class, ChunkSize.class, EndlessFieldSizeConstraints.class, EndlessFieldDataSource.class,
+                EndlessFieldCellFactory.class
         );
 
-        return (EndlessField) constructor.newInstance(stripes, chunkSize, dataSource, cellFactory);
+        // TODO: 04.07.2016 set constraints in config
+        return (EndlessField) constructor.newInstance(
+                stripes, chunkSize, new EndlessFieldSizeConstraints(40000, 40000), dataSource, cellFactory
+        );
     }
 
     protected Set<Integer> relatedChunks(Integer chunkId) {
