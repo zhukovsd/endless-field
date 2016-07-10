@@ -50,12 +50,6 @@
         <!--<param-value></param-value>-->
     <!--</context-param>-->
 
-    <!-- Class name of specific EndlessFieldCellFactory implementation -->
-    <!--<context-param>-->
-        <!--<param-name>EndlessFieldCellFactoryClassName</param-name>-->
-        <!--<param-value></param-value>-->
-    <!--</context-param>-->
-
     <!-- Class name of specific EndlessFieldSerializer implementation -->
     <context-param>
         <param-name>EndlessFieldSerializerClassName</param-name>

@@ -17,6 +17,7 @@
 package com.zhukovsd.serverapp.endpoints.websocket;
 
 import com.zhukovsd.endlessfield.CellPosition;
+import com.zhukovsd.endlessfield.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldAction;
@@ -130,10 +131,11 @@ public class ActionEndpoint {
     @OnMessage
     public void onMessage(String message, Session userSession) throws InterruptedException {
         ClientMessage clientMessage = deserializer.actionMessageDataFromJSON(message);
+        // TODO: 04.07.2016 split response and broadcast messages (response result code, score and rankings changing should only be send to this message sender)
         ActionServerMessage serverMessage = null;
 
         EndlessFieldAction action = field.actionInvoker.selectActionByNumber(clientMessage.type);
-        Iterable<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
+        Collection<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
 
         field.lockChunksByIds(chunkIds);
         try {
