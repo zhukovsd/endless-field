@@ -12,7 +12,7 @@ public class SimpleFieldCell extends EndlessFieldCell {
     }
 
     // clone constructor. should be called only if source is locked, otherwise transitional state may be cloned
-    protected SimpleFieldCell(EndlessFieldCell source) {
+    private SimpleFieldCell(EndlessFieldCell source) {
         SimpleFieldCell casted = ((SimpleFieldCell) source);
         this.isChecked = casted.isChecked;
 //        this.s = casted.s;

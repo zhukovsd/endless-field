@@ -20,7 +20,7 @@ package com.zhukovsd.endlessfield;
  * Created by ZhukovSD on 19.03.2016.
  */
 public class ChunkSize {
-    public int rowCount, columnCount;
+    public final int rowCount, columnCount;
 
     public ChunkSize(int rowCount, int columnCount) {
         this.rowCount = rowCount;

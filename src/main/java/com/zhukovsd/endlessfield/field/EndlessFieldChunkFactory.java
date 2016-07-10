@@ -16,18 +16,19 @@
 
 package com.zhukovsd.endlessfield.field;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 
 /**
- * Created by ZhukovSD on 21.03.2016.
+ * Created by ZhukovSD on 24.06.2016.
  */
-public interface EndlessFieldCellFactory<T extends EndlessFieldCell> {
-    static EndlessFieldCellFactory instantiate(String className) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        Class<?> factoryType = Class.forName(className);
-        Constructor<?> constructor = factoryType.getConstructor();
-        return (EndlessFieldCellFactory) constructor.newInstance();
+public abstract class EndlessFieldChunkFactory<T extends EndlessFieldCell> {
+    protected final EndlessField<T> field;
+
+    public EndlessFieldChunkFactory(EndlessField<T> field) {
+        this.field = field;
     }
 
-    T create();
+    protected EndlessFieldChunk<T> generateChunk(Integer chunkId, Collection<Integer> lockedChunkIds) {
+        return new EndlessFieldChunk<>(field.chunkSize.cellCount());
+    };
 }

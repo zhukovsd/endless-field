@@ -50,12 +50,6 @@
         <param-value>com.zhukovsd.simplefield.SimpleFieldDataSource</param-value>
     </context-param>
 
-    <!-- Class name of specific EndlessFieldCellFactory implementation -->
-    <context-param>
-        <param-name>EndlessFieldCellFactoryClassName</param-name>
-        <param-value>com.zhukovsd.simplefield.SimpleFieldCellFactory</param-value>
-    </context-param>
-
     <!-- Class name of specific EndlessFieldSerializer implementation -->
     <context-param>
         <param-name>EndlessFieldSerializerClassName</param-name>
@@ -76,5 +70,4 @@
     <listener>
         <listener-class>com.zhukovsd.serverapp.ContextListener</listener-class>
     </listener>
-
 </web-app>

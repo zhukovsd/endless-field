@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.endlessfield.field;
+package com.zhukovsd.entrylockingconcurrenthashmap;
 
-import com.zhukovsd.endlessfield.CellPosition;
-
-import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.Set;
 
 /**
- * Created by ZhukovSD on 07.06.2016.
+ * Created by ZhukovSD on 25.06.2016.
  */
-public interface EndlessFieldAction {
-    Collection<Integer> getChunkIds(EndlessField<? extends EndlessFieldCell> field, CellPosition position);
+public class InstantiationData<K> {
+    public final boolean isRelated;
+    public final boolean isNull;
+    public final boolean isReproviding;
+    public final Set<K> lockedKeys;
 
-    LinkedHashMap<CellPosition, ? extends EndlessFieldCell> perform(
-            EndlessField<? extends EndlessFieldCell> field, CellPosition position
-    );
+    InstantiationData(boolean isRelated, boolean isNull, boolean isReproviding, Set<K> lockedKeys) {
+        this.isRelated = isRelated;
+        this.isNull = isNull;
+        this.isReproviding = isReproviding;
+        this.lockedKeys = lockedKeys;
+    }
 }

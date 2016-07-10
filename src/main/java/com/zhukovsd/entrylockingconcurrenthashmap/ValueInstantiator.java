@@ -14,20 +14,11 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.endlessfield.field;
+package com.zhukovsd.entrylockingconcurrenthashmap;
 
-import com.zhukovsd.endlessfield.CellPosition;
-
-import java.util.Collection;
-import java.util.LinkedHashMap;
+        import java.util.function.BiFunction;
 
 /**
- * Created by ZhukovSD on 07.06.2016.
+ * Created by ZhukovSD on 04.07.2016.
  */
-public interface EndlessFieldAction {
-    Collection<Integer> getChunkIds(EndlessField<? extends EndlessFieldCell> field, CellPosition position);
-
-    LinkedHashMap<CellPosition, ? extends EndlessFieldCell> perform(
-            EndlessField<? extends EndlessFieldCell> field, CellPosition position
-    );
-}
+public interface ValueInstantiator<K, V> extends BiFunction<K, InstantiationData<K>, InstantiationResult<V>> { }

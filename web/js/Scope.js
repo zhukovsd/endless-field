@@ -29,7 +29,7 @@ CellPosition.prototype = {
     },
     
     fromKey: function(key) {
-        var coordinates = key.split(',');
+        var coordinates = key.split(/[\s,]+/);
         if (coordinates.length == 2) {
             this.row = coordinates[0];
             this.column = coordinates[1];
