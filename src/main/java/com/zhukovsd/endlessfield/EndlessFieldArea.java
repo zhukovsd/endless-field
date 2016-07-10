@@ -16,28 +16,36 @@
 
 package com.zhukovsd.endlessfield;
 
+import com.zhukovsd.endlessfield.field.EndlessField;
+
 import java.util.Iterator;
 
 /**
  * Created by ZhukovSD on 09.06.2016.
  */
 public class EndlessFieldArea implements Iterable<CellPosition> {
+    private final EndlessField<?> field;
     public CellPosition origin;
     public int rowCount, columnCount;
 
-    public EndlessFieldArea(CellPosition origin, int rowCount, int columnCount) {
+    public EndlessFieldArea(EndlessField<?> field, CellPosition origin, int rowCount, int columnCount) {
+        // TODO: 28.06.2016 check constraints
+        this.field = field;
         this.origin = origin;
         this.rowCount = rowCount;
         this.columnCount = columnCount;
     }
 
-    public EndlessFieldArea expandFromCenter(int amount) {
-        int leftBoundary = Math.max(origin.column - amount, 0);
-        int topBoundary = Math.max(origin.row - amount, 0);
+    public EndlessFieldArea expandFromCenter(int rowAmount, int columnAmount) {
+        int leftBoundary = Math.max(origin.column - columnAmount, 0);
+        int topBoundary = Math.max(origin.row - rowAmount, 0);
 
-        // TODO: 09.06.2016 field size constraints
-        int rightBoundary = (origin.column + columnCount - 1) + amount;
-        int bottomBoundary = (origin.row + rowCount - 1) + amount;
+        int rightBoundary = Math.min(
+                (origin.column + columnCount - 1) + columnAmount, field.sizeConstraints.maxColumn(field.chunkSize)
+        );
+        int bottomBoundary = Math.min(
+                (origin.row + rowCount -1) + rowAmount, field.sizeConstraints.maxRow(field.chunkSize)
+        );
 
         origin = new CellPosition(topBoundary, leftBoundary);
 
@@ -46,6 +54,37 @@ public class EndlessFieldArea implements Iterable<CellPosition> {
 
         return this;
     };
+
+    public EndlessFieldArea expandFromCenter(int amount) {
+        return expandFromCenter(amount, amount);
+    }
+
+    public EndlessFieldArea narrowToCenter(int amount) {
+        if ((amount * 2 + 1 <= columnCount) && (amount * 2 + 1 <= rowCount)) {
+            return this.expandFromCenter(-amount);
+        } else {
+            throw new RuntimeException("can't narrow given area with given amount");
+        }
+    }
+
+    public boolean contains(CellPosition position) {
+        boolean result = true;
+
+        // check left border
+        if (position.row < origin.row)
+            result = false;
+        // check right border
+        else if (position.row > origin.row + rowCount - 1)
+            result = false;
+        // check top border
+        else if (position.column < origin.column)
+            result = false;
+        // check bottom border
+        else if (position.column > origin.column + columnCount - 1)
+            result = false;
+
+        return result;
+    }
 
     @Override
     public Iterator<CellPosition> iterator() {

@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.endlessfield.field;
-
-import com.zhukovsd.endlessfield.CellPosition;
-
-import java.util.Collection;
-import java.util.LinkedHashMap;
+package com.zhukovsd.endlessfield;
 
 /**
- * Created by ZhukovSD on 07.06.2016.
+ * Created by ZhukovSD on 28.06.2016.
  */
-public interface EndlessFieldAction {
-    Collection<Integer> getChunkIds(EndlessField<? extends EndlessFieldCell> field, CellPosition position);
+public class EndlessFieldSizeConstraints {
+    public final int chunkRowCount, chunkColumnCount;
 
-    LinkedHashMap<CellPosition, ? extends EndlessFieldCell> perform(
-            EndlessField<? extends EndlessFieldCell> field, CellPosition position
-    );
+    public EndlessFieldSizeConstraints(int chunkRowCount, int chunkColumnCount) {
+        this.chunkRowCount = chunkRowCount;
+        this.chunkColumnCount = chunkColumnCount;
+    }
+
+    public int maxRow(ChunkSize chunkSize) {
+        return this.chunkRowCount * chunkSize.rowCount - 1;
+    }
+
+    public int maxColumn(ChunkSize chunkSize) {
+        return this.chunkColumnCount * chunkSize.columnCount - 1;
+    }
 }
