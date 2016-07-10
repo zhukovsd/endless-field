@@ -2,9 +2,9 @@ package com.zhukovsd.experiments.concurrency.concurrentcellupdating;
 
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.ChunkSize;
+import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 import com.zhukovsd.simplefield.SimpleFieldDataSource;
 
 import java.util.ArrayList;
@@ -22,7 +22,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ConcurrentCellUpdating {
     public static void main(String[] args) throws InterruptedException {
-        SimpleField field = new SimpleField(16, new ChunkSize(50, 50), new SimpleFieldDataSource(), new SimpleFieldCellFactory());
+        SimpleField field = new SimpleField(
+                16, new ChunkSize(50, 50), new EndlessFieldSizeConstraints(40000, 40000),
+                new SimpleFieldDataSource()
+        );
 
         ExecutorService updateExec = Executors.newCachedThreadPool();
         ExecutorService watcherExec = Executors.newSingleThreadExecutor();

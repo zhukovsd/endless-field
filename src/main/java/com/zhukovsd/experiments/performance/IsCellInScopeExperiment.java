@@ -33,11 +33,11 @@ class ScopeMap {
     private Iterable<Integer> test(Scope scope) {
         HashSet<Integer> rslt = new HashSet<>();
 
-        Integer originChunkId = ChunkIdGenerator.generateID(chunkSize, new CellPosition(scope.originRow, scope.originColumn));
+        Integer originChunkId = ChunkIdGenerator.chunkIdByPosition(chunkSize, new CellPosition(scope.originRow, scope.originColumn));
 
         for (int row = scope.originRow; row < scope.originRow + scope.rowCount; row++) {
             for (int column = scope.originColumn; column < scope.originColumn + scope.columnCount; column++) {
-                rslt.add(ChunkIdGenerator.generateID(chunkSize, new CellPosition(row, column)));
+                rslt.add(ChunkIdGenerator.chunkIdByPosition(chunkSize, new CellPosition(row, column)));
             }
         }
 
@@ -47,7 +47,7 @@ class ScopeMap {
     private Iterable<Integer> chunkIdsByScope(Scope scope) {
         ArrayList<Integer> rslt = new ArrayList<>();
 
-        Integer originChunkId = ChunkIdGenerator.generateID(chunkSize, new CellPosition(scope.originRow, scope.originColumn));
+        Integer originChunkId = ChunkIdGenerator.chunkIdByPosition(chunkSize, new CellPosition(scope.originRow, scope.originColumn));
 
         int a = (scope.originRow / chunkSize.rowCount) * chunkSize.rowCount;
         a = scope.originRow + scope.rowCount - a;
@@ -69,7 +69,7 @@ class ScopeMap {
 
 //        for (int row = scope.originRow; row <= scope.originRow + scope.rowCount; row++) {
 //            for (int column = scope.originColumn; column <= scope.originColumn + scope.columnCount; column++) {
-//                rslt.add(ChunkIdGenerator.generateID(chunkSize, new CellPosition(row, column)));
+//                rslt.add(ChunkIdGenerator.chunkIdByPosition(chunkSize, new CellPosition(row, column)));
 //            }
 //        }
 
@@ -108,7 +108,7 @@ class ScopeMap {
     }
 
     Iterable<Scope> get(CellPosition position) {
-        return map.get(ChunkIdGenerator.generateID(chunkSize, position));
+        return map.get(ChunkIdGenerator.chunkIdByPosition(chunkSize, position));
     }
 
     public static void main(String[] args) {

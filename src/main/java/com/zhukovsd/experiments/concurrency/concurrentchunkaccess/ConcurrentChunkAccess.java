@@ -1,5 +1,6 @@
 package com.zhukovsd.experiments.concurrency.concurrentchunkaccess;
 
+import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 import com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockCheckTask;
 import com.zhukovsd.experiments.concurrency.concurrentchunkaccess.threads.reentrantlocks.ReentrantLockReadTask;
@@ -10,7 +11,6 @@ import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -54,6 +54,7 @@ public class ConcurrentChunkAccess {
         SimpleField field = new SimpleField(
                 16,
                 new ChunkSize(50, 50),
+                new EndlessFieldSizeConstraints(40000, 40000),
                 new EndlessFieldDataSource<SimpleFieldCell>() {
                     @Override
                     public boolean containsChunk(Integer chunkId) {
@@ -74,8 +75,7 @@ public class ConcurrentChunkAccess {
                     public void modifyEntries(Map<CellPosition, SimpleFieldCell> entries) {
 
                     }
-                },
-                new SimpleFieldCellFactory()
+                }
         );
 
         ExecutorService exec = Executors.newCachedThreadPool();

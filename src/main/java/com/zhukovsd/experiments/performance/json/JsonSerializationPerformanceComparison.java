@@ -6,13 +6,13 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.ChunkSize;
+import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 import com.zhukovsd.serverapp.endpoints.http.FieldResponseData;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 import org.bson.*;
 
 import java.io.*;
@@ -56,6 +56,7 @@ public class JsonSerializationPerformanceComparison {
         SimpleField field = new SimpleField(
                 10000,
                 new ChunkSize(50, 50),
+                new EndlessFieldSizeConstraints(40000, 40000),
                 new EndlessFieldDataSource<SimpleFieldCell>() {
                     @Override
                     public boolean containsChunk(Integer chunkId) {
@@ -76,8 +77,7 @@ public class JsonSerializationPerformanceComparison {
                     public void modifyEntries(Map<CellPosition, SimpleFieldCell> entries) {
                         //
                     }
-                },
-                new SimpleFieldCellFactory()
+                }
         );
 
         int chunkId = 0;

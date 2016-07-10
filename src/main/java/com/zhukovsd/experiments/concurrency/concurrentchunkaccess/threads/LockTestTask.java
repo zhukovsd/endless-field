@@ -40,7 +40,7 @@ public abstract class LockTestTask implements Runnable {
 
     protected TreeSet<Integer> getChunkIdsToLock(Iterable<CellPosition> positions) {
         TreeSet<Integer> chunkIds = new TreeSet<>();
-        for (CellPosition position : positions) chunkIds.add(ChunkIdGenerator.generateID(field.chunkSize, position));
+        for (CellPosition position : positions) chunkIds.add(ChunkIdGenerator.chunkIdByPosition(field.chunkSize, position));
 
 //        for (Integer id : chunkIds) field.lockChunksByIds(id);
 

@@ -2,12 +2,12 @@ package com.zhukovsd.experiments.concurrency.concurrentchunkproviding;
 
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.ChunkSize;
+import com.zhukovsd.endlessfield.EndlessFieldSizeConstraints;
 import com.zhukovsd.endlessfield.field.EndlessFieldChunk;
 import com.zhukovsd.endlessfield.fielddatasource.EndlessFieldDataSource;
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
 import com.zhukovsd.simplefield.SimpleField;
 import com.zhukovsd.simplefield.SimpleFieldCell;
-import com.zhukovsd.simplefield.SimpleFieldCellFactory;
 
 import java.util.Collections;
 import java.util.Map;
@@ -30,6 +30,7 @@ public class ConcurrentChunkProvidingCounter {
         SimpleField field = new SimpleField(
                 10000,
                 new ChunkSize(1, 1),
+                new EndlessFieldSizeConstraints(40000, 40000),
                 new EndlessFieldDataSource<SimpleFieldCell>() {
                     @Override
                     public boolean containsChunk(Integer chunkId) {
@@ -50,8 +51,7 @@ public class ConcurrentChunkProvidingCounter {
                     public void modifyEntries(Map<CellPosition, SimpleFieldCell> entries) {
                         //
                     }
-            },
-            new SimpleFieldCellFactory()
+            }
         );
 
         long time = System.nanoTime();
