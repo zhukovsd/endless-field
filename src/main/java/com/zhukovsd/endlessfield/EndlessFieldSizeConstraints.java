@@ -17,17 +17,21 @@
 package com.zhukovsd.endlessfield;
 
 /**
- * Created by ZhukovSD on 19.03.2016.
+ * Created by ZhukovSD on 28.06.2016.
  */
-public class ChunkSize {
-    public final int rowCount, columnCount;
+public class EndlessFieldSizeConstraints {
+    public final int chunkRowCount, chunkColumnCount;
 
-    public ChunkSize(int rowCount, int columnCount) {
-        this.rowCount = rowCount;
-        this.columnCount = columnCount;
+    public EndlessFieldSizeConstraints(int chunkRowCount, int chunkColumnCount) {
+        this.chunkRowCount = chunkRowCount;
+        this.chunkColumnCount = chunkColumnCount;
     }
 
-    public int cellCount() {
-        return rowCount * columnCount;
+    public int maxRow(ChunkSize chunkSize) {
+        return this.chunkRowCount * chunkSize.rowCount - 1;
+    }
+
+    public int maxColumn(ChunkSize chunkSize) {
+        return this.chunkColumnCount * chunkSize.columnCount - 1;
     }
 }

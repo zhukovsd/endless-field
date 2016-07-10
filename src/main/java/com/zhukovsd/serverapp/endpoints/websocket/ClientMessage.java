@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.endlessfield;
+package com.zhukovsd.serverapp.endpoints.websocket;
+
+import com.zhukovsd.endlessfield.CellPosition;
 
 /**
- * Created by ZhukovSD on 19.03.2016.
+ * Created by ZhukovSD on 05.06.2016.
  */
-public class ChunkSize {
-    public final int rowCount, columnCount;
-
-    public ChunkSize(int rowCount, int columnCount) {
-        this.rowCount = rowCount;
-        this.columnCount = columnCount;
-    }
-
-    public int cellCount() {
-        return rowCount * columnCount;
-    }
+public class ClientMessage {
+    CellPosition cell;
+    int type;
 }

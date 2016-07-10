@@ -18,21 +18,24 @@ package com.zhukovsd.entrylockingconcurrenthashmap;
 
 import com.google.common.util.concurrent.Striped;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Created by ZhukovSD on 23.04.2016.
  */
 public class EntryLockingConcurrentHashMap<K, V> {
-    private ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>();
-    public Striped<Lock> striped;
+    private final ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>();
+    private final Striped<Lock> striped;
+    private final Supplier<V> nullSupplier;
+    private Class<?> nullClass;
 
+    // TODO: 04.07.2016 switch to hash set?
     private ThreadLocal<TreeSet<K>> lockedKeys = new ThreadLocal<TreeSet<K>>() {
         @Override
         protected TreeSet<K> initialValue() {
@@ -40,81 +43,177 @@ public class EntryLockingConcurrentHashMap<K, V> {
         }
     };
 
-    public EntryLockingConcurrentHashMap(int stripes) {
+    private ThreadLocal<HashSet<K>> reprovideKeys = new ThreadLocal<HashSet<K>>() {
+        @Override
+        protected HashSet<K> initialValue() {
+            return new HashSet<>();
+        }
+    };
+
+    public EntryLockingConcurrentHashMap(int stripes, Supplier<V> nullSupplier) {
         striped = Striped.lock(stripes);
+        this.nullSupplier = nullSupplier;
+
+        if (nullSupplier != null)
+            nullClass = nullSupplier.get().getClass();
+        else
+            nullClass = null;
     }
 
-    // TODO: 24.04.2016 return boolean
-    private V provideAndLock(K key, Function<K, V> instantiator) throws InterruptedException {
+    public EntryLockingConcurrentHashMap(int stripes) {
+        this(stripes, null);
+    }
+
+    private V provide(K key, InstantiationData<K> data, ValueInstantiator<K, V> instantiator) {
         V value = null;
 
-        // lock first to prevent race conditions on instantiating new entry
-        Lock lock = striped.get(key);
-        lock.lockInterruptibly();
+        // check if map already contains given and and it's value is not a null mock instance
+        if (map.containsKey(key) && ((nullClass != null) && !(nullClass.isInstance(map.get(key))) || (nullClass == null))) {
+            value = map.get(key);
+        }
+        else {
+            // call instantiator
+            if (instantiator != null) {
+                InstantiationResult<V> result = instantiator.apply(key, data);
 
-        try {
-            if (map.containsKey(key)) {
-                value = map.get(key);
-            }
-            else {
-                if (instantiator != null) {
-                    value = instantiator.apply(key);
-
-                    if (value != null) {
-                        map.put(key, value);
-                    }
+                if (result.type == InstantiationResultType.PROVIDED) {
+                    // if value is provided, put it into the map and return as a result
+                    map.put(key, result.value);
+                    value = result.value;
+                } else if (result.type == InstantiationResultType.NULL) {
+                    // if value is null, put null mock instance into the map
+                    map.put(key, nullSupplier.get());
+                } else if (result.type == InstantiationResultType.NEED_RELATED_VALUE){
+                    // if value was not instantiated due to lack of related values, postpone instantiation until second run
+                    reprovideKeys.get().add(key);
                 }
             }
-        } finally {
-            if (value == null)
-                lock.unlock();
         }
 
         return value;
     }
 
-    public boolean lockKey(K key, Function<K, V> instantiator) throws InterruptedException {
-        Set<K> lockSet = lockedKeys.get();
-        // TODO: 25.03.2016 provide proper exception type
-        if (lockSet.size() > 0) throw new RuntimeException("striped set has to be empty before locking!");
-
-        V value = provideAndLock(key, instantiator);
-        if (value != null) {
-            lockSet.add(key);
-            return true;
-        } else
-            return false;
-    }
-
-    public boolean lockKey(K key) throws InterruptedException {
-        return lockKey(key, null);
-    }
-
-    public boolean lockEntries(Iterable<K> keys, Function<K, V> instaniator) throws InterruptedException {
+    public boolean lockEntries(
+            Collection<K> keys, ValueInstantiator<K, V> instantiator, Function<K, Set<K>> relatedKeysFunction
+    ) throws InterruptedException {
         Set<K> lockSet = lockedKeys.get();
         // TODO: 25.03.2016 provide proper exception type
         if (lockSet.size() > 0) throw new RuntimeException("striped set has to be empty before locking!");
 
         boolean result = true;
-        for (K key : keys) {
-            result = (provideAndLock(key, instaniator) != null);
 
-            // add to set only on successful lock
-            if (result)
-                lockSet.add(key);
-            if (!result)
-                break;
+        // determine related keys for all given keys, if related keys function is null, related set is empty
+        Set<K> relatedKeys;
+        if (relatedKeysFunction != null) {
+            relatedKeys = new HashSet<>();
+            for (K key : keys) {
+                relatedKeys.addAll(relatedKeysFunction.apply(key));
+            }
+        } else {
+            relatedKeys = Collections.emptySet();
         }
 
-        // if we unable to lock all requested entries, unlock already locked ones
-        if (!result)
-            unlock();
+        // compose given keys and it's related keys into single keySet, which will be used for locking
+        Iterable<K> keySet;
+        if (relatedKeys.size() != 0) {
+            HashSet<K> s = new HashSet<>(keys.size() + relatedKeys.size());
+            s.addAll(keys);
+            s.addAll(relatedKeys);
+
+            keySet = s;
+        } else {
+            keySet = keys;
+        }
+
+        // lock on key set in order, provided by bulkGet (this order is always the same, so we don't have to sort keySet)
+        Iterable<Lock> locks = striped.bulkGet(keySet);
+        for (Lock lock : locks) {
+            lock.lockInterruptibly();
+        }
+
+        try {
+            HashSet<K> reprovideSet = reprovideKeys.get();
+
+            // first run. provide values for all keys, postpone providing of values, which needs related values,
+            // break from loop on NULL instantiation result
+            for (K key : keySet) {
+                boolean isRelated = !(keys.contains(key));
+
+                V value = provide(
+                        key, new InstantiationData<>(isRelated, map.containsKey(key), false, lockSet), instantiator
+                );
+
+                if (value != null) {
+                    lockSet.add(key);
+                } else if (!reprovideSet.contains(key) && !isRelated) {
+                    // if instantiator for non-related key returned NULL result (instance can't be instantiated),
+                    // break from loop and return false
+                    result = false;
+                    break;
+                }
+            }
+
+            // second run. provide values only for postponed keys, break of loop on NULL instantiation result
+            if (result) {
+                for (K key : reprovideSet) {
+                    boolean isRelated = !(keys.contains(key));
+
+                    V value = provide(
+                            key, new InstantiationData<>(isRelated, map.containsKey(key), true, lockSet), instantiator
+                    );
+
+                    if (value != null) {
+                        lockSet.add(key);
+                    } else if (!isRelated) {
+                        // if instantiator for non-related key returned NULL result (instance can't be instantiated),
+                        // break from loop and return false
+                        result = false;
+                        break;
+                    }
+                }
+            }
+
+            reprovideKeys.remove();
+
+            // TODO: 25.06.2016 react to exceptions in instantiator
+
+            // if we unable to lock all requested keys, unlock entries, which was already locked and clear lockSet
+            if (!result) {
+                for (Lock lock : locks) {
+                    lock.unlock();
+                }
+
+                lockedKeys.remove();
+            }
+        } finally {
+            // TODO: 04.07.2016 don't do this if result is false?
+
+            // after all keys was locked, unlock related keys. don't unlock any keys, which belongs to "keys" set also
+            relatedKeys.removeAll(keys);
+            Iterable<Lock> relatedKeysLocks = striped.bulkGet(relatedKeys);
+
+            for (Lock relatedKeyLock : relatedKeysLocks) {
+                relatedKeyLock.unlock();
+            }
+
+            lockSet.removeAll(relatedKeys);
+        }
 
         return result;
     }
 
-    public boolean lockEntries(Iterable<K> keys) throws InterruptedException {
-        return lockEntries(keys, null);
+    public boolean lockEntries(Collection<K> keys) throws InterruptedException {
+        return lockEntries(keys, null, null);
+    }
+
+    public boolean lockEntry(
+            K key, Function<K, Set<K>> relatedKeysFunction, ValueInstantiator<K, V> instantiator
+    ) throws InterruptedException {
+        return lockEntries(Collections.singleton(key), instantiator, relatedKeysFunction);
+    }
+
+    public boolean lockEntry(K key) throws InterruptedException {
+        return lockEntry(key, null, null);
     }
 
     public void unlock() {
@@ -155,11 +254,8 @@ public class EntryLockingConcurrentHashMap<K, V> {
         return map.get(key);
     }
 
-    public boolean removeIf(K key, Function<V, Boolean> condition) throws InterruptedException {
-//        V value = provideAndLock(key, null);
-        Lock lock = null;
-
-        lock = striped.get(key);
+    public boolean removeIf(K key, Predicate<V> condition) throws InterruptedException {
+        Lock lock = striped.get(key);
         lock.lockInterruptibly();
         try {
             if (!map.containsKey(key))
@@ -168,8 +264,9 @@ public class EntryLockingConcurrentHashMap<K, V> {
                 V value = map.get(key);
 
                 boolean isRemove = true;
-                if (condition != null)
-                    isRemove = condition.apply(value);
+                // if value is "null" - always remove, otherwise evaluate condition
+                if (!((nullClass != null) && (nullClass.isInstance(value))) && (condition != null))
+                    isRemove = condition.test(value);
 
                 if (isRemove)
                     map.remove(key, value);

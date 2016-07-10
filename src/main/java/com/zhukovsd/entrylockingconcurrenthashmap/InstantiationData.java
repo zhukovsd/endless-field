@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.endlessfield;
+package com.zhukovsd.entrylockingconcurrenthashmap;
+
+import java.util.Set;
 
 /**
- * Created by ZhukovSD on 19.03.2016.
+ * Created by ZhukovSD on 25.06.2016.
  */
-public class ChunkSize {
-    public final int rowCount, columnCount;
+public class InstantiationData<K> {
+    public final boolean isRelated;
+    public final boolean isNull;
+    public final boolean isReproviding;
+    public final Set<K> lockedKeys;
 
-    public ChunkSize(int rowCount, int columnCount) {
-        this.rowCount = rowCount;
-        this.columnCount = columnCount;
-    }
-
-    public int cellCount() {
-        return rowCount * columnCount;
+    InstantiationData(boolean isRelated, boolean isNull, boolean isReproviding, Set<K> lockedKeys) {
+        this.isRelated = isRelated;
+        this.isNull = isNull;
+        this.isReproviding = isReproviding;
+        this.lockedKeys = lockedKeys;
     }
 }

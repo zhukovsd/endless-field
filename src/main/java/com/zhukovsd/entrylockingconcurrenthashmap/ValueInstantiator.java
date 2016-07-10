@@ -14,20 +14,11 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.endlessfield;
+package com.zhukovsd.entrylockingconcurrenthashmap;
+
+        import java.util.function.BiFunction;
 
 /**
- * Created by ZhukovSD on 19.03.2016.
+ * Created by ZhukovSD on 04.07.2016.
  */
-public class ChunkSize {
-    public final int rowCount, columnCount;
-
-    public ChunkSize(int rowCount, int columnCount) {
-        this.rowCount = rowCount;
-        this.columnCount = columnCount;
-    }
-
-    public int cellCount() {
-        return rowCount * columnCount;
-    }
-}
+public interface ValueInstantiator<K, V> extends BiFunction<K, InstantiationData<K>, InstantiationResult<V>> { }

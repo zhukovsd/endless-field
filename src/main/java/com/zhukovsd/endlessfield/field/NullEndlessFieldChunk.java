@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.endlessfield;
+package com.zhukovsd.endlessfield.field;
 
 /**
- * Created by ZhukovSD on 19.03.2016.
+ * Created by ZhukovSD on 25.06.2016.
  */
-public class ChunkSize {
-    public final int rowCount, columnCount;
-
-    public ChunkSize(int rowCount, int columnCount) {
-        this.rowCount = rowCount;
-        this.columnCount = columnCount;
-    }
-
-    public int cellCount() {
-        return rowCount * columnCount;
+public class NullEndlessFieldChunk<T extends EndlessFieldCell> extends EndlessFieldChunk<T> {
+    NullEndlessFieldChunk() {
+        super(0);
     }
 }

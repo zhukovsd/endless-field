@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.endlessfield;
+package com.zhukovsd.simplefield;
+
+import com.zhukovsd.endlessfield.CellPosition;
+import com.zhukovsd.endlessfield.field.EndlessField;
+import com.zhukovsd.endlessfield.field.EndlessFieldAction;
+import com.zhukovsd.endlessfield.field.EndlessFieldActionInvoker;
 
 /**
- * Created by ZhukovSD on 19.03.2016.
+ * Created by ZhukovSD on 07.06.2016.
  */
-public class ChunkSize {
-    public final int rowCount, columnCount;
-
-    public ChunkSize(int rowCount, int columnCount) {
-        this.rowCount = rowCount;
-        this.columnCount = columnCount;
+public class SimpleFieldActionInvoker extends EndlessFieldActionInvoker {
+    public SimpleFieldActionInvoker(EndlessField<SimpleFieldCell> field) {
+        super(field);
     }
 
-    public int cellCount() {
-        return rowCount * columnCount;
+    @Override
+    public SimpleFieldAction selectActionByNumber(int number) {
+        return SimpleFieldAction.values()[number];
     }
 }

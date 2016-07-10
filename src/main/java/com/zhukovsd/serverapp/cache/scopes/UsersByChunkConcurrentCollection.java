@@ -17,6 +17,8 @@
 package com.zhukovsd.serverapp.cache.scopes;
 
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
+import com.zhukovsd.entrylockingconcurrenthashmap.InstantiationResult;
+import com.zhukovsd.serverapp.endpoints.websocket.ActionEndpoint;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -24,24 +26,25 @@ import java.util.Set;
 /**
  * Created by ZhukovSD on 18.04.2016.
  */
-// map<chunk id, set of user id>
+// map<chunk id, set of action endpoints>
+// TODO: 07.06.2016 rename
 public class UsersByChunkConcurrentCollection extends EntryLockingConcurrentHashMap<
-        Integer, HashSet<String>>
+        Integer, HashSet<ActionEndpoint>>
 {
     public UsersByChunkConcurrentCollection(int stripes) {
         super(stripes);
     }
 
-    public void updateUserScope(String userId, Set<Integer> scope, Set<Integer> newScope) throws InterruptedException {
+    public void updateEndpointScope(ActionEndpoint endpoint, Set<Integer> newScope) throws InterruptedException {
         // lock on scope due to its changing (clear / refilling)
-        synchronized (scope) {
-            // user leaving chunks with ids in scope set
-            for (Integer chunkId : scope) {
-                // remove user id from users set for each chunk
-                if (this.lockKey(chunkId)) {
-                    Set<String> users = getValue(chunkId);
+        synchronized (endpoint.scope) {
+            // endpoint leaving chunks with ids in scope set
+            for (Integer chunkId : endpoint.scope) {
+                // remove endpoint from set for each chunk
+                if (this.lockEntry(chunkId)) {
+                    Set<ActionEndpoint> endpoints = getValue(chunkId);
                     try {
-                        users.remove(userId);
+                        endpoints.remove(endpoint);
                     } finally {
                         unlock();
                     }
@@ -49,21 +52,21 @@ public class UsersByChunkConcurrentCollection extends EntryLockingConcurrentHash
 
                 // item removal possible only after unlocking.
                 // remove only if value set by given key is empty
-                removeIf(chunkId, userIds -> userIds.size() == 0);
+                removeIf(chunkId, endpoints -> endpoints.size() == 0);
             }
 
             // update scope, because of this we need to synchronize on scope, otherwise race condition is possible and
             // ConcurrentModificationException will occur
             // (collections might be modified from another after iterator() obtained by above foreach loop)
-            scope.clear();
-            scope.addAll(newScope);
+            endpoint.scope.clear();
+            endpoint.scope.addAll(newScope);
 
-            // user entering chunks with in in scope set
-            for (Integer chunkId : scope) {
-                if (lockKey(chunkId, key -> new HashSet<>())) {
-                    Set<String> users = getValue(chunkId);
+            // endpoint entering chunks with ids in its new scope set
+            for (Integer chunkId : endpoint.scope) {
+                if (lockEntry(chunkId, null, (key, data) -> InstantiationResult.provided(new HashSet<>()))) {
+                    Set<ActionEndpoint> endpoints = getValue(chunkId);
                     try {
-                        users.add(userId);
+                        endpoints.add(endpoint);
                     } finally {
                         unlock();
                     }

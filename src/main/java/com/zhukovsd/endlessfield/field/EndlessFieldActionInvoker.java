@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package com.zhukovsd.endlessfield;
+package com.zhukovsd.endlessfield.field;
+
+import com.zhukovsd.endlessfield.CellPosition;
 
 /**
- * Created by ZhukovSD on 19.03.2016.
+ * Created by ZhukovSD on 07.06.2016.
  */
-public class ChunkSize {
-    public final int rowCount, columnCount;
+public abstract class EndlessFieldActionInvoker {
+    protected final EndlessField<?> field;
 
-    public ChunkSize(int rowCount, int columnCount) {
-        this.rowCount = rowCount;
-        this.columnCount = columnCount;
+    protected EndlessFieldActionInvoker(EndlessField<?> field) {
+        this.field = field;
     }
 
-    public int cellCount() {
-        return rowCount * columnCount;
-    }
+    public abstract EndlessFieldAction selectActionByNumber(int number);
 }

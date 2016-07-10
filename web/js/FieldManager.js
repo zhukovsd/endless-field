@@ -18,24 +18,39 @@
  * Created by ZhukovSD on 04.05.2016.
  */
 
-FieldManagerState = {
+var FieldManagerState = {
     UNINITIALIZED: 0,
     CONNECTED: 1,
     NETWORK_ERROR: 2,
     SERVER_ERROR: 3
 };
 
-ActionMessageType = {
+var ActionMessageType = {
     INIT_MESSAGE: 0,
     ACTION_MESSAGE: 1
 };
 
+var Player = function(id, name) {
+    this.id = id;
+    this.name = name;
+
+    this.toString = function() {
+        return this.id;
+    }
+};
+
 var FieldManager = function (applicationContextPath) {
     this.state = FieldManagerState.UNINITIALIZED;
+    
     this.onStateChange = null;
     this.onChunksReceived = null;
+    this.OnActionMessageReceived = null;
 
     this.cells = {};
+    this.playersPositions = {};
+
+    // var player = new Player('0', 'User #0');
+    // this.playersPositions[player.toString()] = {player: player, position: new CellPosition(20, 10)};
 
     this.setState = function(state) {
         this.state = state;
@@ -47,7 +62,8 @@ var FieldManager = function (applicationContextPath) {
     
     //
 
-    this.wsSessionId = "";
+    this.wsSessionId = null;
+    this.userId = null;
     this.chunkSize = {};
     this.chunkIdFactor = 0;
     this.initialChunkId = 0;
@@ -61,19 +77,53 @@ var FieldManager = function (applicationContextPath) {
         if (msg.type === ActionMessageType.INIT_MESSAGE) {
             // alert("hi, " + msg.type + ", " + msg.wsSessionId + ", " + msg.chunkSize.rowCount + ", " + msg.chunkSize.columnCount);
             alert(JSON.stringify(msg));
+            console.log(message.data);
 
             this.manager.wsSessionId = msg.wsSessionId;
+            this.manager.userId = msg.userId;
             this.manager.chunkSize = msg.chunkSize;
             this.manager.chunkIdFactor = msg.chunkIdFactor;
             this.manager.initialChunkId = msg.initialChunkId;
             
             this.manager.setState(FieldManagerState.CONNECTED);
-        } else {
+        } else if (msg.type === ActionMessageType.ACTION_MESSAGE) {
             // action message
+            var cells = msg.cells;
+            var positions = {};
+
+            var c = 0;
+            for (var key in cells) {
+                if (cells.hasOwnProperty(key)) {
+                    c++;
+
+                    var position = new CellPosition().fromKey(key);
+                    this.manager.cells[position.toString()] = this.manager.processResponseCell(cells[key]);
+                    // todo remove debug field
+                    this.manager.cells[position.toString()].text = key + "!";
+
+                    positions[position.toString()] = position;
+                }
+            }
+            console.log(c + "cells updated");
+
+            var player = new Player(msg.player.id, msg.player.name);
+            if (player.id !== this.manager.userId) {                
+                this.manager.playersPositions[player.toString()] = {player: player, position: msg.origin};
+            }
+            
+            if (this.manager.OnActionMessageReceived !== null) {
+                this.manager.OnActionMessageReceived(positions);
+            }
         }
     };
 
     // todo: handle on close and on error events
+
+    this.sendMessage = function(message) {
+        if (this.state = FieldManagerState.CONNECTED) {
+            webSocket.send(JSON.stringify(message));
+        }
+    };
 
     //
 
@@ -135,7 +185,7 @@ var FieldManager = function (applicationContextPath) {
             // alert("cells count = " + Object.keys(this.cells).length);
 
             //todo draw only new cells
-            if (this.onChunksReceived != null) {
+            if (this.onChunksReceived !== null) {
                 this.onChunksReceived(chunkIds);
             }
 
@@ -158,10 +208,6 @@ var FieldManager = function (applicationContextPath) {
 };
 
 FieldManager.prototype = {
-    foo: function() {
-        alert(this.wsSessionId);
-    },
-
     processResponseCells: function(chunkOrigin, responseCells) {
         //alert(this.chunkSize.rowCount + ", " + this.chunkSize.columnCount);
         //alert("chunkOrigin = " + JSON.stringify(chunkOrigin));
@@ -170,10 +216,10 @@ FieldManager.prototype = {
         for (var row = 0; row < this.chunkSize.rowCount; row++) {
             for (var column = 0; column < this.chunkSize.columnCount; column++) {
                 var key = (chunkOrigin.row + row) + "," + (chunkOrigin.column + column);
-                //console.log(key);
+                // console.log(key);
                 this.cells[key] = this.processResponseCell(responseCells[index]);
                 
-                //todo remove debug field
+                // todo remove debug field
                 this.cells[key].text = key;
 
                 index++;
