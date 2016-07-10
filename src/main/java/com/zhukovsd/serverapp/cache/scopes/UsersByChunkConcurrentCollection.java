@@ -17,6 +17,7 @@
 package com.zhukovsd.serverapp.cache.scopes;
 
 import com.zhukovsd.entrylockingconcurrenthashmap.EntryLockingConcurrentHashMap;
+import com.zhukovsd.entrylockingconcurrenthashmap.InstantiationResult;
 import com.zhukovsd.serverapp.endpoints.websocket.ActionEndpoint;
 
 import java.util.HashSet;
@@ -62,7 +63,7 @@ public class UsersByChunkConcurrentCollection extends EntryLockingConcurrentHash
 
             // endpoint entering chunks with ids in its new scope set
             for (Integer chunkId : endpoint.scope) {
-                if (lockEntry(chunkId, key -> new HashSet<>())) {
+                if (lockEntry(chunkId, null, (key, data) -> InstantiationResult.provided(new HashSet<>()))) {
                     Set<ActionEndpoint> endpoints = getValue(chunkId);
                     try {
                         endpoints.add(endpoint);
