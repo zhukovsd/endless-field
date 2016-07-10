@@ -74,7 +74,10 @@
         fieldManager.onStateChange = function() {
             switch (fieldManager.state) {
                 case (FieldManagerState.CONNECTED): {
-                    var storedPosition = JSON.parse(localStorage["cameraPosition"]);
+                    if (localStorage["cameraPosition"] !== undefined) {
+                        var storedPosition = JSON.parse(localStorage["cameraPosition"]);
+                    }
+
                     var uriChunkId = uriManager.getChunkId();
 
                     var cameraPosition;
@@ -83,7 +86,7 @@
                         cameraPosition = new CameraPosition(fieldManager.initialChunkId, 0, 0);
                     } else {
                         // if stored chunk id differs from uri chunk id, set camera to left-top corner of uri id
-                        if (uriChunkId != storedPosition.originChunkId) {
+                        if ((storedPosition === undefined) || (uriChunkId != storedPosition.originChunkId)) {
                             cameraPosition = new CameraPosition(uriChunkId, 0, 0);
                         } else {
                             cameraPosition = new CameraPosition(
