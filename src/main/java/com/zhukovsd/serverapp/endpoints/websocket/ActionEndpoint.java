@@ -136,6 +136,7 @@ public class ActionEndpoint {
 
         EndlessFieldAction action = field.actionInvoker.selectActionByNumber(clientMessage.type);
         Collection<Integer> chunkIds = action.getChunkIds(field, clientMessage.cell);
+        Collection<Integer> affectedChunkIds = new HashSet<>();
 
         field.lockChunksByIds(chunkIds);
         try {
@@ -146,7 +147,10 @@ public class ActionEndpoint {
             HashMap<CellPosition, EndlessFieldCell> cloned = new LinkedHashMap<>(entries.size());
             for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
                 EndlessFieldCell cell = entry.getValue();
-                cloned.put(entry.getKey(), cell.getFactory().clone(cell));
+                CellPosition position = entry.getKey();
+
+                affectedChunkIds.add(ChunkIdGenerator.chunkIdByPosition(field.chunkSize, position));
+                cloned.put(position, cell.getFactory().clone(cell));
             }
 
             String userId = ((String) httpSession.getAttribute("user_id"));
@@ -159,35 +163,31 @@ public class ActionEndpoint {
         String serialized = serializer.actionEndpointMessageToJSON(serverMessage);
 
         HashSet<ActionEndpoint> recipients = new HashSet<>();
-
-        int c = 0;
-        for (Integer chunkId : chunkIds) {
+        recipients.add(this);
+        for (Integer chunkId : affectedChunkIds) {
             if (scopes.lockEntry(chunkId)) {
                 try {
-                    HashSet<ActionEndpoint> endpoints = scopes.getValue(chunkId);
-//                    Set<ActionEndpoint> endpoints = Collections.singleton(this);
-
-                    for (ActionEndpoint endpoint : endpoints) {
-                        if (!recipients.contains(endpoint)) {
-                            endpoint.sendTextMessageAsync(serialized);
-
-                            recipients.add(endpoint);
-                            c++;
-                        }
-                    }
+                    recipients.addAll(scopes.getValue(chunkId));
                 } finally {
                     scopes.unlock();
                 }
             }
         }
 
-//        System.out.println("message sent to " + c + " endpoints, " + recipients.toString());
+        int c = 0;
+        for (ActionEndpoint recipient : recipients) {
+            recipient.sendTextMessageAsync(serialized);
+            c++;
+        }
+
+        System.out.println("message sent to " + c + " endpoints - " + recipients.toString()
+                + ", affected chunks size = " + affectedChunkIds.size());
     }
 
     //
 
     private void close() {
-         if (wsSession != null) {
+        if (wsSession != null) {
             try {
                 if (wsSession.isOpen())
                     wsSession.close();
