@@ -35,7 +35,7 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
         function(event) {
             view.canvasContainer = document.getElementById(containerId);
             
-            view.forEachLayer(function(layer) { layer.setSize(view.canvasContainer.clientWidth, view.canvasContainer.clientHeight); });
+            view.forEachLayer(function(layer) { layer.setCanvasSize(view.canvasContainer.clientWidth, view.canvasContainer.clientHeight); });
         }, false
     );
 

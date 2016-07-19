@@ -22,6 +22,7 @@
 
     <script src="${pageContext.request.contextPath}/js/FieldManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/FieldView.js"></script>
+    <script src="${pageContext.request.contextPath}/js/FieldViewLayerImageData.js"></script>
     <script src="${pageContext.request.contextPath}/js/AbstractFieldViewLayer.js"></script>
     <script src="${pageContext.request.contextPath}/js/CellsFieldViewLayer.js"></script>
     <script src="${pageContext.request.contextPath}/js/PlayersLabelsFieldViewLayer.js"></script>
@@ -45,16 +46,13 @@
         var fieldManager = new SimpleFieldManager(contextPath);
         var fieldView = new FieldView(fieldManager, 'field-canvas-container', new DrawSettings(25, 25));
         fieldView.addLayer('cells-layer', new SimpleCellsFieldViewLayer(fieldView, 'field-cells-layer-canvas'));
-        fieldView.addLayer('players-labels-layer', new PlayersLabelsFieldViewLayer(fieldView, 'field-players-labels-layer-canvas'));
+//        fieldView.addLayer('players-labels-layer', new PlayersLabelsFieldViewLayer(fieldView, 'field-players-labels-layer-canvas'));
 
-        var mouseEventListener = new SimpleMouseEventListener(fieldView, 'players-labels-layer');
+        var mouseEventListener = new SimpleMouseEventListener(fieldView, 'cells-layer');
         var uriManager = new AddressBarManager(contextPath + '/game/');
 
         window.addEventListener('load',
             function(event) {
-//                fieldView.init('field-canvas-container', 'field-canvas');
-//                mouseEventListener.init(fieldView.getLayer('player-labels-layer'));
-
                 var canvas = document.getElementById('field-cells-layer-canvas');
 
                 window.addEventListener('resize',
@@ -101,7 +99,7 @@
 
                     fieldView.camera.setPosition(cameraPosition);
                     // todo expand scope
-                    fieldManager.requestChunks(fieldView.camera.cellsScope().chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
+                    // fieldManager.requestChunks(fieldView.camera.cellsScope().chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
                 }
 
 //                case (FieldManagerState.LOADED): {
@@ -111,12 +109,12 @@
         };
 
         fieldManager.onChunksReceived = function(chunkIds) {
-            fieldView.getLayer('cells-layer').drawCellsByChunkIds(chunkIds);
+//            fieldView.getLayer('cells-layer').drawCellsByChunkIds(chunkIds);
         };
 
         fieldManager.OnActionMessageReceived = function (positions) {
-            fieldView.getLayer('cells-layer').drawByPositions(positions);
-            fieldView.getLayer('players-labels-layer').drawVisiblePlayersLabels();
+//            fieldView.getLayer('cells-layer').drawByPositions(positions);
+//            fieldView.getLayer('players-labels-layer').drawVisiblePlayersLabels();
         };
 
         fieldView.camera.onPositionChanged = function(position) {
@@ -145,26 +143,6 @@
         <input type="button" value="requestChunks()" onclick="fieldManager.requestChunks();">
         <input type="button" value="draw" onclick="fieldView.drawCellsByChunkIds([0, 1]);">
         <input type="text" name="chunk" id="chunk_id_text" value="0">
-
-        <input type="button" value="left" onclick="
-            var context = document.getElementById('field-cells-layer-canvas').getContext('2d');
-
-            // shift everything to the left:
-            var imageData = context.getImageData(1, 0, context.canvas.width-1, context.canvas.height);
-            context.putImageData(imageData, 0, 0);
-            // now clear the right-most pixels:
-            context.clearRect(context.canvas.width-1, 0, 1, context.canvas.height);
-        ">
-
-        <input type="button" value="right" onclick="
-            var context = document.getElementById('field-cells-layer-canvas').getContext('2d');
-
-            // shift everything to the right:
-            var imageData = context.getImageData(0, 0, context.canvas.width-1, context.canvas.height);
-            context.putImageData(imageData, 1, 0);
-            // now clear the right-most pixels:
-//            context.clearRect(context.canvas.width-1, 0, 1, context.canvas.height);
-        ">
     </div>
 
     <%--<input type="button" value="Button" onclick="fieldManager.foo({});">--%>

@@ -28,6 +28,7 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
     this.width = null;
     this.height = null;
 
+    // var imageData = null;
     var imageData = null;
 
     var layer = this;
@@ -36,22 +37,26 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
             layer.canvas = document.getElementById(canvasId);
             layer.context = layer.canvas.getContext('2d');
 
-            layer.applySize();
+            // todo: image data size factors as params
+            imageData = new FieldViewLayerImageData(layer.canvas, 1.5, 1.5);
+            layer.applyCanvasSize();
         }, false
     );
 
-    this.applySize = function() {
+    this.applyCanvasSize = function() {
         if (this.canvas !== null) {
             this.canvas.width = this.width;
             this.canvas.height = this.height;
+            
+            imageData.updateSize(this.width, this.height);
         }
     };
 
-    this.setSize = function(width, height) {
+    this.setCanvasSize = function(width, height) {
         this.width = width;
         this.height = height;
 
-        this.applySize();
+        this.applyCanvasSize();
     };
 
     this.clear = function() {
@@ -60,18 +65,18 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
         }
     };
 
-    this.storeImageData = function() {
-        if (this.context !== null) {
-            imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        }
-    };
-
-    this.restoreImageData = function(offset) {
-        if (imageData !== null) {
-            this.clear();
-            this.context.putImageData(imageData, offset.x, offset.y);
-        }
-    }
+    // this.storeImageData = function() {
+    //     if (this.context !== null) {
+    //         imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    //     }
+    // };
+    //
+    // this.restoreImageData = function(offset) {
+    //     if (imageData !== null) {
+    //         this.clear();
+    //         this.context.putImageData(imageData, offset.x, offset.y);
+    //     }
+    // }
 };
 
 AbstractFieldViewLayer.prototype.drawByPositions = function(positions) {
