@@ -30,7 +30,7 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
 
     // var imageData = null;
     var imageData = null;
-    var shift = {x: 0, y: 0};
+    var offset = {x: 0, y: 0}, storedOffset;
 
     var layer = this;
     window.addEventListener('load',
@@ -42,7 +42,7 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
             imageData = new FieldViewLayerImageData(layer.canvas, 1.5, 1.5);
             layer.applyCanvasSize();
 
-            shift = {x: -(layer.width * 0.25), y: -(layer.height * 0.25)};
+            offset = {x: -(layer.width * 0.25), y: -(layer.height * 0.25)};
 
             //
             var cn = document.createElement('canvas');
@@ -84,9 +84,19 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
     };
 
     this.render = function() {
-        console.log(JSON.stringify(shift));
-        this.context.putImageData(imageData.data, shift.x, shift.y);
-        // this.context.drawImage(imageData.data, 0, 0);
+        this.clear();
+        this.context.putImageData(imageData.data, offset.x, offset.y);
+    };
+
+    this.storeOffset = function() {
+        storedOffset = { x: offset.x, y: offset.y };
+    };
+
+    this.shiftOffset = function(offsetDelta) {
+        offset.x = storedOffset.x + offsetDelta.x;
+        offset.y = storedOffset.y + offsetDelta.y;
+
+        this.render();
     };
 
     // this.storeImageData = function() {
@@ -103,6 +113,6 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
     // }
 };
 
-AbstractFieldViewLayer.prototype.drawByPositions = function(positions) {
-    //
-};
+// AbstractFieldViewLayer.prototype.drawByPositions = function(positions) {
+//     //
+// };

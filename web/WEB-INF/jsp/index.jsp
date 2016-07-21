@@ -100,6 +100,7 @@
                     fieldView.camera.setPosition(cameraPosition);
                     // todo expand scope
                     // fieldManager.requestChunks(fieldView.camera.cellsScope().chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
+                    fieldManager.requestChunks();
                 }
 
 //                case (FieldManagerState.LOADED): {
@@ -108,7 +109,9 @@
             }
         };
 
+        var cellsLayer = fieldView.getLayer('cells-layer');
         fieldManager.onChunksReceived = function(chunkIds) {
+//            cellsLayer.
 //            fieldView.getLayer('cells-layer').drawCellsByChunkIds(chunkIds);
         };
 
@@ -131,7 +134,7 @@
 
     <div class="unselectable" id="field-canvas-container">
         <canvas id="field-cells-layer-canvas"></canvas>
-        <canvas id="field-players-labels-layer-canvas"></canvas>
+        <%--<canvas id="field-players-labels-layer-canvas"></canvas>--%>
     </div>
 
     <div style="position: absolute; left: 20px; top: 20px; width: 600px; height: 200px; background-color: rgba(240, 255, 255, 0.8); z-index: 100;">
