@@ -141,9 +141,14 @@
         <div>camera scope = <span id="camera-scope"></span></div>
         <div>chunks scope = <span id="chunks-scope"></span></div>
         <input type="button" value="requestChunks()" onclick="fieldManager.requestChunks();">
-        <input type="button" value="draw" onclick="fieldView.drawCellsByChunkIds([0, 1]);">
+        <input type="button" value="draw" onclick="fieldView.getLayer('cells-layer').render(); /*fieldView.drawCellsByChunkIds([0, 1]);*/">
         <input type="text" name="chunk" id="chunk_id_text" value="0">
     </div>
+
+    <img id="test-img" style="position: absolute; left: 700px; top: 20px; width: 480px; height: 240px; z-index: 100; display: none;"
+         src="${pageContext.request.contextPath}/cute-kitty-1920x1080-480x240.jpg"/>
+
+
 
     <%--<input type="button" value="Button" onclick="fieldManager.foo({});">--%>
 </body>

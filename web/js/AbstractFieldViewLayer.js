@@ -30,6 +30,7 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
 
     // var imageData = null;
     var imageData = null;
+    var shift = {x: 0, y: 0};
 
     var layer = this;
     window.addEventListener('load',
@@ -40,6 +41,23 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
             // todo: image data size factors as params
             imageData = new FieldViewLayerImageData(layer.canvas, 1.5, 1.5);
             layer.applyCanvasSize();
+
+            shift = {x: -(layer.width * 0.25), y: -(layer.height * 0.25)};
+
+            //
+            var cn = document.createElement('canvas');
+            cn.width = imageData.width;
+            cn.height = imageData.height;
+            var img = document.getElementById('test-img');
+            var ct = cn.getContext('2d');
+
+            ct.rect(0, 0, cn.width, cn.height);
+            ct.lineWidth = 3;
+            ct.stroke();
+            
+            ct.drawImage(img, 750, 300);
+            imageData.data = ct.getImageData(0, 0, cn.width, cn.height);
+            //
         }, false
     );
 
@@ -63,6 +81,12 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
         if (this.context !== null) {
             this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         }
+    };
+
+    this.render = function() {
+        console.log(JSON.stringify(shift));
+        this.context.putImageData(imageData.data, shift.x, shift.y);
+        // this.context.drawImage(imageData.data, 0, 0);
     };
 
     // this.storeImageData = function() {

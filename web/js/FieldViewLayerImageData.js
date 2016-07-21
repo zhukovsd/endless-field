@@ -26,7 +26,7 @@ var FieldViewLayerImageData = function(canvas, widthFactor, heightFactor) {
     this.width = 0;
     this.height = 0;
 
-    var data = null;
+    this.data = null;
 
     this.updateSize = function(canvasWidth, canvasHeight) {
         var newWidth = canvasWidth * widthFactor;
@@ -40,9 +40,7 @@ var FieldViewLayerImageData = function(canvas, widthFactor, heightFactor) {
                 this.context = this.canvas.getContext('2d');
             }
 
-            data = this.context.createImageData(this.width, this.height);
-
-            console.log('image data created');
+            this.data = this.context.createImageData(this.width, this.height);
 
             // todo copy existing image data on resize
         }
