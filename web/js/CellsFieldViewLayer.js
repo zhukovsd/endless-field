@@ -27,14 +27,38 @@ var CellsFieldViewLayer = function (fieldView, canvasId) {
         var layer = this;
         var scope = this.fieldView.camera.cellsScope();
 
-        //this.canvasContext.fillstyle = "black";
-        this.context.strokeStyle = "black";
-        this.context.font = "6pt Arial";
-        this.context.lineWidth = 1;
-
-        // fieldManager.chunkSize = {rowCount: 1, columnCount: 2};
+        var context = this.imageData.renderContext;
+        context.strokeStyle = "black";
+        context.font = "6pt Arial";
+        context.lineWidth = 1;
 
         var a = 0;
+
+        // set exact size
+
+
+        var minRow = fieldManager.chunkIdFactor;
+        var minColumn = fieldManager.chunkIdFactor;
+        var maxRow = 0;
+        var maxColumn = 0;
+        console.log(JSON.stringify(chunkIds));
+        chunkIds.forEach(function(chunkId) {
+           // console.log(chunkId);
+
+            var row = ChunkIdGenerator.chunkRow(chunkId, fieldManager.chunkIdFactor);
+            var column = ChunkIdGenerator.chunkColumn(chunkId, fieldManager.chunkIdFactor);
+
+            // console.log(chunkId + ": " + row + ", " + column);
+
+            minRow = Math.min(minRow, row);
+            minColumn = Math.min(minColumn, column);
+            maxRow = Math.max(maxRow, row);
+            maxColumn = Math.max(maxColumn, column);
+        });
+        var chunkRowRange = maxRow - minRow + 1;
+        var chunkColumnRange = maxColumn - minColumn + 1;
+
+        console.log(chunkRowRange + ", " + chunkColumnRange);
 
         chunkIds.forEach(function(chunkId) {
             var origin = ChunkIdGenerator.chunkOrigin(fieldManager.chunkSize, fieldManager.chunkIdFactor, chunkId);
@@ -44,10 +68,24 @@ var CellsFieldViewLayer = function (fieldView, canvasId) {
                     var row = origin.row + r;
                     var column = origin.column + c;
 
-                    if (scope.containsCell(row, column)) {
-                        layer.drawCell(layer.fieldView.camera.cellRect(row, column), fieldManager.getCell(row, column), true);
-                        a++;
-                    }
+                    // if (scope.containsCell(row, column)) {
+                    // var rect = layer.fieldView.camera.cellRect(row, column);
+
+                    var cellSize = layer.fieldView.drawSettings.cellSize;
+                    var rect = {
+                        x: column * cellSize.width + 0.5,
+                        y: row * cellSize.height + 0.5,
+                        width: cellSize.width,
+                        height: cellSize.height
+                    };
+
+                    // console.log("r = " + r + ", c = " + c + ", rect = " + JSON.stringify(rect));
+
+                    layer.drawCell(
+                        rect, fieldManager.getCell(row, column), true
+                    );
+                    a++;
+                    // }
                 }
             }
         });
@@ -58,24 +96,24 @@ var CellsFieldViewLayer = function (fieldView, canvasId) {
 
 CellsFieldViewLayer.prototype = Object.create(AbstractFieldViewLayer.prototype);
 
-CellsFieldViewLayer.prototype.drawByPositions = function(positions) {
-    var fieldManager = this.fieldManager;
-
-    for (var key in positions) {
-        if (positions.hasOwnProperty(key)) {
-            var position = positions[key];
-
-            this.drawCell(
-                this.fieldView.camera.cellRect(position.row, position.column),
-                fieldManager.getCell(position.row, position.column),
-                true
-            );
-        }
-    }
-};
+// CellsFieldViewLayer.prototype.drawByPositions = function(positions) {
+//     var fieldManager = this.fieldManager;
+//
+//     for (var key in positions) {
+//         if (positions.hasOwnProperty(key)) {
+//             var position = positions[key];
+//
+//             this.drawCell(
+//                 this.fieldView.camera.cellRect(position.row, position.column),
+//                 fieldManager.getCell(position.row, position.column),
+//                 true
+//             );
+//         }
+//     }
+// };
 
 CellsFieldViewLayer.prototype.drawCell = function(rect, cell, clear) {
-    var c = this.context;
+    var c = this.imageData.renderContext;
 
     if (cell != null) {
         if (clear)
@@ -86,4 +124,6 @@ CellsFieldViewLayer.prototype.drawCell = function(rect, cell, clear) {
         c.stroke();
         c.fillText(cell.text, rect.x + 2, rect.y + 9);
     }
+
+    // console.log(JSON.stringify(rect));
 };

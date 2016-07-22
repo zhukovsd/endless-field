@@ -29,7 +29,7 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
     this.height = null;
 
     // var imageData = null;
-    var imageData = null;
+    this.imageData = null;
     var offset = {x: 0, y: 0}, storedOffset;
 
     var layer = this;
@@ -39,25 +39,11 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
             layer.context = layer.canvas.getContext('2d');
 
             // todo: image data size factors as params
-            imageData = new FieldViewLayerImageData(layer.canvas, 1.5, 1.5);
+            layer.imageData = new FieldViewLayerImageData(layer.canvas, 1.5, 1.5);
             layer.applyCanvasSize();
 
-            offset = {x: -(layer.width * 0.25), y: -(layer.height * 0.25)};
-
-            //
-            var cn = document.createElement('canvas');
-            cn.width = imageData.width;
-            cn.height = imageData.height;
-            var img = document.getElementById('test-img');
-            var ct = cn.getContext('2d');
-
-            ct.rect(0, 0, cn.width, cn.height);
-            ct.lineWidth = 3;
-            ct.stroke();
-            
-            ct.drawImage(img, 750, 300);
-            imageData.data = ct.getImageData(0, 0, cn.width, cn.height);
-            //
+            // ?
+            // offset = {x: -(layer.width * 0.25), y: -(layer.height * 0.25)};
         }, false
     );
 
@@ -66,7 +52,7 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
             this.canvas.width = this.width;
             this.canvas.height = this.height;
             
-            imageData.updateSize(this.width, this.height);
+            this.imageData.updateSize(this.width, this.height);
         }
     };
 
@@ -85,7 +71,8 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
 
     this.render = function() {
         this.clear();
-        this.context.putImageData(imageData.data, offset.x, offset.y);
+        // this.context.putImageData(imageData.data, offset.x, offset.y);
+        this.context.drawImage(this.imageData.renderCanvas, offset.x, offset.y);
     };
 
     this.storeOffset = function() {

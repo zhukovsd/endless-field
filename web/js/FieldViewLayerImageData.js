@@ -18,15 +18,18 @@
  * Created by ZhukovSD on 19.07.2016.
  */
 
-var FieldViewLayerImageData = function(canvas, widthFactor, heightFactor) {
-    this.canvas = canvas;
-    this.context = null;
-    this.data = null;
+var FieldViewLayerImageData = function(layerCanvas, widthFactor, heightFactor) {
+    // var canvas = layerCanvas;
+
+    this.renderCanvas = document.createElement('canvas');
+    this.renderContext = this.renderCanvas.getContext('2d');
+
+    // this.context = null;
 
     this.width = 0;
     this.height = 0;
 
-    this.data = null;
+    // this.data = null;
 
     this.updateSize = function(canvasWidth, canvasHeight) {
         var newWidth = canvasWidth * widthFactor;
@@ -36,13 +39,20 @@ var FieldViewLayerImageData = function(canvas, widthFactor, heightFactor) {
             this.width = newWidth;
             this.height = newHeight;
 
-            if (!this.context) {
-                this.context = this.canvas.getContext('2d');
-            }
+            this.renderCanvas.width = this.width;
+            this.renderCanvas.height = this.height;
 
-            this.data = this.context.createImageData(this.width, this.height);
+            //
+            var img = document.getElementById('test-img');
+            this.renderContext.rect(0, 0, this.width, this.height);
+            this.renderContext.lineWidth = 3;
+            this.renderContext.stroke();
+            this.renderContext.drawImage(img, 550, 300);
+            //
 
             // todo copy existing image data on resize
+
+            // this.data = renderContext.getImageData(0, 0, renderCanvas.width, renderCanvas.height);
         }
     }
 };
