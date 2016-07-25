@@ -38,6 +38,7 @@ var SimpleMouseEventListener = function(fieldView, fieldViewTopLayerName) {
 SimpleMouseEventListener.prototype = Object.create(MouseEventListener.prototype);
 
 SimpleMouseEventListener.prototype.cellClicked = function(mouseButton, cellPosition) {
+    console.log('mouse click ' + mouseButton + " " + cellPosition.row + "," + cellPosition.column);
     this.fieldManager.sendMessage(
         new ActionMessage(cellPosition, SimpleFieldActionType.selectByMouseButton(mouseButton))
     );

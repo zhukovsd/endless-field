@@ -198,6 +198,7 @@ var FieldManager = function (applicationContextPath) {
             //else
             //    this.setState(FieldManagerState.SERVER_ERROR);
         } catch (exception) {
+            console.log('exception');
             this.setState(FieldManagerState.SERVER_ERROR);
         }
     };

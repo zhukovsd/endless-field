@@ -25,18 +25,11 @@ var CellsFieldViewLayer = function (fieldView, canvasId) {
         var fieldManager = this.fieldManager;
 
         var layer = this;
-        var scope = this.fieldView.camera.cellsScope();
-
-        var context = this.imageData.renderContext;
-        context.strokeStyle = "black";
-        context.font = "6pt Arial";
-        context.lineWidth = 1;
+        // var scope = this.fieldView.camera.cellsScope();
 
         var a = 0;
 
         // set exact size
-
-
         var minRow = fieldManager.chunkIdFactor;
         var minColumn = fieldManager.chunkIdFactor;
         var maxRow = 0;
@@ -58,7 +51,20 @@ var CellsFieldViewLayer = function (fieldView, canvasId) {
         var chunkRowRange = maxRow - minRow + 1;
         var chunkColumnRange = maxColumn - minColumn + 1;
 
-        console.log(chunkRowRange + ", " + chunkColumnRange);
+        var chunkWidthInPixels = this.fieldManager.chunkSize.columnCount * this.fieldView.drawSettings.cellSize.width;
+        var chunkHeightInPixels = this.fieldManager.chunkSize.rowCount * this.fieldView.drawSettings.cellSize.height;
+
+        this.imageData.setSize(chunkColumnRange * chunkWidthInPixels + 1, chunkRowRange * chunkHeightInPixels + 1);
+
+        var context = this.imageData.renderContext;
+        context.strokeStyle = "black";
+        context.font = "6pt Arial";
+        context.lineWidth = 1;
+
+        // console.log(
+        //     chunkColumnRange * this.fieldManager.chunkSize.columnCount * this.fieldView.drawSettings.cellSize.width + ', ' +
+        //     chunkRowRange * this.fieldManager.chunkSize.rowCount * this.fieldView.drawSettings.cellSize.height
+        // );
 
         chunkIds.forEach(function(chunkId) {
             var origin = ChunkIdGenerator.chunkOrigin(fieldManager.chunkSize, fieldManager.chunkIdFactor, chunkId);
@@ -81,9 +87,7 @@ var CellsFieldViewLayer = function (fieldView, canvasId) {
 
                     // console.log("r = " + r + ", c = " + c + ", rect = " + JSON.stringify(rect));
 
-                    layer.drawCell(
-                        rect, fieldManager.getCell(row, column), true
-                    );
+                    layer.drawCell(rect, fieldManager.getCell(row, column), true);
                     a++;
                     // }
                 }
@@ -91,26 +95,22 @@ var CellsFieldViewLayer = function (fieldView, canvasId) {
         });
 
         console.log(a + " cells drawn");
+
+        var cameraPosition = fieldView.camera.position;
+        var cameraColumn = ChunkIdGenerator.chunkColumn(cameraPosition.originChunkId, fieldManager.chunkIdFactor);
+        var cameraRow = ChunkIdGenerator.chunkRow(cameraPosition.originChunkId, fieldManager.chunkIdFactor);
+
+        // console.log((cameraRow - minRow) + ", " + (cameraColumn - minColumn));
+        // console.log(JSON.stringify(fieldView.camera.position));
+
+        this.offset = {
+            x: - (cameraPosition.shift.x + chunkWidthInPixels * (cameraColumn - minColumn)),
+            y: - (cameraPosition.shift.y + chunkHeightInPixels * (cameraRow - minRow))
+        };
     };
 };
 
 CellsFieldViewLayer.prototype = Object.create(AbstractFieldViewLayer.prototype);
-
-// CellsFieldViewLayer.prototype.drawByPositions = function(positions) {
-//     var fieldManager = this.fieldManager;
-//
-//     for (var key in positions) {
-//         if (positions.hasOwnProperty(key)) {
-//             var position = positions[key];
-//
-//             this.drawCell(
-//                 this.fieldView.camera.cellRect(position.row, position.column),
-//                 fieldManager.getCell(position.row, position.column),
-//                 true
-//             );
-//         }
-//     }
-// };
 
 CellsFieldViewLayer.prototype.drawCell = function(rect, cell, clear) {
     var c = this.imageData.renderContext;
@@ -127,3 +127,19 @@ CellsFieldViewLayer.prototype.drawCell = function(rect, cell, clear) {
 
     // console.log(JSON.stringify(rect));
 };
+
+// CellsFieldViewLayer.prototype.drawByPositions = function(positions) {
+//     var fieldManager = this.fieldManager;
+//
+//     for (var key in positions) {
+//         if (positions.hasOwnProperty(key)) {
+//             var position = positions[key];
+//
+//             this.drawCell(
+//                 this.fieldView.camera.cellRect(position.row, position.column),
+//                 fieldManager.getCell(position.row, position.column),
+//                 true
+//             );
+//         }
+//     }
+// };

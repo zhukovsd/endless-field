@@ -18,7 +18,7 @@
  * Created by ZhukovSD on 19.07.2016.
  */
 
-var FieldViewLayerImageData = function(layerCanvas, widthFactor, heightFactor) {
+var FieldViewLayerImageData = function(layerCanvas/*, widthFactor, heightFactor*/) {
     // var canvas = layerCanvas;
 
     this.renderCanvas = document.createElement('canvas');
@@ -31,28 +31,30 @@ var FieldViewLayerImageData = function(layerCanvas, widthFactor, heightFactor) {
 
     // this.data = null;
 
-    this.updateSize = function(canvasWidth, canvasHeight) {
-        var newWidth = canvasWidth * widthFactor;
-        var newHeight = canvasHeight * heightFactor;
+    this.setSize = function(width, height) {
+        // var newWidth = width * widthFactor;
+        // var newHeight = height * heightFactor;
 
-        if (this.width != newWidth || this.height != newHeight) {
-            this.width = newWidth;
-            this.height = newHeight;
+        // if (this.width != newWidth || this.height != newHeight) {
+        if (this.width != width || this.height || height) {
+            this.width = width;
+            this.height = height;
 
             this.renderCanvas.width = this.width;
             this.renderCanvas.height = this.height;
 
             //
-            var img = document.getElementById('test-img');
-            this.renderContext.rect(0, 0, this.width, this.height);
-            this.renderContext.lineWidth = 3;
-            this.renderContext.stroke();
-            this.renderContext.drawImage(img, 550, 300);
+            // var img = document.getElementById('test-img');
+            // this.renderContext.rect(0, 0, this.width, this.height);
+            // this.renderContext.lineWidth = 3;
+            // this.renderContext.stroke();
+            // this.renderContext.drawImage(img, 550, 300);
             //
 
             // todo copy existing image data on resize
 
             // this.data = renderContext.getImageData(0, 0, renderCanvas.width, renderCanvas.height);
+            // }
         }
     }
 };
