@@ -100,6 +100,9 @@
                     fieldView.camera.setPosition(cameraPosition);
                     // todo expand scope
                     // fieldManager.requestChunks(fieldView.camera.cellsScope().chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
+
+                    fieldView.camera.cellsScope().expand(fieldView, 1, 1);
+
                     fieldManager.requestChunks([0, 1, 2, 40000, 40001, 40002]);
                 }
 

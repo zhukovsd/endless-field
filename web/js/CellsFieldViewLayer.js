@@ -101,7 +101,7 @@ var CellsFieldViewLayer = function (fieldView, canvasId) {
         var cameraRow = ChunkIdGenerator.chunkRow(cameraPosition.originChunkId, fieldManager.chunkIdFactor);
 
         // console.log((cameraRow - minRow) + ", " + (cameraColumn - minColumn));
-        // console.log(JSON.stringify(fieldView.camera.position));
+        console.log(JSON.stringify(fieldView.camera.position));
 
         this.offset = {
             x: - (cameraPosition.shift.x + chunkWidthInPixels * (cameraColumn - minColumn)),

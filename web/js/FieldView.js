@@ -35,7 +35,10 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
         function(event) {
             view.canvasContainer = document.getElementById(containerId);
             
-            view.forEachLayer(function(layer) { layer.setCanvasSize(view.canvasContainer.clientWidth, view.canvasContainer.clientHeight); });
+            view.forEachLayer(function(layer) {
+                // layer.setCanvasSize(view.canvasContainer.clientWidth, view.canvasContainer.clientHeight);
+                layer.setCanvasSize(view.width(), view.height());
+            });
         }, false
     );
 
@@ -53,5 +56,13 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
                 callback(this.layers[name]);
             }
         }
-    }
+    };
+    
+    this.width = function() {
+        return view.canvasContainer.clientWidth; 
+    };
+    
+    this.height = function() {
+        return view.canvasContainer.clientHeight;
+    };
 };
