@@ -103,13 +103,11 @@ Scope.prototype = {
         );
         var rightBottomChunkId = ChunkIdGenerator.generateId(chunkSize, chunkIdFactor, bottomRightScopePosition);
 
-        var vChunkCount = ChunkIdGenerator.chunkRow(
-            rightBottomChunkId, chunkIdFactor) - ChunkIdGenerator.chunkRow(originChunkId, chunkIdFactor
-        ) + 1;
+        var vChunkCount = ChunkIdGenerator.chunkRow(rightBottomChunkId, chunkIdFactor)
+            - ChunkIdGenerator.chunkRow(originChunkId, chunkIdFactor) + 1;
 
-        var hChunkCount = ChunkIdGenerator.chunkRow(
-            rightBottomChunkId, chunkIdFactor) - ChunkIdGenerator.chunkRow(originChunkId, chunkIdFactor
-        ) + 1;
+        var hChunkCount = ChunkIdGenerator.chunkColumn(rightBottomChunkId, chunkIdFactor)
+            - ChunkIdGenerator.chunkColumn(originChunkId, chunkIdFactor) + 1;
 
         var result = [];
         for (var chunkRow = 0; chunkRow < vChunkCount; chunkRow++) {
@@ -157,42 +155,38 @@ Scope.prototype = {
     //     return this;
     // },
 
-    expand: function(fieldView, rowAmount, columnAmount) {
+    expand: function(fieldView, x, y) {
         var cellSize = fieldView.drawSettings.cellSize;
         var chunkSize = fieldView.fieldManager.chunkSize;
         var idFactor = fieldView.fieldManager.chunkIdFactor;
 
-        console.log('current camera position = ' + JSON.stringify(fieldView.camera.position));
+        // console.log('current camera position = ' + JSON.stringify(fieldView.camera.position));
 
         var topLeftCameraPosition = fieldView.camera.position.shiftBy(
-            {x: cellSize.width * columnAmount, y: cellSize.height * rowAmount},
-            chunkSize, idFactor, cellSize
+            {x: x, y: y}, chunkSize, idFactor, cellSize
         );
-        var o = ChunkIdGenerator.chunkOrigin(chunkSize, idFactor, topLeftCameraPosition.originChunkId);
-        var b = o.column + Math.ceil(topLeftCameraPosition.shift.x / cellSize.width) - 1;
-        var c = o.row + Math.ceil(topLeftCameraPosition.shift.y / cellSize.height) - 1;
+        // var o = ChunkIdGenerator.chunkOrigin(chunkSize, idFactor, topLeftCameraPosition.originChunkId);
+        // var b = o.column + Math.ceil(topLeftCameraPosition.shift.x / cellSize.width) - 1;
+        // var c = o.row + Math.ceil(topLeftCameraPosition.shift.y / cellSize.height) - 1;
 
-        console.log('top left camera position = ' + JSON.stringify(topLeftCameraPosition) + ', ' + b + ' ' + c);
+        // console.log('top left camera position = ' + JSON.stringify(topLeftCameraPosition) + ', ' + b + ' ' + c);
 
         var bottomRightCameraPosition = fieldView.camera.position.shiftBy(
-            {x: - (fieldView.width() + cellSize.width * columnAmount), y: - (fieldView.height() + cellSize.height * rowAmount)},
+            {x: - (fieldView.width() + x), y: - (fieldView.height() + y)},
             chunkSize, idFactor, cellSize
         );
 
-        var o = ChunkIdGenerator.chunkOrigin(chunkSize, idFactor, bottomRightCameraPosition.originChunkId);
-        var b = o.column + Math.ceil(bottomRightCameraPosition.shift.x / cellSize.width) - 1;
-        var c = o.row + Math.ceil(bottomRightCameraPosition.shift.y / cellSize.height) - 1;
+        // var o = ChunkIdGenerator.chunkOrigin(chunkSize, idFactor, bottomRightCameraPosition.originChunkId);
+        // var b = o.column + Math.ceil(bottomRightCameraPosition.shift.x / cellSize.width) - 1;
+        // var c = o.row + Math.ceil(bottomRightCameraPosition.shift.y / cellSize.height) - 1;
 
-        console.log('right bottom = ' + JSON.stringify(bottomRightCameraPosition) + ', ' + b + ' ' + c);
+        // console.log('right bottom = ' + JSON.stringify(bottomRightCameraPosition) + ', ' + b + ' ' + c);
 
-        var offset = topLeftCameraPosition.calculateMouseOffset(bottomRightCameraPosition, chunkSize, idFactor, cellSize);
+        var offset = bottomRightCameraPosition.calculateMouseOffset(topLeftCameraPosition, chunkSize, idFactor, cellSize);
 
-        console.log('offset = ' + JSON.stringify(offset));
+        // console.log('offset = ' + JSON.stringify(offset));
 
-        return new Scope(
-            this.width, 0,
-            topLeftCameraPosition, cellSize, chunkSize, idFactor
-        );
+        return new Scope(offset.x, offset.y, topLeftCameraPosition, cellSize, chunkSize, idFactor);
     },
 
     toSet: function() {

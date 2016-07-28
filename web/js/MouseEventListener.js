@@ -160,6 +160,8 @@ var MouseEventListener = function(fieldView, fieldViewTopLayerName) {
             //     // todo request only difference
             //     this.fieldManager.requestChunks(mouseUpChunkIds);
             // }
+
+            fieldView.updateExpandedScopeChunkIds();
         }
     };
 

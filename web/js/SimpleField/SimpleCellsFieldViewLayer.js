@@ -40,7 +40,7 @@ SimpleCellsFieldViewLayer.prototype.drawCell = function(rect, cell, clear) {
             c.rect(rect.x, rect.y, rect.width, rect.height);
             c.fillStyle = "#E8E8E8";
             c.fill();
-            c.restore();            
+            c.restore();
         }
         
         inheritedDrawCell.call(this, rect, cell, false);
