@@ -20,108 +20,74 @@
 
 var CellsFieldViewLayer = function (fieldView, canvasId) {
     AbstractFieldViewLayer.call(this, fieldView, canvasId);
-
-    this.drawCellsByChunkIds = function(chunkIds) {
-        // console.log('rendering chunks with ids = ' + chunkIds);
-        var time = Date.now();
-
-        var fieldManager = this.fieldManager;
-        var chunkSize = fieldManager.chunkSize;
-        var cellSize = this.fieldView.drawSettings.cellSize;
-
-        var layer = this;
-        // var scope = this.fieldView.camera.cellsScope();
-
-        var a = 0;
-
-        // set exact size
-        var minChunkRow = fieldManager.chunkIdFactor;
-        var minChunkColumn = fieldManager.chunkIdFactor;
-        var maxChunkRow = 0;
-        var maxChunkColumn = 0;
-        // console.log(JSON.stringify(chunkIds));
-        chunkIds.forEach(function(chunkId) {
-           // console.log(chunkId);
-
-            var chunkRow = ChunkIdGenerator.chunkRow(chunkId, fieldManager.chunkIdFactor);
-            var chunkColumn = ChunkIdGenerator.chunkColumn(chunkId, fieldManager.chunkIdFactor);
-
-            // console.log(chunkId + ": " + chunkRow + ", " + chunkColumn);
-
-            minChunkRow = Math.min(minChunkRow, chunkRow);
-            minChunkColumn = Math.min(minChunkColumn, chunkColumn);
-            maxChunkRow = Math.max(maxChunkRow, chunkRow);
-            maxChunkColumn = Math.max(maxChunkColumn, chunkColumn);
-        });
-
-        var chunkRowRange = maxChunkRow - minChunkRow + 1;
-        var chunkColumnRange = maxChunkColumn - minChunkColumn + 1;
-
-        var mostTopRow = minChunkRow * chunkSize.rowCount;
-        var mostLeftColumn = minChunkColumn * chunkSize.columnCount;
-
-        // console.log(mostTopRow + ', ' + mostLeftColumn);
-
-        var chunkWidthInPixels = chunkSize.columnCount * cellSize.width;
-        var chunkHeightInPixels = chunkSize.rowCount * cellSize.height;
-
-        this.imageData.setSize(chunkColumnRange * chunkWidthInPixels + 1, chunkRowRange * chunkHeightInPixels + 1);
-
-        var context = this.imageData.renderContext;
-        context.strokeStyle = "black";
-        context.font = "6pt Arial";
-        context.lineWidth = 1;
-
-        // console.log(
-        //     chunkColumnRange * this.fieldManager.chunkSize.columnCount * this.fieldView.drawSettings.cellSize.width + ', ' +
-        //     chunkRowRange * this.fieldManager.chunkSize.rowCount * this.fieldView.drawSettings.cellSize.height
-        // );
-
-        chunkIds.forEach(function(chunkId) {
-            var origin = ChunkIdGenerator.chunkOrigin(fieldManager.chunkSize, fieldManager.chunkIdFactor, chunkId);
-
-            for (var r = 0; r < fieldManager.chunkSize.rowCount; r++) {
-                for (var c = 0; c < fieldManager.chunkSize.columnCount; c++) {
-                    var row = origin.row + r;
-                    var column = origin.column + c;
-
-                    // if (scope.containsCell(row, column)) {
-                    // var rect = layer.fieldView.camera.cellRect(row, column);
-
-                    var rect = {
-                        x: (column - mostLeftColumn) * cellSize.width + 0.5,
-                        y: (row - mostTopRow) * cellSize.height + 0.5,
-                        width: cellSize.width,
-                        height: cellSize.height
-                    };
-
-                    // console.log("r = " + r + ", c = " + c + ", rect = " + JSON.stringify(rect));
-
-                    layer.drawCell(rect, fieldManager.getCell(row, column), true);
-                    a++;
-                    // }
-                }
-            }
-        });
-
-        var cameraPosition = fieldView.camera.position;
-        var cameraColumn = ChunkIdGenerator.chunkColumn(cameraPosition.originChunkId, fieldManager.chunkIdFactor);
-        var cameraRow = ChunkIdGenerator.chunkRow(cameraPosition.originChunkId, fieldManager.chunkIdFactor);
-
-        // console.log((cameraRow - minChunkRow) + ", " + (cameraColumn - minChunkColumn));
-        // console.log(JSON.stringify(fieldView.camera.position));
-
-        this.offset = {
-            x: - (cameraPosition.shift.x + chunkWidthInPixels * (cameraColumn - minChunkColumn)),
-            y: - (cameraPosition.shift.y + chunkHeightInPixels * (cameraRow - minChunkRow))
-        };
-
-        // console.log("cells layer offset = " + JSON.stringify(this.offset));
-        console.log(a + " cells drawn, elapsed time = " + (Date.now() - time));
-    };
 };
 
 CellsFieldViewLayer.prototype = Object.create(AbstractFieldViewLayer.prototype);
+
+CellsFieldViewLayer.prototype.renderByChunkIds = function(chunkIds) {
+    // console.log('rendering chunks with ids = ' + chunkIds);
+    var time = Date.now();
+
+    var fieldManager = this.fieldManager;
+    var chunkSize = fieldManager.chunkSize;
+    var cellSize = this.fieldView.drawSettings.cellSize;
+
+    var layer = this;
+
+    var a = 0;
+
+    var chunksArea = this.fieldView.currentChunkIdsArea();
+
+    var chunkWidthInPixels = chunkSize.columnCount * cellSize.width;
+    var chunkHeightInPixels = chunkSize.rowCount * cellSize.height;
+
+    this.imageData.setSize(
+        chunksArea.chunkColumnRange * chunkWidthInPixels + 1, chunksArea.chunkRowRange * chunkHeightInPixels + 1
+    );
+
+    var context = this.imageData.renderContext;
+    context.strokeStyle = "black";
+    context.font = "6pt Arial";
+    context.lineWidth = 1;
+
+    chunkIds.forEach(function(chunkId) {
+        var origin = ChunkIdGenerator.chunkOrigin(fieldManager.chunkSize, fieldManager.chunkIdFactor, chunkId);
+
+        for (var r = 0; r < fieldManager.chunkSize.rowCount; r++) {
+            for (var c = 0; c < fieldManager.chunkSize.columnCount; c++) {
+                var row = origin.row + r;
+                var column = origin.column + c;
+
+                var rect = {
+                    x: (column - chunksArea.mostLeftColumn) * cellSize.width + 0.5,
+                    y: (row - chunksArea.mostTopRow) * cellSize.height + 0.5,
+                    width: cellSize.width,
+                    height: cellSize.height
+                };
+
+                // console.log("r = " + r + ", c = " + c + ", rect = " + JSON.stringify(rect));
+
+                layer.drawCell(rect, fieldManager.getCell(row, column), true);
+                a++;
+            }
+        }
+    });
+
+    var cameraPosition = fieldView.camera.position;
+    var cameraColumn = ChunkIdGenerator.chunkColumn(cameraPosition.originChunkId, fieldManager.chunkIdFactor);
+    var cameraRow = ChunkIdGenerator.chunkRow(cameraPosition.originChunkId, fieldManager.chunkIdFactor);
+
+    // console.log((cameraRow - minChunkRow) + ", " + (cameraColumn - minChunkColumn));
+    // console.log(JSON.stringify(fieldView.camera.position));
+
+    this.offset = {
+        x: - (cameraPosition.shift.x + chunkWidthInPixels * (cameraColumn - chunksArea.minChunkColumn)),
+        y: - (cameraPosition.shift.y + chunkHeightInPixels * (cameraRow - chunksArea.minChunkRow))
+    };
+
+    // console.log("cells layer offset = " + JSON.stringify(this.offset));
+    console.log(a + " cells drawn, elapsed time = " + (Date.now() - time));
+};
 
 CellsFieldViewLayer.prototype.drawCell = function(rect, cell, clear) {
     var c = this.imageData.renderContext;

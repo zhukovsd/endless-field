@@ -97,5 +97,42 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
         } else {
             console.log('not changed');
         }
+    };
+
+    this.currentChunkIdsArea = function() {
+        var minChunkRow = fieldManager.chunkIdFactor;
+        var minChunkColumn = fieldManager.chunkIdFactor;
+        var maxChunkRow = 0;
+        var maxChunkColumn = 0;
+
+        lastRequestedChunkIds.forEach(function(chunkId) {
+            // console.log(chunkId);
+
+            var chunkRow = ChunkIdGenerator.chunkRow(chunkId, fieldManager.chunkIdFactor);
+            var chunkColumn = ChunkIdGenerator.chunkColumn(chunkId, fieldManager.chunkIdFactor);
+
+            // console.log(chunkId + ": " + chunkRow + ", " + chunkColumn);
+
+            minChunkRow = Math.min(minChunkRow, chunkRow);
+            minChunkColumn = Math.min(minChunkColumn, chunkColumn);
+            maxChunkRow = Math.max(maxChunkRow, chunkRow);
+            maxChunkColumn = Math.max(maxChunkColumn, chunkColumn);
+        });
+
+        // console.log(
+        //     chunkColumnRange * this.fieldManager.chunkSize.columnCount * this.fieldView.drawSettings.cellSize.width + ', ' +
+        //     chunkRowRange * this.fieldManager.chunkSize.rowCount * this.fieldView.drawSettings.cellSize.height
+        // );
+
+        return {
+            minChunkRow: minChunkRow,
+            minChunkColumn: minChunkColumn,
+
+            chunkRowRange: maxChunkRow - minChunkRow + 1,
+            chunkColumnRange: maxChunkColumn - minChunkColumn + 1,
+
+            mostTopRow: minChunkRow * fieldManager.chunkSize.rowCount,
+            mostLeftColumn: minChunkColumn * fieldManager.chunkSize.columnCount
+        };
     }
 };

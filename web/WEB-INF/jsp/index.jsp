@@ -66,7 +66,7 @@
                             document.getElementById('camera-scope').textContent = JSON.stringify(scope);
                             document.getElementById('chunks-scope').textContent = JSON.stringify(scope.chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
 
-                            fieldView.getLayer('cells-layer').drawCellsByChunkIds([0, 1]);
+                            fieldView.getLayer('cells-layer').renderByChunkIds([0, 1]);
                         },
                         false
                 );
@@ -109,10 +109,10 @@
 
         var cellsLayer = fieldView.getLayer('cells-layer');
         fieldManager.onChunksReceived = function(chunkIds) {
-            cellsLayer.drawCellsByChunkIds(chunkIds);
+            cellsLayer.renderByChunkIds(chunkIds);
 
-            cellsLayer.render();
-//            fieldView.getLayer('cells-layer').drawCellsByChunkIds(chunkIds);
+            cellsLayer.display();
+//            fieldView.getLayer('cells-layer').renderByChunkIds(chunkIds);
         };
 
         fieldManager.OnActionMessageReceived = function (positions) {
@@ -144,7 +144,7 @@
         <div>camera scope = <span id="camera-scope"></span></div>
         <div>chunks scope = <span id="chunks-scope"></span></div>
         <input type="button" value="requestChunks()" onclick="fieldManager.requestChunks();">
-        <input type="button" value="draw" onclick="fieldView.getLayer('cells-layer').render(); /*fieldView.drawCellsByChunkIds([0, 1]);*/">
+        <input type="button" value="draw" onclick="fieldView.getLayer('cells-layer').display(); /*fieldView.renderByChunkIds([0, 1]);*/">
         <input type="text" name="chunk" id="chunk_id_text" value="0">
     </div>
 

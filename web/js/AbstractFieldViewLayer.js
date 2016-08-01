@@ -70,7 +70,7 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
         }
     };
 
-    this.render = function() {
+    this.display = function() {
         this.clear();
         // this.context.putImageData(imageData.data, offset.x, offset.y);
         this.context.drawImage(this.imageData.renderCanvas, this.offset.x, this.offset.y);
@@ -84,7 +84,7 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
         this.offset.x = storedOffset.x + offsetDelta.x;
         this.offset.y = storedOffset.y + offsetDelta.y;
 
-        this.render();
+        this.display();
     };
 
     // this.storeImageData = function() {
@@ -100,6 +100,12 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
     //     }
     // }
 };
+
+AbstractFieldViewLayer.prototype.renderByChunkIds = function(chunkIds) {
+    console.log('abstract renderByChunkIds()');
+};
+
+
 
 // AbstractFieldViewLayer.prototype.drawByPositions = function(positions) {
 //     //
