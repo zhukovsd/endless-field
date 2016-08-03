@@ -39,8 +39,7 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
             layer.canvas = document.getElementById(canvasId);
             layer.context = layer.canvas.getContext('2d');
 
-            // todo: image data size factors as params
-            layer.imageData = new FieldViewLayerImageData(layer.canvas, 1.5, 1.5);
+            layer.imageData = new FieldViewLayerImageData(layer);
             layer.applyCanvasSize();
 
             // ?
@@ -53,11 +52,11 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
             this.canvas.width = this.width;
             this.canvas.height = this.height;
             
-            this.imageData.setSize(this.width, this.height);
+            // this.imageData.setSize(this.width, this.height);
         }
     };
 
-    this.setCanvasSize = function(width, height) {
+    this.setSize = function(width, height) {
         this.width = width;
         this.height = height;
 
@@ -86,26 +85,90 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
 
         this.display();
     };
+};
 
-    // this.storeImageData = function() {
-    //     if (this.context !== null) {
-    //         imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
-    //     }
-    // };
-    //
-    // this.restoreImageData = function(offset) {
-    //     if (imageData !== null) {
-    //         this.clear();
-    //         this.context.putImageData(imageData, offset.x, offset.y);
-    //     }
-    // }
+AbstractFieldViewLayer.prototype.initRenderCanvasStyleSettings = function() {
+    console.log('abstract initRenderCanvasStyleSettings()');
+};
+
+AbstractFieldViewLayer.prototype.rectByPosition = function(position, chunksArea) {
+    // console.log('abstract rectByPosition()');
+};
+
+AbstractFieldViewLayer.prototype.locateAndRenderByPosition = function(position, chunksArea) {
+    var rect = this.rectByPosition(position, chunksArea);
+
+    if (rect !== null)
+    {
+        // todo: don't render positions which not in chunksArea
+        this.renderByPosition(position, rect);
+    }
+};
+
+AbstractFieldViewLayer.prototype.renderByPosition = function(position, rect) {
+    // console.log('abstract renderByPosition()');
+};
+
+AbstractFieldViewLayer.prototype.renderByPositions = function(positions) {
+    var chunksArea = this.fieldView.currentChunksArea();
+
+    for (var key in positions) {
+        if (positions.hasOwnProperty(key)) {
+            var position = positions[key];
+
+            this.locateAndRenderByPosition(position, chunksArea);
+        }
+    }
 };
 
 AbstractFieldViewLayer.prototype.renderByChunkIds = function(chunkIds) {
-    console.log('abstract renderByChunkIds()');
+    var time = Date.now();
+
+    var fieldManager = this.fieldManager;
+    var layer = this;
+
+    var chunksArea = this.fieldView.currentChunksArea();
+
+    // console.log(JSON.stringify(chunksArea));
+
+    this.imageData.setSize(
+        // chunksArea.chunkColumnRange * chunkWidthInPixels + 1, chunksArea.chunkRowRange * chunkHeightInPixels + 1
+        chunksArea.widthInPixels, chunksArea.heightInPixels
+    );
+
+    var a = 0;
+
+    chunkIds.forEach(function(chunkId) {
+        var origin = ChunkIdGenerator.chunkOrigin(fieldManager.chunkSize, fieldManager.chunkIdFactor, chunkId);
+        var position = new CellPosition();
+
+        for (var r = 0; r < fieldManager.chunkSize.rowCount; r++) {
+            for (var c = 0; c < fieldManager.chunkSize.columnCount; c++) {
+                position.row = origin.row + r;
+                position.column = origin.column + c;
+
+                layer.locateAndRenderByPosition(position, chunksArea);
+
+                a++;
+            }
+        }
+    });
+
+    var cameraPosition = fieldView.camera.position;
+    var cameraColumn = ChunkIdGenerator.chunkColumn(cameraPosition.originChunkId, fieldManager.chunkIdFactor);
+    var cameraRow = ChunkIdGenerator.chunkRow(cameraPosition.originChunkId, fieldManager.chunkIdFactor);
+
+    // console.log((cameraRow - minChunkRow) + ", " + (cameraColumn - minChunkColumn));
+    // console.log(JSON.stringify(fieldView.camera.position));
+
+    this.offset = {
+        x: - (cameraPosition.shift.x + chunksArea.chunkWidthInPixels * (cameraColumn - chunksArea.minChunkColumn)),
+        y: - (cameraPosition.shift.y + chunksArea.chunkHeightInPixels * (cameraRow - chunksArea.minChunkRow))
+    };
+
+    // console.log("cells layer offset = " + JSON.stringify(this.offset));
+    console.log(a + " cells drawn, elapsed time = " + (Date.now() - time));
 };
-
-
 
 // AbstractFieldViewLayer.prototype.drawByPositions = function(positions) {
 //     //

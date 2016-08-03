@@ -107,9 +107,11 @@ var FieldManager = function (applicationContextPath) {
             console.log(c + "cells updated");
 
             var player = new Player(msg.player.id, msg.player.name);
-            if (player.id !== this.manager.userId) {                
-                this.manager.playersPositions[player.toString()] = {player: player, position: msg.origin};
-            }
+            // if (player.id !== this.manager.userId) {
+                this.manager.playersPositions[player.toString()] = {
+                    player: player, position: new CellPosition(msg.origin.row, msg.origin.column)
+                };
+            // }
             
             if (this.manager.OnActionMessageReceived !== null) {
                 this.manager.OnActionMessageReceived(positions);
@@ -184,7 +186,7 @@ var FieldManager = function (applicationContextPath) {
             console.log("chunk received, ids = " + chunkIds + ", current cells count = " + Object.keys(this.cells).length);
             // alert("cells count = " + Object.keys(this.cells).length);
 
-            //todo draw only new cells
+            // todo: draw only new cells
             if (this.onChunksReceived !== null) {
                 this.onChunksReceived(chunkIds);
             }
@@ -198,7 +200,7 @@ var FieldManager = function (applicationContextPath) {
             //else
             //    this.setState(FieldManagerState.SERVER_ERROR);
         } catch (exception) {
-            console.log('exception');
+            console.log('exception ' + exception.stack);
             this.setState(FieldManagerState.SERVER_ERROR);
 
             throw exception;

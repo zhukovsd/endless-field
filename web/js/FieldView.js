@@ -38,8 +38,8 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
             view.canvasContainer = document.getElementById(containerId);
             
             view.forEachLayer(function(layer) {
-                // layer.setCanvasSize(view.canvasContainer.clientWidth, view.canvasContainer.clientHeight);
-                layer.setCanvasSize(view.width(), view.height());
+                // layer.setSize(view.canvasContainer.clientWidth, view.canvasContainer.clientHeight);
+                layer.setSize(view.width(), view.height());
             });
         }, false
     );
@@ -99,11 +99,17 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
         }
     };
 
-    this.currentChunkIdsArea = function() {
+    this.currentChunksArea = function() {
+        var chunkSize = fieldManager.chunkSize;
+        var cellSize = this.drawSettings.cellSize;
+
         var minChunkRow = fieldManager.chunkIdFactor;
         var minChunkColumn = fieldManager.chunkIdFactor;
         var maxChunkRow = 0;
         var maxChunkColumn = 0;
+
+        var chunkWidthInPixels = chunkSize.columnCount * cellSize.width;
+        var chunkHeightInPixels = chunkSize.rowCount * cellSize.height;
 
         lastRequestedChunkIds.forEach(function(chunkId) {
             // console.log(chunkId);
@@ -119,17 +125,26 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
             maxChunkColumn = Math.max(maxChunkColumn, chunkColumn);
         });
 
+        var chunkRowRange = maxChunkRow - minChunkRow + 1;
+        var chunkColumnRange = maxChunkColumn - minChunkColumn + 1;
+
         // console.log(
         //     chunkColumnRange * this.fieldManager.chunkSize.columnCount * this.fieldView.drawSettings.cellSize.width + ', ' +
         //     chunkRowRange * this.fieldManager.chunkSize.rowCount * this.fieldView.drawSettings.cellSize.height
         // );
 
         return {
+            chunkWidthInPixels: chunkWidthInPixels,
+            chunkHeightInPixels: chunkHeightInPixels,
+
+            widthInPixels: chunkColumnRange * chunkWidthInPixels + 1,
+            heightInPixels: chunkRowRange * chunkHeightInPixels + 1,
+
             minChunkRow: minChunkRow,
             minChunkColumn: minChunkColumn,
 
-            chunkRowRange: maxChunkRow - minChunkRow + 1,
-            chunkColumnRange: maxChunkColumn - minChunkColumn + 1,
+            chunkRowRange: chunkRowRange,
+            chunkColumnRange: chunkColumnRange,
 
             mostTopRow: minChunkRow * fieldManager.chunkSize.rowCount,
             mostLeftColumn: minChunkColumn * fieldManager.chunkSize.columnCount

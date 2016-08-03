@@ -18,7 +18,7 @@
  * Created by ZhukovSD on 19.07.2016.
  */
 
-var FieldViewLayerImageData = function(layerCanvas/*, widthFactor, heightFactor*/) {
+var FieldViewLayerImageData = function(layer/*layerCanvas, widthFactor, heightFactor*/) {
     // var canvas = layerCanvas;
 
     this.renderCanvas = document.createElement('canvas');
@@ -42,6 +42,8 @@ var FieldViewLayerImageData = function(layerCanvas/*, widthFactor, heightFactor*
 
             this.renderCanvas.width = this.width;
             this.renderCanvas.height = this.height;
+
+            layer.initRenderCanvasStyleSettings();
 
             //
             // var img = document.getElementById('test-img');

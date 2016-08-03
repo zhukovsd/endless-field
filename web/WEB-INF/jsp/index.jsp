@@ -46,9 +46,9 @@
         var fieldManager = new SimpleFieldManager(contextPath);
         var fieldView = new FieldView(fieldManager, 'field-canvas-container', new DrawSettings(25, 25));
         fieldView.addLayer('cells-layer', new SimpleCellsFieldViewLayer(fieldView, 'field-cells-layer-canvas'));
-//        fieldView.addLayer('players-labels-layer', new PlayersLabelsFieldViewLayer(fieldView, 'field-players-labels-layer-canvas'));
+        fieldView.addLayer('players-labels-layer', new PlayersLabelsFieldViewLayer(fieldView, 'field-players-labels-layer-canvas'));
 
-        var mouseEventListener = new SimpleMouseEventListener(fieldView, 'cells-layer');
+        var mouseEventListener = new SimpleMouseEventListener(fieldView, 'players-labels-layer');
         var uriManager = new AddressBarManager(contextPath + '/game/');
 
         window.addEventListener('load',
@@ -109,13 +109,21 @@
 
         var cellsLayer = fieldView.getLayer('cells-layer');
         fieldManager.onChunksReceived = function(chunkIds) {
-            cellsLayer.renderByChunkIds(chunkIds);
+            // todo: render and display all chunks
 
-            cellsLayer.display();
+            fieldView.forEachLayer(function(layer) {
+                layer.renderByChunkIds(chunkIds);
+                layer.display();
+            });
 //            fieldView.getLayer('cells-layer').renderByChunkIds(chunkIds);
         };
 
         fieldManager.OnActionMessageReceived = function (positions) {
+            fieldView.forEachLayer(function(layer) {
+                layer.renderByPositions(positions);
+                layer.display();
+            });
+
 //            fieldView.getLayer('cells-layer').drawByPositions(positions);
 //            fieldView.getLayer('players-labels-layer').drawVisiblePlayersLabels();
         };
@@ -134,7 +142,7 @@
 
     <div class="unselectable" id="field-canvas-container">
         <canvas id="field-cells-layer-canvas"></canvas>
-        <%--<canvas id="field-players-labels-layer-canvas"></canvas>--%>
+        <canvas id="field-players-labels-layer-canvas"></canvas>
     </div>
 
     <div style="position: absolute; left: 20px; top: 20px; width: 600px; height: 200px; background-color: rgba(240, 255, 255, 0.8); z-index: 100;">
@@ -148,10 +156,8 @@
         <input type="text" name="chunk" id="chunk_id_text" value="0">
     </div>
 
-    <img id="test-img" style="position: absolute; left: 700px; top: 20px; width: 480px; height: 240px; z-index: 100; display: none;"
-         src="${pageContext.request.contextPath}/cute-kitty-1920x1080-480x240.jpg"/>
-
-
+    <%--<img id="test-img" style="position: absolute; left: 700px; top: 20px; width: 480px; height: 240px; z-index: 100; display: none;"--%>
+         <%--src="${pageContext.request.contextPath}/cute-kitty-1920x1080-480x240.jpg"/>--%>
 
     <%--<input type="button" value="Button" onclick="fieldManager.foo({});">--%>
 </body>
