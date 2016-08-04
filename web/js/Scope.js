@@ -39,6 +39,7 @@ CellPosition.prototype = {
     }
 };
 
+// todo: rename to camera scope?
 var Scope = function(width, height, cameraPosition, cellSize, chunkSize, chunkIdFactor) {
     // todo: min/max row/column constraints
    
@@ -73,6 +74,7 @@ var Scope = function(width, height, cameraPosition, cellSize, chunkSize, chunkId
     this.rowCount = visibleRowCount;
     this.columnCount = visibleColumnCount;
 
+    // todo: remove method?
     this.removePartiallyVisibleCells = function() {
         if (cameraPosition.shift.y % cellSize.height != 0) {
             this.origin.row++;
@@ -119,6 +121,7 @@ Scope.prototype = {
         return result;
     },
 
+    // todo: remove method?
     containsCell: function(row, column) {
         var result = true;
 

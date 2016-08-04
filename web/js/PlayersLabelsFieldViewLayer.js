@@ -50,7 +50,7 @@ PlayersLabelsFieldViewLayer.prototype.initRenderCanvasStyleSettings = function()
     // c.fillStyle = "rgba(0, 0, 0, 0.5)";
 };
 
-PlayersLabelsFieldViewLayer.prototype.rectByPosition = function(position, chunksArea) {
+PlayersLabelsFieldViewLayer.prototype.rectByPosition = function(position, chunksScope) {
     var f = false;
     var name;
     for (var userId in this.fieldManager.playersPositions) {
@@ -66,13 +66,14 @@ PlayersLabelsFieldViewLayer.prototype.rectByPosition = function(position, chunks
         }
     }
 
-    console.log(JSON.stringify(this.fieldManager.playersPositions));
+    // console.log(JSON.stringify(this.fieldManager.playersPositions));
 
     if (f) {
         // console.log('123');
 
         var c = this.imageData.renderContext;
-        var cellRect = this.fieldView.camera.cellRect(position.row, position.column);
+        // var cellRect = this.fieldView.camera.cellRect(position);
+        var cellRect = chunksScope.cellRect(position);
 
         return {x: cellRect.x - 0.5, y: cellRect.y - 20.5, width: c.measureText(name).width + 10, height: 20};
     } else {
@@ -81,7 +82,7 @@ PlayersLabelsFieldViewLayer.prototype.rectByPosition = function(position, chunks
 };
 
 PlayersLabelsFieldViewLayer.prototype.renderByPosition = function(position, rect) {
-    console.log('sup');
+    // console.log('sup');
 
     var c = this.imageData.renderContext;
 

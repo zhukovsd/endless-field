@@ -32,6 +32,7 @@
     <script src="${pageContext.request.contextPath}/js/Camera.js"></script>
     <script src="${pageContext.request.contextPath}/js/CameraPosition.js"></script>
     <script src="${pageContext.request.contextPath}/js/Scope.js"></script>
+    <script src="${pageContext.request.contextPath}/js/ChunksScope.js"></script>
     <script src="${pageContext.request.contextPath}/js/AddressBarManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/ActionMessage.js"></script>
 
@@ -107,9 +108,12 @@
             }
         };
 
+        var a;
+
         var cellsLayer = fieldView.getLayer('cells-layer');
+        var labelsLayer = fieldView.getLayer('players-labels-layer');
         fieldManager.onChunksReceived = function(chunkIds) {
-            // todo: render and display all chunks
+            a = chunkIds;
 
             fieldView.forEachLayer(function(layer) {
                 layer.renderByChunkIds(chunkIds);
@@ -119,8 +123,15 @@
         };
 
         fieldManager.OnActionMessageReceived = function (positions) {
+//            fieldView.forEachLayer(function(layer) {
+//                layer.renderByPositions(positions);
+//                layer.display();
+//            });
+
+            cellsLayer.renderByPositions(positions);
+            labelsLayer.renderByChunkIds(a);
+
             fieldView.forEachLayer(function(layer) {
-                layer.renderByPositions(positions);
                 layer.display();
             });
 
