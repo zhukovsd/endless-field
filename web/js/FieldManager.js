@@ -47,7 +47,8 @@ var FieldManager = function (applicationContextPath) {
     this.OnActionMessageReceived = null;
 
     this.cells = {};
-    this.playersPositions = {};
+    // this.playersPositions = {};
+    this.playersPositions = new SimpleBiMap(); // BiMap<Position, Player>
 
     // var player = new Player('0', 'User #0');
     // this.playersPositions[player.toString()] = {player: player, position: new CellPosition(20, 10)};
@@ -108,9 +109,11 @@ var FieldManager = function (applicationContextPath) {
 
             var player = new Player(msg.player.id, msg.player.name);
             // if (player.id !== this.manager.userId) {
-                this.manager.playersPositions[player.toString()] = {
-                    player: player, position: new CellPosition(msg.origin.row, msg.origin.column)
-                };
+            //     this.manager.playersPositions[player.toString()] = {
+            //         player: player, position: new CellPosition(msg.origin.row, msg.origin.column)
+            //     };
+            
+                this.manager.playersPositions.put(new CellPosition(msg.origin.row, msg.origin.column), player);
             // }
             
             if (this.manager.OnActionMessageReceived !== null) {

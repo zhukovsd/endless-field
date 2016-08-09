@@ -33,6 +33,8 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
     this.offset = {x: 0, y: 0};
     var storedOffset;
 
+    this.displayedChunkIds = [];
+    
     var layer = this;
     window.addEventListener('load',
         function(event) {
@@ -98,7 +100,7 @@ AbstractFieldViewLayer.prototype.rectByPosition = function(position, chunksScope
 AbstractFieldViewLayer.prototype.locateAndRenderByPosition = function(position, chunksScope) {
     var rect = this.rectByPosition(position, chunksScope);
 
-    if (rect !== null)
+    if (rect != undefined)
     {
         // todo: don't render positions which not in chunksScope
         this.renderByPosition(position, rect);
@@ -123,6 +125,8 @@ AbstractFieldViewLayer.prototype.renderByPositions = function(positions) {
 
 AbstractFieldViewLayer.prototype.renderByChunkIds = function(chunkIds) {
     var time = Date.now();
+
+    this.displayedChunkIds = chunkIds;
 
     var fieldManager = this.fieldManager;
     var layer = this;
@@ -168,6 +172,27 @@ AbstractFieldViewLayer.prototype.renderByChunkIds = function(chunkIds) {
 
     // console.log("cells layer offset = " + JSON.stringify(this.offset));
     console.log(a + " cells drawn, elapsed time = " + (Date.now() - time));
+};
+
+AbstractFieldViewLayer.prototype.refresh = function() {
+    this.renderByChunkIds(this.displayedChunkIds);
+}
+
+AbstractFieldViewLayer.prototype.mouseMove = function(mousePosition) {
+    var layerMousePosition = {
+        x: mousePosition.x - this.offset.x, y: mousePosition.y - this.offset.y
+    };
+
+    this.doOnMouseMove(layerMousePosition);
+
+    // console.log(
+    //     'mousePosition = ' + JSON.stringify(mousePosition) + ', offset = ' + JSON.stringify(this.offset)
+    //     + ', result position = ' + JSON.stringify(layerMousePosition)
+    // );
+};
+
+AbstractFieldViewLayer.prototype.doOnMouseMove = function(layerMousePosition) {
+    //
 };
 
 // AbstractFieldViewLayer.prototype.drawByPositions = function(positions) {

@@ -100,56 +100,6 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
     };
 
     this.currentChunksScope = function() {
-        // var chunkSize = fieldManager.chunkSize;
-        // var cellSize = this.drawSettings.cellSize;
-        //
-        // var minChunkRow = fieldManager.chunkIdFactor;
-        // var minChunkColumn = fieldManager.chunkIdFactor;
-        // var maxChunkRow = 0;
-        // var maxChunkColumn = 0;
-        //
-        // var chunkWidthInPixels = chunkSize.columnCount * cellSize.width;
-        // var chunkHeightInPixels = chunkSize.rowCount * cellSize.height;
-        //
-        // lastRequestedChunkIds.forEach(function(chunkId) {
-        //     // console.log(chunkId);
-        //
-        //     var chunkRow = ChunkIdGenerator.chunkRow(chunkId, fieldManager.chunkIdFactor);
-        //     var chunkColumn = ChunkIdGenerator.chunkColumn(chunkId, fieldManager.chunkIdFactor);
-        //
-        //     // console.log(chunkId + ": " + chunkRow + ", " + chunkColumn);
-        //
-        //     minChunkRow = Math.min(minChunkRow, chunkRow);
-        //     minChunkColumn = Math.min(minChunkColumn, chunkColumn);
-        //     maxChunkRow = Math.max(maxChunkRow, chunkRow);
-        //     maxChunkColumn = Math.max(maxChunkColumn, chunkColumn);
-        // });
-        //
-        // var chunkRowRange = maxChunkRow - minChunkRow + 1;
-        // var chunkColumnRange = maxChunkColumn - minChunkColumn + 1;
-        //
-        // // console.log(
-        // //     chunkColumnRange * this.fieldManager.chunkSize.columnCount * this.fieldView.drawSettings.cellSize.width + ', ' +
-        // //     chunkRowRange * this.fieldManager.chunkSize.rowCount * this.fieldView.drawSettings.cellSize.height
-        // // );
-        //
-        // return {
-        //     chunkWidthInPixels: chunkWidthInPixels,
-        //     chunkHeightInPixels: chunkHeightInPixels,
-        //
-        //     widthInPixels: chunkColumnRange * chunkWidthInPixels + 1,
-        //     heightInPixels: chunkRowRange * chunkHeightInPixels + 1,
-        //
-        //     minChunkRow: minChunkRow,
-        //     minChunkColumn: minChunkColumn,
-        //
-        //     chunkRowRange: chunkRowRange,
-        //     chunkColumnRange: chunkColumnRange,
-        //
-        //     mostTopRow: minChunkRow * fieldManager.chunkSize.rowCount,
-        //     mostLeftColumn: minChunkColumn * fieldManager.chunkSize.columnCount
-        // };
-
         return new ChunksScope(this, lastRequestedChunkIds);
     }
 };

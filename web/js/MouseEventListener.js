@@ -85,8 +85,8 @@ var MouseEventListener = function(fieldView, fieldViewTopLayerName) {
     };
 
     this.mouseMoveEvent = function(event) {
+        var mousePos = getMousePos(listener.layer.canvas, event);
         if (isDragging) {
-            var mousePos = getMousePos(listener.layer.canvas, event);
             var mouseOffset = {x: mousePos.x - mouseDownPos.x, y: mousePos.y - mouseDownPos.y};
 
             if ((handleClick) && (Math.abs(mouseOffset.x) + Math.abs(mouseOffset.y) > 5)) {
@@ -130,6 +130,10 @@ var MouseEventListener = function(fieldView, fieldViewTopLayerName) {
             //     JSON.stringify(mouseOffset) + ", " + JSON.stringify(shiftedCameraPosition) + ", " +
             //     JSON.stringify(offset)
             // );
+        } else {
+            fieldView.forEachLayer(function(layer) {
+                layer.mouseMove(mousePos);
+            });
         }
     };
 

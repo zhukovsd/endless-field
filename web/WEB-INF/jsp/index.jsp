@@ -35,6 +35,7 @@
     <script src="${pageContext.request.contextPath}/js/ChunksScope.js"></script>
     <script src="${pageContext.request.contextPath}/js/AddressBarManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/ActionMessage.js"></script>
+    <script src="${pageContext.request.contextPath}/js/SimpleBiMap.js"></script>
 
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleMouseEventListener.js"></script>
@@ -108,6 +109,7 @@
             }
         };
 
+        // todo: remember chunks somewhere
         var a;
 
         var cellsLayer = fieldView.getLayer('cells-layer');
