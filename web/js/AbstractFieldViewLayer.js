@@ -176,14 +176,18 @@ AbstractFieldViewLayer.prototype.renderByChunkIds = function(chunkIds) {
 
 AbstractFieldViewLayer.prototype.refresh = function() {
     this.renderByChunkIds(this.displayedChunkIds);
-}
+    this.display();
+};
 
-AbstractFieldViewLayer.prototype.mouseMove = function(mousePosition) {
-    var layerMousePosition = {
+
+AbstractFieldViewLayer.prototype.absoluteMousePositionToRelative = function(mousePosition) {
+    return {
         x: mousePosition.x - this.offset.x, y: mousePosition.y - this.offset.y
     };
+};
 
-    this.doOnMouseMove(layerMousePosition);
+AbstractFieldViewLayer.prototype.mouseMove = function(mousePosition) {
+    this.doOnMouseMove(this.absoluteMousePositionToRelative(mousePosition));
 
     // console.log(
     //     'mousePosition = ' + JSON.stringify(mousePosition) + ', offset = ' + JSON.stringify(this.offset)

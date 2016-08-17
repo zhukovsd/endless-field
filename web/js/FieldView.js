@@ -101,5 +101,5 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
 
     this.currentChunksScope = function() {
         return new ChunksScope(this, lastRequestedChunkIds);
-    }
+    };
 };

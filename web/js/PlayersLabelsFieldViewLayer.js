@@ -21,6 +21,7 @@
 var PlayersLabelsFieldViewLayer = function(fieldView, canvasId) {
     AbstractFieldViewLayer.call(this, fieldView, canvasId);
 
+    this.mouseListener = null;
     this.renderedRects = [];
 };
 
@@ -52,17 +53,24 @@ PlayersLabelsFieldViewLayer.prototype.rectByPosition = function(position, chunks
 };
 
 PlayersLabelsFieldViewLayer.prototype.renderByPosition = function(position, rect) {
-    this.renderedRects.push({rect: rect, hover: false});
+    var hover = pointInRect(rect, this.absoluteMousePositionToRelative(this.mouseListener.mousePos));
+    this.renderedRects.push({rect: rect, hover: hover});
 
-    var c = this.imageData.renderContext;
+    // console.log('!' + JSON.stringify(this.absoluteMousePositionToRelative(this.mouseListener.mousePos)));
 
-    // todo: check if mouse in rect
-    c.save();
-    c.fillStyle = "rgba(0, 0, 0, 0.5)";
-    c.fillRect(rect.x, rect.y, rect.width, rect.height);
-    c.restore();
+    if (!hover) {
+        // console.log('draw');
 
-    c.fillText(this.fieldManager.playersPositions.value(position).name, rect.x + 4, rect.y + 15);
+        var c = this.imageData.renderContext;
+
+        // todo: check if mouse in rect
+        c.save();
+        c.fillStyle = "rgba(0, 0, 0, 0.5)";
+        c.fillRect(rect.x, rect.y, rect.width, rect.height);
+        c.restore();
+
+        c.fillText(this.fieldManager.playersPositions.value(position).name, rect.x + 4, rect.y + 15);
+    }
 };
 
 var pointInRect = function(rect, point) {
@@ -74,12 +82,12 @@ PlayersLabelsFieldViewLayer.prototype.doOnMouseMove = function(layerMousePositio
     var renderFlag = false;
     this.renderedRects.forEach(function(renderedRect) {
         if (!renderedRect.hover && pointInRect(renderedRect.rect, layerMousePosition)) {
-            renderedRect.hover = true;
+            // renderedRect.hover = true;
             renderFlag = true;
 
             // console.log('mouse enter');
         } else if (renderedRect.hover && !pointInRect(renderedRect.rect, layerMousePosition)) {
-            renderedRect.hover = false;
+            // renderedRect.hover = false;
             renderFlag = true;
 
             // console.log('mouse leave');

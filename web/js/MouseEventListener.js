@@ -27,7 +27,9 @@ MouseButton = {
 var MouseEventListener = function(fieldView, fieldViewTopLayerName) {
     this.fieldManager = fieldView.fieldManager;
     this.layer = null;
-    
+
+    this.mousePos = null;
+
     var listener = this;
 
     var isDragging = false;
@@ -86,6 +88,8 @@ var MouseEventListener = function(fieldView, fieldViewTopLayerName) {
 
     this.mouseMoveEvent = function(event) {
         var mousePos = getMousePos(listener.layer.canvas, event);
+        listener.mousePos = mousePos;
+
         if (isDragging) {
             var mouseOffset = {x: mousePos.x - mouseDownPos.x, y: mousePos.y - mouseDownPos.y};
 

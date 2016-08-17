@@ -53,6 +53,8 @@
         var mouseEventListener = new SimpleMouseEventListener(fieldView, 'players-labels-layer');
         var uriManager = new AddressBarManager(contextPath + '/game/');
 
+        fieldView.getLayer('players-labels-layer').mouseListener = mouseEventListener;
+
         window.addEventListener('load',
             function(event) {
                 var canvas = document.getElementById('field-cells-layer-canvas');
