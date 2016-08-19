@@ -111,36 +111,20 @@
             }
         };
 
-        // todo: remember chunks somewhere
-        var a;
-
         var cellsLayer = fieldView.getLayer('cells-layer');
         var labelsLayer = fieldView.getLayer('players-labels-layer');
         fieldManager.onChunksReceived = function(chunkIds) {
-            a = chunkIds;
-
             fieldView.forEachLayer(function(layer) {
                 layer.renderByChunkIds(chunkIds);
                 layer.display();
             });
-//            fieldView.getLayer('cells-layer').renderByChunkIds(chunkIds);
         };
 
         fieldManager.OnActionMessageReceived = function (positions) {
-//            fieldView.forEachLayer(function(layer) {
-//                layer.renderByPositions(positions);
-//                layer.display();
-//            });
-
             cellsLayer.renderByPositions(positions);
-            labelsLayer.renderByChunkIds(a);
+            cellsLayer.display();
 
-            fieldView.forEachLayer(function(layer) {
-                layer.display();
-            });
-
-//            fieldView.getLayer('cells-layer').drawByPositions(positions);
-//            fieldView.getLayer('players-labels-layer').drawVisiblePlayersLabels();
+            labelsLayer.refresh();
         };
 
         fieldView.camera.onPositionChanged = function(position) {

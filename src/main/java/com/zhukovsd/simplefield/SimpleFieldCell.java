@@ -6,7 +6,7 @@ import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 /**
  * Thread-safe only within locked chunk, not by itself.
  */
-public class SimpleFieldCell extends EndlessFieldCell {
+public class SimpleFieldCell extends EndlessFieldCell<SimpleFieldCell> {
     public SimpleFieldCell(boolean isChecked) {
         this.isChecked = isChecked;
     }
@@ -19,8 +19,8 @@ public class SimpleFieldCell extends EndlessFieldCell {
     }
 
     @Override
-    public EndlessCellCloneFactory getFactory() {
-        return SimpleFieldCell::new;
+    public EndlessCellCloneFactory cloneFactory() {
+        return (source) -> new SimpleFieldCell(source);
     }
 
     //@SerializedName("c")

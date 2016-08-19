@@ -19,6 +19,8 @@ package com.zhukovsd.serverapp.endpoints.http;
 import com.zhukovsd.endlessfield.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
+import com.zhukovsd.endlessfield.field.EndlessFieldCellView;
+import com.zhukovsd.minesweeperfield.MinesweeperFieldCell;
 import com.zhukovsd.serverapp.cache.scopes.UsersByChunkConcurrentCollection;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
@@ -122,11 +124,12 @@ public class FieldEndpoint extends HttpServlet {
 
                         // before unlocking clone cells of chunk to send
                         for (Integer chunkId : requestData.scope) {
-                            ArrayList<? extends EndlessFieldCell> cells = field.getCellsByChunkId(chunkId);
-                            ArrayList<EndlessFieldCell> clonedCells = new ArrayList<>(cells.size());
+                            ArrayList<? extends EndlessFieldCell<?>> cells = field.getCellsByChunkId(chunkId);
+                            ArrayList<EndlessFieldCellView> clonedCells = new ArrayList<>(cells.size());
 
-                            for (EndlessFieldCell cell : cells) {
-                                clonedCells.add(cell.getFactory().clone(cell));
+                            for (EndlessFieldCell<?> cell : cells) {
+//                                clonedCells.add(cell.cloneFactory().clone(cell));
+                                clonedCells.add(cell.viewFactory().view(cell).cloneFactory().clone(cell));
                             }
 
                             responseData.addChunk(ChunkIdGenerator.chunkOrigin(field.chunkSize, chunkId), clonedCells);
