@@ -2,6 +2,7 @@ package com.zhukovsd.simplefield;
 
 import com.zhukovsd.endlessfield.field.EndlessCellCloneFactory;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
+import com.zhukovsd.endlessfield.field.EndlessFieldCellView;
 
 /**
  * Thread-safe only within locked chunk, not by itself.
@@ -12,7 +13,7 @@ public class SimpleFieldCell extends EndlessFieldCell<SimpleFieldCell> {
     }
 
     // clone constructor. should be called only if source is locked, otherwise transitional state may be cloned
-    private SimpleFieldCell(EndlessFieldCell source) {
+    private SimpleFieldCell(EndlessFieldCellView source) {
         SimpleFieldCell casted = ((SimpleFieldCell) source);
         this.isChecked = casted.isChecked;
 //        this.s = casted.s;
@@ -20,7 +21,7 @@ public class SimpleFieldCell extends EndlessFieldCell<SimpleFieldCell> {
 
     @Override
     public EndlessCellCloneFactory cloneFactory() {
-        return (source) -> new SimpleFieldCell(source);
+        return SimpleFieldCell::new;
     }
 
     //@SerializedName("c")

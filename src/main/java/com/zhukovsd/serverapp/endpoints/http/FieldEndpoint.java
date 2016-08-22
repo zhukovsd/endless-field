@@ -128,8 +128,8 @@ public class FieldEndpoint extends HttpServlet {
                             ArrayList<EndlessFieldCellView> clonedCells = new ArrayList<>(cells.size());
 
                             for (EndlessFieldCell<?> cell : cells) {
-//                                clonedCells.add(cell.cloneFactory().clone(cell));
-                                clonedCells.add(cell.viewFactory().view(cell).cloneFactory().clone(cell));
+                                EndlessFieldCellView view = cell.viewFactory().view(cell);
+                                clonedCells.add(view.cloneFactory().clone(view));
                             }
 
                             responseData.addChunk(ChunkIdGenerator.chunkOrigin(field.chunkSize, chunkId), clonedCells);

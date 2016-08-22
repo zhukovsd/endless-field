@@ -19,6 +19,6 @@ package com.zhukovsd.endlessfield.field;
 /**
  * Created by ZhukovSD on 19.08.2016.
  */
-public interface EndlessFieldCellViewFactory<T extends EndlessFieldCell> {
-    EndlessFieldCellView view(T cell);
+public interface EndlessFieldCellViewFactory{
+    EndlessFieldCellView view(EndlessFieldCell cell);
 }

@@ -150,7 +150,10 @@ public class ActionEndpoint {
                 CellPosition position = entry.getKey();
 
                 affectedChunkIds.add(ChunkIdGenerator.chunkIdByPosition(field.chunkSize, position));
-                cloned.put(position, cell.cloneFactory().clone(cell));
+
+//                cloned.put(position, cell.cloneFactory().clone(cell));
+                EndlessFieldCellView view = cell.viewFactory().view(cell);
+                cloned.put(position, view.cloneFactory().clone(view));
             }
 
             String userId = ((String) httpSession.getAttribute("user_id"));

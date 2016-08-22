@@ -108,13 +108,13 @@ var FieldManager = function (applicationContextPath) {
             console.log(c + "cells updated");
 
             var player = new Player(msg.player.id, msg.player.name);
-            // if (player.id !== this.manager.userId) {
+            if (player.id !== this.manager.userId) {
             //     this.manager.playersPositions[player.toString()] = {
             //         player: player, position: new CellPosition(msg.origin.row, msg.origin.column)
             //     };
             
                 this.manager.playersPositions.put(new CellPosition(msg.origin.row, msg.origin.column), player);
-            // }
+            }
             
             if (this.manager.OnActionMessageReceived !== null) {
                 this.manager.OnActionMessageReceived(positions);

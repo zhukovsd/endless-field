@@ -20,15 +20,7 @@ package com.zhukovsd.endlessfield.field;
  * Created by ZhukovSD on 19.03.2016.
  */
 public abstract class EndlessFieldCell<T extends EndlessFieldCell<T>> extends EndlessFieldCellView<T> {
-    public EndlessFieldCell() {
-
-    }
-
-    protected EndlessFieldCell(EndlessFieldCell source) {
-
-    };
-
-    public EndlessFieldCellViewFactory<T> viewFactory() {
+    public EndlessFieldCellViewFactory viewFactory() {
         return (cell) -> this;
     }
 }
