@@ -31,6 +31,7 @@
     <script src="${pageContext.request.contextPath}/js/Camera.js"></script>
     <script src="${pageContext.request.contextPath}/js/CameraPosition.js"></script>
     <script src="${pageContext.request.contextPath}/js/Scope.js"></script>
+    <script src="${pageContext.request.contextPath}/js/ChunksScope.js"></script>
     <script src="${pageContext.request.contextPath}/js/AddressBarManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/ActionMessage.js"></script>
     <script src="${pageContext.request.contextPath}/js/SimpleBiMap.js"></script>
