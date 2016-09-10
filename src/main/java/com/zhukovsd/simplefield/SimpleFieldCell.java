@@ -2,24 +2,25 @@ package com.zhukovsd.simplefield;
 
 import com.zhukovsd.endlessfield.field.EndlessCellCloneFactory;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
+import com.zhukovsd.endlessfield.field.EndlessFieldCellView;
 
 /**
  * Thread-safe only within locked chunk, not by itself.
  */
-public class SimpleFieldCell extends EndlessFieldCell {
+public class SimpleFieldCell extends EndlessFieldCell<SimpleFieldCell> {
     public SimpleFieldCell(boolean isChecked) {
         this.isChecked = isChecked;
     }
 
     // clone constructor. should be called only if source is locked, otherwise transitional state may be cloned
-    private SimpleFieldCell(EndlessFieldCell source) {
+    private SimpleFieldCell(EndlessFieldCellView source) {
         SimpleFieldCell casted = ((SimpleFieldCell) source);
         this.isChecked = casted.isChecked;
 //        this.s = casted.s;
     }
 
     @Override
-    public EndlessCellCloneFactory getFactory() {
+    public EndlessCellCloneFactory cloneFactory() {
         return SimpleFieldCell::new;
     }
 
