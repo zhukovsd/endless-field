@@ -26,7 +26,7 @@ SimpleCellsFieldViewLayer.prototype = Object.create(CellsFieldViewLayer.prototyp
 
 var inheritedDrawCell = SimpleCellsFieldViewLayer.prototype.drawCell;
 SimpleCellsFieldViewLayer.prototype.drawCell = function(rect, cell, clear) {
-    var c = this.context;
+    var c = this.imageData.renderContext;
 
     if (cell != null) {
         // clear rect for this cell only if clear flag equals true,

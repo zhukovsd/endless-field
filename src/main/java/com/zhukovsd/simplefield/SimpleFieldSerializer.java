@@ -2,6 +2,7 @@ package com.zhukovsd.simplefield;
 
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
+import com.zhukovsd.endlessfield.field.EndlessFieldCellView;
 import com.zhukovsd.serverapp.endpoints.http.FieldResponseData;
 import com.zhukovsd.serverapp.endpoints.websocket.ActionServerMessage;
 import com.zhukovsd.serverapp.endpoints.websocket.InitServerMessage;
@@ -42,7 +43,7 @@ public class SimpleFieldSerializer implements EndlessFieldSerializer {
                 sb.append(",\"cells\":[");
 
                 String cellSeparator = "";
-                for (EndlessFieldCell cell : chunk.cells) {
+                for (EndlessFieldCellView cell : chunk.cells) {
                     sb.append(cellSeparator);
 
                     // cell begin
@@ -100,7 +101,7 @@ public class SimpleFieldSerializer implements EndlessFieldSerializer {
                 sb.append("\"cells\":{");
 
                 String cellSeparator = "";
-                for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : casted.cells.entrySet()) {
+                for (Map.Entry<CellPosition, ? extends EndlessFieldCellView> entry : casted.cells.entrySet()) {
                     CellPosition position = entry.getKey();
 
                     sb.append(cellSeparator);
