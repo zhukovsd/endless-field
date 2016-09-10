@@ -17,8 +17,10 @@
 package com.zhukovsd.endlessfield.field;
 
 /**
- * Created by ZhukovSD on 10.05.2016.
+ * Created by ZhukovSD on 19.08.2016.
  */
-public interface EndlessCellCloneFactory {
-    EndlessFieldCellView clone(EndlessFieldCellView source);
+public abstract class EndlessFieldCellView<T extends EndlessFieldCell> {
+    protected EndlessFieldCellView() {}
+
+    public abstract EndlessCellCloneFactory cloneFactory();
 }

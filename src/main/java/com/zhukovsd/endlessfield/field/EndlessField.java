@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by ZhukovSD on 13.03.2016.
  */
-public abstract class EndlessField<T extends EndlessFieldCell> {
+public abstract class EndlessField<T extends EndlessFieldCell<T>> {
     public final ChunkSize chunkSize;
     public final EndlessFieldSizeConstraints sizeConstraints;
 
