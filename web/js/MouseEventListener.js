@@ -27,7 +27,9 @@ MouseButton = {
 var MouseEventListener = function(fieldView, fieldViewTopLayerName) {
     this.fieldManager = fieldView.fieldManager;
     this.layer = null;
-    
+
+    this.mousePos = null;
+
     var listener = this;
 
     var isDragging = false;
@@ -69,24 +71,18 @@ var MouseEventListener = function(fieldView, fieldViewTopLayerName) {
 
         if (dragMouseButton == MouseButton.LEFT) {
             mouseDownCameraPosition = fieldView.camera.position.clone();
-            mouseDownCameraScope = fieldView.camera.cellsScope();
 
-            // this variable used to determine how scope is changing during dragging.
-            // (mouse move scope - this scope) = newly appeared cells which has to be drawn. since cells, which was only
-            // partially visible in the beginning of the dragging also has to be redrawn, exclude them from current scope
-            // to force their redraw on every dragging mouse move event
-            mouseDownCameraScope.removePartiallyVisibleCells();
-
-            // imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
-            fieldView.forEachLayer(function(layer) { layer.storeImageData(); });
+            fieldView.forEachLayer(function(layer) { layer.storeOffset(); });
         }
 
         handleClick = true;
     };
 
     this.mouseMoveEvent = function(event) {
+        var mousePos = getMousePos(listener.layer.canvas, event);
+        listener.mousePos = mousePos;
+
         if (isDragging) {
-            var mousePos = getMousePos(listener.layer.canvas, event);
             var mouseOffset = {x: mousePos.x - mouseDownPos.x, y: mousePos.y - mouseDownPos.y};
 
             if ((handleClick) && (Math.abs(mouseOffset.x) + Math.abs(mouseOffset.y) > 5)) {
@@ -107,26 +103,21 @@ var MouseEventListener = function(fieldView, fieldViewTopLayerName) {
                     fieldView.drawSettings.cellSize
                 );
 
-                // canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-                // canvasContext.putImageData(imageData, offset.x, offset.y);
-                fieldView.forEachLayer(function(layer) { layer.restoreImageData(offset); });
+                fieldView.forEachLayer(function(layer) {
+                    layer.shiftOffset(offset);
+                });
 
                 fieldView.camera.setPosition(shiftedCameraPosition);
-
-                // draw cells, which was out of scope on mouse down (todo also redraw cells, which was only partly visible)
-                var newScope = fieldView.camera.cellsScope();
-                if (!newScope.equals(mouseDownCameraScope)) {
-                    var difference = newScope.difference(mouseDownCameraScope);
-                    
-                    // fieldView.drawByPositions(newScope.difference(mouseDownCameraScope));
-                    fieldView.forEachLayer(function(layer) { layer.drawByPositions(difference); });
-                }
             }
 
             // console.log(
             //     JSON.stringify(mouseOffset) + ", " + JSON.stringify(shiftedCameraPosition) + ", " +
             //     JSON.stringify(offset)
             // );
+        } else {
+            fieldView.forEachLayer(function(layer) {
+                layer.mouseMove(mousePos);
+            });
         }
     };
 
@@ -141,22 +132,7 @@ var MouseEventListener = function(fieldView, fieldViewTopLayerName) {
 
     this.onDragEnd = function() {
         if (dragMouseButton == MouseButton.LEFT) {
-            var mouseDownChunkIds = mouseDownCameraScope.chunkIds(this.fieldManager.chunkSize, this.fieldManager.chunkIdFactor);
-            var mouseUpChunkIds = fieldView.camera.cellsScope().chunkIds(this.fieldManager.chunkSize, this.fieldManager.chunkIdFactor);
-
-            // plain array comparison, array items have to be ordered in the same way
-            var chunksScopeChanged = !(
-                (mouseDownChunkIds.length == mouseUpChunkIds.length)
-                &&
-                (mouseDownChunkIds.every(function (v, i) {
-                    return v === mouseUpChunkIds[i]
-                }))
-            );
-
-            if (chunksScopeChanged) {
-                // todo request only difference
-                this.fieldManager.requestChunks(mouseUpChunkIds);
-            }
+            fieldView.updateExpandedScopeChunkIds();
         }
     };
 

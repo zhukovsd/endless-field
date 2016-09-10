@@ -30,12 +30,17 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
 
     this.layers = {};
 
+    var lastRequestedChunkIds = [];
+
     var view = this;
     window.addEventListener('load',
         function(event) {
             view.canvasContainer = document.getElementById(containerId);
             
-            view.forEachLayer(function(layer) { layer.setSize(view.canvasContainer.clientWidth, view.canvasContainer.clientHeight); });
+            view.forEachLayer(function(layer) {
+                // layer.setSize(view.canvasContainer.clientWidth, view.canvasContainer.clientHeight);
+                layer.setSize(view.width(), view.height());
+            });
         }, false
     );
 
@@ -53,5 +58,48 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
                 callback(this.layers[name]);
             }
         }
-    }
+    };
+    
+    this.width = function() {
+        return view.canvasContainer.clientWidth; 
+    };
+    
+    this.height = function() {
+        return view.canvasContainer.clientHeight;
+    };
+    
+    this.getExpandedScopeChunkIds = function() {
+        // todo expand factor as variable
+        var expandedScope = this.camera.cellsScope().expand(
+            this, this.width() / 2, this.height() / 2
+        );
+
+        // console.log("expanded scope = " + JSON.stringify(expandedScope));
+        return expandedScope.chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor);
+    };
+
+    this.updateExpandedScopeChunkIds = function() {
+        var currentChunkIds = this.getExpandedScopeChunkIds();
+
+        // plain array comparison, array items have to be ordered in the same way
+        var chunksScopeChanged = !(
+            (lastRequestedChunkIds.length == currentChunkIds.length)
+            &&
+            (lastRequestedChunkIds.every(function (v, i) {
+                return v === currentChunkIds[i]
+            }))
+        );
+
+        if (chunksScopeChanged) {
+            lastRequestedChunkIds = currentChunkIds;
+
+            this.fieldManager.requestChunks(currentChunkIds);
+        } else {
+            console.log('not changed');
+        }
+    };
+
+    this.currentChunksScope = function() {
+        return new ChunksScope(this, lastRequestedChunkIds);
+    };
 };
