@@ -22,6 +22,7 @@
 
     <script src="${pageContext.request.contextPath}/js/FieldManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/FieldView.js"></script>
+    <script src="${pageContext.request.contextPath}/js/FieldViewLayerImageData.js"></script>
     <script src="${pageContext.request.contextPath}/js/AbstractFieldViewLayer.js"></script>
     <script src="${pageContext.request.contextPath}/js/CellsFieldViewLayer.js"></script>
     <script src="${pageContext.request.contextPath}/js/PlayersLabelsFieldViewLayer.js"></script>
@@ -48,6 +49,8 @@
         var mouseEventListener = new MouseEventListener(fieldView, 'players-labels-layer');
         var uriManager = new AddressBarManager(contextPath + '/game/');
 
+        fieldView.getLayer('players-labels-layer').mouseListener = mouseEventListener;
+
         window.addEventListener('load',
             function(event) {
 //                fieldView.init('field-canvas-container', 'field-canvas');
@@ -66,7 +69,7 @@
                             document.getElementById('camera-scope').textContent = JSON.stringify(scope);
                             document.getElementById('chunks-scope').textContent = JSON.stringify(scope.chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
 
-                            fieldView.getLayer('cells-layer').drawCellsByChunkIds([0, 1]);
+                            fieldView.getLayer('cells-layer').renderByChunkIds([0, 1]);
                         },
                         false
                 );
@@ -98,8 +101,7 @@
                     }
 
                     fieldView.camera.setPosition(cameraPosition);
-                    // todo expand scope
-                    fieldManager.requestChunks(fieldView.camera.cellsScope().chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
+                    fieldView.updateExpandedScopeChunkIds();
                 }
 
 //                case (FieldManagerState.LOADED): {
@@ -108,13 +110,20 @@
             }
         };
 
+        var cellsLayer = fieldView.getLayer('cells-layer');
+        var labelsLayer = fieldView.getLayer('players-labels-layer');
         fieldManager.onChunksReceived = function(chunkIds) {
-            fieldView.getLayer('cells-layer').drawCellsByChunkIds(chunkIds);
+            fieldView.forEachLayer(function(layer) {
+                layer.renderByChunkIds(chunkIds);
+                layer.display();
+            });
         };
 
         fieldManager.OnActionMessageReceived = function (positions) {
-            fieldView.getLayer('cells-layer').drawByPositions(positions);
-            fieldView.getLayer('players-labels-layer').drawVisiblePlayersLabels();
+            cellsLayer.renderByPositions(positions);
+            cellsLayer.display();
+
+            labelsLayer.refresh();
         };
 
         fieldView.camera.onPositionChanged = function(position) {
