@@ -18,6 +18,7 @@ package com.zhukovsd.serverapp.endpoints.websocket;
 
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
+import com.zhukovsd.endlessfield.field.EndlessFieldCellView;
 
 import java.util.HashMap;
 
@@ -34,11 +35,11 @@ public class ActionServerMessage extends ServerMessage {
         }
     }
 
-    public final HashMap<CellPosition, EndlessFieldCell> cells;
+    public final HashMap<CellPosition, EndlessFieldCellView> cells;
     public final CellPosition origin;
     public final User player;
 
-    ActionServerMessage(HashMap<CellPosition, EndlessFieldCell> cells, CellPosition origin, String userId, String username) {
+    ActionServerMessage(HashMap<CellPosition, EndlessFieldCellView> cells, CellPosition origin, String userId, String username) {
         super(ServerMessageType.ACTION_MESSAGE);
         this.cells = cells;
         this.origin = origin;
