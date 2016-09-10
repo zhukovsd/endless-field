@@ -30,3 +30,11 @@ ChunkIdGenerator.chunkOrigin = function(chunkSize, idFactor, chunkId) {
         column: (chunkId % idFactor) * chunkSize.columnCount
     };
 };
+
+ChunkIdGenerator.chunkRow = function(chunkId, idFactor) {
+    return Math.floor(chunkId / idFactor);
+};
+
+ChunkIdGenerator.chunkColumn = function(chunkId, idFactor) {
+    return chunkId % idFactor;
+};

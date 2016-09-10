@@ -52,7 +52,7 @@ CameraPosition.prototype = {
 
         // camera shifted beyond the right boundary of chunk
         if (x > chunkWidthInPixels) {
-            //todo check for right field boundary
+            //todo check for right field boundary (constraints)
             // originChunkId += Math.floor(x / chunkWidthInPixels);
             chunkColumn += Math.floor(x / chunkWidthInPixels);
             x %= chunkWidthInPixels;
@@ -70,7 +70,7 @@ CameraPosition.prototype = {
 
         // camera shifted beyond the bottom boundary of chunk
         if (y > chunkHeightInPixels) {
-            // todo check for bottom field boundary
+            // todo check for bottom field boundary (constraints)
             chunkRow += Math.floor(y / chunkHeightInPixels);
             y %= chunkHeightInPixels;
         // camera shifted beyond the top boundary of chunk
