@@ -18,10 +18,10 @@ package com.zhukovsd.serverapp.endpoints.websocket;
 
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.ChunkIdGenerator;
-import com.zhukovsd.endlessfield.ChunkSize;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldAction;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
+import com.zhukovsd.endlessfield.field.EndlessFieldCellView;
 import com.zhukovsd.serverapp.cache.scopes.UsersByChunkConcurrentCollection;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
@@ -144,13 +144,16 @@ public class ActionEndpoint {
 
             field.updateEntries(entries);
 
-            HashMap<CellPosition, EndlessFieldCell> cloned = new LinkedHashMap<>(entries.size());
+            HashMap<CellPosition, EndlessFieldCellView> cloned = new LinkedHashMap<>(entries.size());
             for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
                 EndlessFieldCell cell = entry.getValue();
                 CellPosition position = entry.getKey();
 
                 affectedChunkIds.add(ChunkIdGenerator.chunkIdByPosition(field.chunkSize, position));
-                cloned.put(position, cell.getFactory().clone(cell));
+
+//                cloned.put(position, cell.cloneFactory().clone(cell));
+                EndlessFieldCellView view = cell.viewFactory().view(cell);
+                cloned.put(position, view.cloneFactory().clone(view));
             }
 
             String userId = ((String) httpSession.getAttribute("user_id"));
