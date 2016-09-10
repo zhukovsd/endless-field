@@ -19,7 +19,7 @@ package com.zhukovsd.endlessfield.field;
 /**
  * Created by ZhukovSD on 19.08.2016.
  */
-public abstract class EndlessFieldCellView<T extends EndlessFieldCell<T>> {
+public abstract class EndlessFieldCellView<T extends EndlessFieldCell> {
     protected EndlessFieldCellView() {}
 
     public abstract EndlessCellCloneFactory cloneFactory();
