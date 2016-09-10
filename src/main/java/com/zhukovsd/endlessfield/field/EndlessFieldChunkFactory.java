@@ -21,7 +21,7 @@ import java.util.Collection;
 /**
  * Created by ZhukovSD on 24.06.2016.
  */
-public abstract class EndlessFieldChunkFactory<T extends EndlessFieldCell> {
+public abstract class EndlessFieldChunkFactory<T extends EndlessFieldCell<T>> {
     protected final EndlessField<T> field;
 
     public EndlessFieldChunkFactory(EndlessField<T> field) {

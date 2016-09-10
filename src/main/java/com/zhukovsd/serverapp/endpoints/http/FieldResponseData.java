@@ -18,6 +18,7 @@ package com.zhukovsd.serverapp.endpoints.http;
 
 import com.zhukovsd.endlessfield.CellPosition;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
+import com.zhukovsd.endlessfield.field.EndlessFieldCellView;
 
 import java.util.ArrayList;
 
@@ -27,9 +28,9 @@ import java.util.ArrayList;
 public class FieldResponseData {
     public class ChunkData {
         public CellPosition origin;
-        public ArrayList<EndlessFieldCell> cells;
+        public ArrayList<EndlessFieldCellView> cells;
 
-        ChunkData(CellPosition origin, ArrayList<EndlessFieldCell> cells) {
+        ChunkData(CellPosition origin, ArrayList<EndlessFieldCellView> cells) {
             this.origin = origin;
             this.cells = cells;
         }
@@ -47,7 +48,7 @@ public class FieldResponseData {
 //        this.cells = cells;
 //    }
 
-    void addChunk(CellPosition origin, ArrayList<EndlessFieldCell> cells) {
+    void addChunk(CellPosition origin, ArrayList<EndlessFieldCellView> cells) {
         chunks.add(new ChunkData(origin, cells));
     }
 }
