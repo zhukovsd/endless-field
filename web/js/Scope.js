@@ -39,6 +39,7 @@ CellPosition.prototype = {
     }
 };
 
+// todo: rename to camera scope?
 var Scope = function(width, height, cameraPosition, cellSize, chunkSize, chunkIdFactor) {
     // todo: min/max row/column constraints
    
@@ -73,6 +74,7 @@ var Scope = function(width, height, cameraPosition, cellSize, chunkSize, chunkId
     this.rowCount = visibleRowCount;
     this.columnCount = visibleColumnCount;
 
+    // todo: remove method?
     this.removePartiallyVisibleCells = function() {
         if (cameraPosition.shift.y % cellSize.height != 0) {
             this.origin.row++;
@@ -97,18 +99,17 @@ var Scope = function(width, height, cameraPosition, cellSize, chunkSize, chunkId
 Scope.prototype = {
     chunkIds: function(chunkSize, chunkIdFactor) {
         var originChunkId = ChunkIdGenerator.generateId(chunkSize, chunkIdFactor, this.origin);
-        
-        var vChunkCount = Math.floor(this.origin.row / chunkSize.rowCount) * chunkSize.rowCount;
-        vChunkCount = this.origin.row + this.rowCount - vChunkCount;
-        vChunkCount = Math.floor(vChunkCount / chunkSize.rowCount);
-        if (!((this.origin.row % chunkSize.rowCount == 0) && (this.rowCount % chunkSize.rowCount == 0)))
-            vChunkCount++;
 
-        var hChunkCount = Math.floor(this.origin.column / chunkSize.columnCount) * chunkSize.columnCount;
-        hChunkCount = this.origin.column + this.columnCount - hChunkCount;
-        hChunkCount = Math.floor(hChunkCount / chunkSize.columnCount);
-        if (!((this.origin.column % chunkSize.columnCount == 0) && (this.columnCount % chunkSize.columnCount == 0)))
-            hChunkCount++;
+        var bottomRightScopePosition = new CellPosition(
+            this.origin.row + this.rowCount - 1, this.origin.column + this.columnCount - 1
+        );
+        var rightBottomChunkId = ChunkIdGenerator.generateId(chunkSize, chunkIdFactor, bottomRightScopePosition);
+
+        var vChunkCount = ChunkIdGenerator.chunkRow(rightBottomChunkId, chunkIdFactor)
+            - ChunkIdGenerator.chunkRow(originChunkId, chunkIdFactor) + 1;
+
+        var hChunkCount = ChunkIdGenerator.chunkColumn(rightBottomChunkId, chunkIdFactor)
+            - ChunkIdGenerator.chunkColumn(originChunkId, chunkIdFactor) + 1;
 
         var result = [];
         for (var chunkRow = 0; chunkRow < vChunkCount; chunkRow++) {
@@ -120,6 +121,7 @@ Scope.prototype = {
         return result;
     },
 
+    // todo: remove method?
     containsCell: function(row, column) {
         var result = true;
 
@@ -141,20 +143,39 @@ Scope.prototype = {
         return result;
     },
 
-    // reduce: function(amount) {
-    //     // todo exit if amount < 0
-    //
-    //     this.origin.row += amount;
-    //     this.origin.column += amount;
-    //
-    //     this.rowCount -= 2 * amount;
-    //     // this.rowCount = Math.max(0, this.rowCount);
-    //
-    //     this.columnCount -= 2 * amount;
-    //     // this.columnCount = Math.max(0, this.columnCount);
-    //
-    //     return this;
-    // },
+    expand: function(fieldView, x, y) {
+        var cellSize = fieldView.drawSettings.cellSize;
+        var chunkSize = fieldView.fieldManager.chunkSize;
+        var idFactor = fieldView.fieldManager.chunkIdFactor;
+
+        // console.log('current camera position = ' + JSON.stringify(fieldView.camera.position));
+
+        var topLeftCameraPosition = fieldView.camera.position.shiftBy(
+            {x: x, y: y}, chunkSize, idFactor, cellSize
+        );
+        // var o = ChunkIdGenerator.chunkOrigin(chunkSize, idFactor, topLeftCameraPosition.originChunkId);
+        // var b = o.column + Math.ceil(topLeftCameraPosition.shift.x / cellSize.width) - 1;
+        // var c = o.row + Math.ceil(topLeftCameraPosition.shift.y / cellSize.height) - 1;
+
+        // console.log('top left camera position = ' + JSON.stringify(topLeftCameraPosition) + ', ' + b + ' ' + c);
+
+        var bottomRightCameraPosition = fieldView.camera.position.shiftBy(
+            {x: - (fieldView.width() + x), y: - (fieldView.height() + y)},
+            chunkSize, idFactor, cellSize
+        );
+
+        // var o = ChunkIdGenerator.chunkOrigin(chunkSize, idFactor, bottomRightCameraPosition.originChunkId);
+        // var b = o.column + Math.ceil(bottomRightCameraPosition.shift.x / cellSize.width) - 1;
+        // var c = o.row + Math.ceil(bottomRightCameraPosition.shift.y / cellSize.height) - 1;
+
+        // console.log('right bottom = ' + JSON.stringify(bottomRightCameraPosition) + ', ' + b + ' ' + c);
+
+        var offset = bottomRightCameraPosition.calculateMouseOffset(topLeftCameraPosition, chunkSize, idFactor, cellSize);
+
+        // console.log('offset = ' + JSON.stringify(offset));
+
+        return new Scope(offset.x, offset.y, topLeftCameraPosition, cellSize, chunkSize, idFactor);
+    },
 
     toSet: function() {
         var result = {};
