@@ -43,14 +43,14 @@ var Camera = function(fieldView) {
         );
     };
 
-    this.cellRect = function(row, column) {
+    this.cellRect = function(position) {
         var chunkOrigin = this.position.getChunkOrigin();
         var cellSize = this.fieldView.drawSettings.cellSize;
 
         return {
             // since canvas calculates from the half of a pixel, add 0.5 to prevent anti-aliasing
-            y: (row - chunkOrigin.row) * cellSize.height - this.position.shift.y + 0.5,
-            x: (column - chunkOrigin.column) * cellSize.width - this.position.shift.x + 0.5,
+            y: (position.row - chunkOrigin.row) * cellSize.height - this.position.shift.y + 0.5,
+            x: (position.column - chunkOrigin.column) * cellSize.width - this.position.shift.x + 0.5,
             width: cellSize.width,
             height: cellSize.height
         };
