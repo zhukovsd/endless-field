@@ -44,6 +44,25 @@ var FieldView = function(fieldManager, containerId, drawSettings) {
         }, false
     );
 
+    var containerResizeEnd = function() {
+        console.log('resize ended');
+
+        view.updateExpandedScopeChunkIds();
+    };
+
+    var resizeEndTimerId;
+    window.addEventListener('resize',
+        function(event) {
+            view.forEachLayer(function(layer) {
+                layer.setSize(view.width(), view.height());
+                layer.display();
+            });
+
+            clearTimeout(resizeEndTimerId);
+            resizeEndTimerId = setTimeout(containerResizeEnd, 200);
+        }, false
+    );
+
     this.addLayer = function(name, layer) {
         this.layers[name] = layer;
     };
