@@ -18,6 +18,7 @@
  * Created by ZhukovSD on 15.06.2016.
  */
 
+// TODO rename to AbstractChunkedFieldViewLayer. Extract AbstractFieldViewLayer as super class
 var AbstractFieldViewLayer = function(fieldView, canvasId) {
     this.fieldView = fieldView;
     this.fieldManager = fieldView.fieldManager;
@@ -172,7 +173,6 @@ AbstractFieldViewLayer.prototype.refresh = function() {
     this.renderByChunkIds(this.displayedChunkIds);
     this.display();
 };
-
 
 AbstractFieldViewLayer.prototype.absoluteMousePositionToRelative = function(mousePosition) {
     return {

@@ -104,5 +104,6 @@ PlayersLabelsFieldViewLayer.prototype.doOnMouseMove = function(layerMousePositio
     });
 
     if (renderFlag)
+        // TODO override refresh as rendering by positions of existing labels
         this.refresh();
 };

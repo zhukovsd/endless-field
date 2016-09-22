@@ -27,6 +27,8 @@
     <script src="${pageContext.request.contextPath}/js/CellsFieldViewLayer.js"></script>
     <script src="${pageContext.request.contextPath}/js/PlayersLabelsFieldViewLayer.js"></script>
     <script src="${pageContext.request.contextPath}/js/MouseEventListener.js"></script>
+    <script src="${pageContext.request.contextPath}/js/animations/AbstractLayerAnimation.js"></script>
+    <script src="${pageContext.request.contextPath}/js/animations/ChunkedAnimationFieldViewLayer.js"></script>
 
     <script src="${pageContext.request.contextPath}/js/ChunkIdGenerator.js"></script>
     <script src="${pageContext.request.contextPath}/js/Camera.js"></script>
@@ -40,6 +42,7 @@
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldManager.js"></script>
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleMouseEventListener.js"></script>
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleCellsFieldViewLayer.js"></script>
+    <script src="${pageContext.request.contextPath}/js/SimpleField/OpenCellLayerAnimation.js"></script>
 
     <title>Title</title>
     <script>
@@ -48,6 +51,7 @@
         var fieldManager = new SimpleFieldManager(contextPath);
         var fieldView = new FieldView(fieldManager, 'field-canvas-container', new DrawSettings(25, 25));
         fieldView.addLayer('cells-layer', new SimpleCellsFieldViewLayer(fieldView, 'field-cells-layer-canvas'));
+        fieldView.addLayer('cells-animation-layer', new ChunkedAnimationFieldViewLayer(fieldView, 'field-cells-animation-layer-canvas'));
         fieldView.addLayer('players-labels-layer', new PlayersLabelsFieldViewLayer(fieldView, 'field-players-labels-layer-canvas'));
 
         var mouseEventListener = new SimpleMouseEventListener(fieldView, 'players-labels-layer');
@@ -106,6 +110,10 @@
 
                     fieldView.camera.setPosition(cameraPosition);
                     fieldView.updateExpandedScopeChunkIds();
+
+                    fieldView.getLayer('cells-animation-layer').addAnimation(
+                            new CellPosition(15, 10), new OpenCellLayerAnimation()
+                    );
                 }
 
 //                case (FieldManagerState.LOADED): {
@@ -143,8 +151,9 @@
     <%--Scope for this client = 123--%>
 
     <div class="unselectable" id="field-canvas-container">
-        <canvas id="field-cells-layer-canvas"></canvas>
-        <canvas id="field-players-labels-layer-canvas"></canvas>
+        <canvas class="cells-layer-canvas" id="field-cells-layer-canvas"></canvas>
+        <canvas class="cells-layer-canvas" id="field-cells-animation-layer-canvas"></canvas>
+        <canvas class="cells-layer-canvas" id="field-players-labels-layer-canvas"></canvas>
     </div>
 
     <div style="position: absolute; left: 20px; top: 20px; width: 600px; height: 200px; background-color: rgba(240, 255, 255, 0.8); z-index: 100;">
