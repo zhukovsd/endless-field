@@ -28,6 +28,7 @@ var MouseEventListener = function(fieldView, fieldViewTopLayerName) {
     this.fieldManager = fieldView.fieldManager;
     this.layer = null;
 
+    // TODO initialize with some value
     this.mousePos = null;
 
     var listener = this;

@@ -32,14 +32,7 @@ CellsFieldViewLayer.prototype.initRenderCanvasStyleSettings = function() {
 };
 
 CellsFieldViewLayer.prototype.rectByPosition = function(position, chunksScope) {
-    var cellSize = this.fieldView.drawSettings.cellSize;
-
-    return {
-        x: (position.column - chunksScope.mostLeftColumn) * cellSize.width + 0.5,
-        y: (position.row - chunksScope.mostTopRow) * cellSize.height + 0.5,
-        width: cellSize.width,
-        height: cellSize.height
-    };
+    return chunksScope.cellRect(position);
 };
 
 CellsFieldViewLayer.prototype.renderByPosition = function(position, rect) {

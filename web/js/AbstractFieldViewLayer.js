@@ -32,6 +32,8 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
     this.offset = {x: 0, y: 0};
     var storedOffset;
 
+    this.chunksScopeImageDataOffset = {x: 0, y: 0};
+
     this.displayedChunkIds = [];
 
     var layer = this;
@@ -87,6 +89,11 @@ AbstractFieldViewLayer.prototype.initRenderCanvasStyleSettings = function() {
     console.log('abstract initRenderCanvasStyleSettings()');
 };
 
+AbstractFieldViewLayer.prototype.calculateImageDataSizeAndShift = function(chunksScope) {
+    this.imageData.setSize(chunksScope.widthInPixels, chunksScope.heightInPixels);
+    // this.chunksScopeImageDataOffset is 0, 0 by default
+};
+
 AbstractFieldViewLayer.prototype.rectByPosition = function(position, chunksScope) {
     // console.log('abstract rectByPosition()');
 };
@@ -126,10 +133,7 @@ AbstractFieldViewLayer.prototype.renderByChunkIds = function(chunkIds) {
 
     var chunksScope = this.fieldView.currentChunksScope();
 
-    this.imageData.setSize(
-        // chunksScope.chunkColumnRange * chunkWidthInPixels + 1, chunksScope.chunkRowRange * chunkHeightInPixels + 1
-        chunksScope.widthInPixels, chunksScope.heightInPixels
-    );
+    this.calculateImageDataSizeAndShift(chunksScope);
 
     var a = 0;
 
@@ -154,8 +158,10 @@ AbstractFieldViewLayer.prototype.renderByChunkIds = function(chunkIds) {
     var cameraRow = ChunkIdGenerator.chunkRow(cameraPosition.originChunkId, fieldManager.chunkIdFactor);
 
     this.offset = {
-        x: - (cameraPosition.shift.x + chunksScope.chunkWidthInPixels * (cameraColumn - chunksScope.minChunkColumn)),
-        y: - (cameraPosition.shift.y + chunksScope.chunkHeightInPixels * (cameraRow - chunksScope.minChunkRow))
+        x: - (cameraPosition.shift.x + chunksScope.chunkWidthInPixels * (cameraColumn - chunksScope.minChunkColumn))
+            + this.chunksScopeImageDataOffset.x,
+        y: - (cameraPosition.shift.y + chunksScope.chunkHeightInPixels * (cameraRow - chunksScope.minChunkRow)) +
+            + this.chunksScopeImageDataOffset.y
     };
 
     // console.log("cells layer offset = " + JSON.stringify(this.offset));

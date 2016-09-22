@@ -49,6 +49,10 @@ var FieldManager = function (applicationContextPath) {
     this.cells = {};
     this.playersPositions = new SimpleBiMap(); // BiMap<Position, Player>
 
+    this.playersPositions.put(new CellPosition(50, 0), new Player(100, 'test'));
+    this.playersPositions.put(new CellPosition(55, 0), new Player(101, 'test'));
+    this.playersPositions.put(new CellPosition(99, 0), new Player(102, 'test'));
+
     // var player = new Player('0', 'User #0');
     // this.playersPositions[player.toString()] = {player: player, position: new CellPosition(20, 10)};
 

@@ -35,6 +35,11 @@ PlayersLabelsFieldViewLayer.prototype.initRenderCanvasStyleSettings = function()
     c.font = "bold 15px Arial";
 };
 
+PlayersLabelsFieldViewLayer.prototype.calculateImageDataSizeAndShift = function(chunksScope) {
+    this.imageData.setSize(chunksScope.widthInPixels, chunksScope.heightInPixels);
+    this.chunksScopeImageDataOffset = {x: 0, y: -20};
+};
+
 inheritedRenderByChunkIds = PlayersLabelsFieldViewLayer.prototype.renderByChunkIds;
 PlayersLabelsFieldViewLayer.prototype.renderByChunkIds = function(chunkIds) {
     this.renderedRects = [];
@@ -47,6 +52,10 @@ PlayersLabelsFieldViewLayer.prototype.rectByPosition = function(position, chunks
 
         var c = this.imageData.renderContext;
         var cellRect = chunksScope.cellRect(position);
+
+        // TODO incapsulate in a method
+        cellRect.x -= this.chunksScopeImageDataOffset.x;
+        cellRect.y -= this.chunksScopeImageDataOffset.y;
 
         return {x: cellRect.x - 0.5, y: cellRect.y - 20.5, width: c.measureText(name).width + 10, height: 20};
     }
