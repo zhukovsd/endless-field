@@ -111,9 +111,9 @@
                     fieldView.camera.setPosition(cameraPosition);
                     fieldView.updateExpandedScopeChunkIds();
 
-                    fieldView.getLayer('cells-animation-layer').addAnimation(
-                            new CellPosition(15, 10), new OpenCellLayerAnimation()
-                    );
+//                    fieldView.getLayer('cells-animation-layer').addAnimation(
+//                            new CellPosition(15, 10), new OpenCellLayerAnimation(3000)
+//                    );
                 }
 
 //                case (FieldManagerState.LOADED): {
@@ -163,7 +163,7 @@
         <div>camera scope = <span id="camera-scope"></span></div>
         <div>chunks scope = <span id="chunks-scope"></span></div>
         <input type="button" value="requestChunks()" onclick="fieldManager.requestChunks();">
-        <input type="button" value="draw" onclick="fieldView.drawCellsByChunkIds([0, 1]);">
+        <input type="button" value="anim" onclick="fieldView.getLayer('cells-animation-layer').addAnimation(new CellPosition(15, 10), new OpenCellLayerAnimation(3000));">
         <input type="text" name="chunk" id="chunk_id_text" value="0">
 
         <input type="button" value="left" onclick="

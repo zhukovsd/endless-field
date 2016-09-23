@@ -27,13 +27,25 @@ var ChunkedAnimationFieldViewLayer = function (fieldView, canvasId) {
 
     this.addAnimation = function(cellPosition, animation) {
         this.animations[cellPosition.toString()] = animation;
+        animation.start();
 
         requestAnimationFrame(animationFrameCallback);
     };
 
+    this.animationCount = function() {
+        return Object.keys(this.animations).length;
+    };
+
     var layer = this;
-    var animationFrameCallback = function(a) {
-        console.log(a);
+    var animationFrameCallback = function() {
+        layer.refresh();
+
+        if (layer.animationCount() > 0) {
+            // console.log('request another frame');
+            requestAnimationFrame(animationFrameCallback);
+        } else {
+            // console.log('all animations are over');
+        }
 
         // requestAnimationFrame(animationFrameCallback)
     }
@@ -51,9 +63,39 @@ ChunkedAnimationFieldViewLayer.prototype.rectByPosition = function(position, chu
 ChunkedAnimationFieldViewLayer.prototype.renderByPosition = function(position, rect) {
     // render animation for given rect
     var key = position.toString();
-    var animation = this.animations;
+    var animation = this.animations[key];
 
-    
+    animation.updateValue();    
+    animation.render(this.imageData.renderContext, rect);
 
-    animation[key].render(this.imageData.renderContext, rect);
+    if (animation.finished()) {
+        delete this.animations[key];
+    }
+};
+
+ChunkedAnimationFieldViewLayer.prototype.refresh = function() {
+    // TODO fix this after migrating 'animations' to map
+    var keys = Object.keys(this.animations);
+    var positions = {};
+
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        var position = new CellPosition().fromKey(key);
+        positions[position.toString()] = position;
+    }
+
+    // console.log('positions = ' + JSON.stringify(positions));
+
+    // console.log('before imageData.width = ' + this.imageData.width + ', height = ' + this.imageData.height);
+
+    // if (this.imageData.width == 0) {
+    //     console.log('0');
+    // }
+
+    // var chunksScope = this.fieldView.currentChunksScope();
+    // this.calculateImageDataSizeAndShift(chunksScope);
+    // console.log('after imageData.width = ' + this.imageData.width + ', height = ' + this.imageData.height);
+
+    this.renderByPositions(positions);
+    this.display();
 };

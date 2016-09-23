@@ -18,10 +18,30 @@
  * Created by ZhukovSD on 22.09.2016.
  */
 
-var AbstractLayerAnimation = function() {
+var AbstractLayerAnimation = function(duration) {
     this.value = 0;
-    this.duration = 0;
+    this.maxValue = 100;
+
+    // animation duration in milliseconds
+    this.duration = duration;
     this.startTimestamp = 0;
+
+    this.start = function() {
+        this.startTimestamp = Date.now();
+    };
+
+    this.finished = function() {
+        return (this.value == this.maxValue);
+    };
+
+    this.updateValue = function() {
+        var elapsedTime = Date.now() - this.startTimestamp;
+        var elapsedValue = Math.floor((elapsedTime / this.duration) * this.maxValue);
+
+        this.value = Math.min(elapsedValue, this.maxValue);
+
+        // console.log('value = ' + this.value);
+    };
 };
 
 AbstractLayerAnimation.prototype.rect = function(cellPosition, chunksScope) {

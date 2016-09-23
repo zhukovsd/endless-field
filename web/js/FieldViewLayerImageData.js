@@ -26,7 +26,7 @@ var FieldViewLayerImageData = function(layer/*layerCanvas, widthFactor, heightFa
     this.height = 0;
 
     this.setSize = function(width, height) {
-        if (this.width != width || this.height || height) {
+        if (this.width != width || this.height != height) {
             this.width = width;
             this.height = height;
 

@@ -87,7 +87,7 @@ var AbstractFieldViewLayer = function(fieldView, canvasId) {
 };
 
 AbstractFieldViewLayer.prototype.initRenderCanvasStyleSettings = function() {
-    console.log('abstract initRenderCanvasStyleSettings()');
+    // console.log('abstract initRenderCanvasStyleSettings()');
 };
 
 AbstractFieldViewLayer.prototype.calculateImageDataSizeAndShift = function(chunksScope) {

@@ -18,20 +18,34 @@
  * Created by ZhukovSD on 22.09.2016.
  */
 
-var OpenCellLayerAnimation = function() {
-    AbstractLayerAnimation.call(this);
+var OpenCellLayerAnimation = function(duration) {
+    AbstractLayerAnimation.call(this, duration);
 };
 
 OpenCellLayerAnimation.prototype = Object.create(AbstractLayerAnimation.prototype);
 
 OpenCellLayerAnimation.prototype.rect = function(cellPosition, chunksScope) {
-    return chunksScope.cellRect(cellPosition);
+    // TODO fix this
+    var rect = chunksScope.cellRect(cellPosition);
+    rect.x -= 0.5;
+    rect.y -= 0.5;
+    rect.width++;
+    rect.height++;
+
+    return rect;
 };
 
 OpenCellLayerAnimation.prototype.render = function(context, rect) {
+    context.clearRect(rect.x, rect.y, rect.width, rect.height);
+
+    var alpha = 1 - this.value / this.maxValue;
+    // var alpha = this.value / this.maxValue;
+    // console.log('alpha = ' + alpha);
+
     context.save();
-    // context.fillStyle = "rgba(0, 0, 0, 95)";
-    context.fillStyle = 'rgba(255, 0, 0, 0.3)';
+    context.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';
     context.fillRect(rect.x, rect.y, rect.width, rect.height);
     context.restore();
+
+    console.log(JSON.stringify(rect));
 };
