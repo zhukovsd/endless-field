@@ -18,8 +18,11 @@
  * Created by ZhukovSD on 22.09.2016.
  */
 
-var OpenCellLayerAnimation = function(duration) {
-    AbstractLayerAnimation.call(this, duration);
+var OpenCellLayerAnimation = function() {
+    AbstractLayerAnimation.call(this, 500);
+
+    // this.alphaTransition = new FloatValueTransition(this.maxPosition, 1, 0);
+    this.colorTransition = new ColorValueTransition('#ff0000', '#0000ff', 1, 0, this.maxPosition);
 };
 
 OpenCellLayerAnimation.prototype = Object.create(AbstractLayerAnimation.prototype);
@@ -38,14 +41,10 @@ OpenCellLayerAnimation.prototype.rect = function(cellPosition, chunksScope) {
 OpenCellLayerAnimation.prototype.render = function(context, rect) {
     context.clearRect(rect.x, rect.y, rect.width, rect.height);
 
-    var alpha = 1 - this.value / this.maxValue;
-    // var alpha = this.value / this.maxValue;
-    // console.log('alpha = ' + alpha);
-
     context.save();
-    context.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';
+    // context.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';
+    // context.fillStyle = 'rgba(255, 0, 0, ' + this.alphaTransition.currentValue(this.position) + ')';
+    context.fillStyle = this.colorTransition.currentValue(this.position);
     context.fillRect(rect.x, rect.y, rect.width, rect.height);
     context.restore();
-
-    // console.log(JSON.stringify(rect));
 };

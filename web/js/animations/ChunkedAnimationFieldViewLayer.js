@@ -118,7 +118,7 @@ ChunkedAnimationFieldViewLayer.prototype.renderByPosition = function(position, r
     var key = position.toString();
     var animation = this.animations[key];
 
-    animation.updateValue();    
+    animation.updatePosition();    
     animation.render(this.imageData.renderContext, rect);
 
     if (animation.finished()) {

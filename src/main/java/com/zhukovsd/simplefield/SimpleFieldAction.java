@@ -61,17 +61,25 @@ enum SimpleFieldAction implements EndlessFieldAction {
             EndlessFieldArea area = new EndlessFieldArea(field, position, 1, 1).expandFromCenter(1);
             LinkedHashMap<CellPosition, ? extends EndlessFieldCell> entries = field.getEntries(area);
 
+            LinkedHashMap<CellPosition, EndlessFieldCell> result = new LinkedHashMap<>();
+
             boolean value = !((SimpleFieldCell) entries.get(position)).isChecked();
 
-            for (EndlessFieldCell cell : entries.values()) {
-                SimpleFieldCell casted = ((SimpleFieldCell) cell);
+//            for (EndlessFieldCell cell : entries.values()) {
+            for (Map.Entry<CellPosition, ? extends EndlessFieldCell> entry : entries.entrySet()) {
+                CellPosition cellPosition = entry.getKey();
+                SimpleFieldCell casted = ((SimpleFieldCell) entry.getValue());
+
+                if (casted.isChecked() != value) {
+                    result.put(cellPosition, casted);
+                }
 
                 synchronized (casted) {
                     casted.setChecked(value);
                 }
             }
 
-            return entries;
+            return result;
         }
     }),
 

@@ -19,8 +19,8 @@
  */
 
 var AbstractLayerAnimation = function(duration) {
-    this.value = 0;
-    this.maxValue = 100;
+    this.position = 0;
+    this.maxPosition = 100;
 
     // animation duration in milliseconds
     this.duration = duration;
@@ -31,14 +31,14 @@ var AbstractLayerAnimation = function(duration) {
     };
 
     this.finished = function() {
-        return (this.value == this.maxValue);
+        return (this.position == this.maxPosition);
     };
 
-    this.updateValue = function() {
+    this.updatePosition = function() {
         var elapsedTime = Date.now() - this.startTimestamp;
-        var elapsedValue = Math.floor((elapsedTime / this.duration) * this.maxValue);
+        var elapsedValue = Math.floor((elapsedTime / this.duration) * this.maxPosition);
 
-        this.value = Math.min(elapsedValue, this.maxValue);
+        this.position = Math.min(elapsedValue, this.maxPosition);
 
         // console.log('value = ' + this.value);
     };

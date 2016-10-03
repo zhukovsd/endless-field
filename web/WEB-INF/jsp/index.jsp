@@ -29,6 +29,9 @@
     <script src="${pageContext.request.contextPath}/js/MouseEventListener.js"></script>
     <script src="${pageContext.request.contextPath}/js/animations/AbstractLayerAnimation.js"></script>
     <script src="${pageContext.request.contextPath}/js/animations/ChunkedAnimationFieldViewLayer.js"></script>
+    <script src="${pageContext.request.contextPath}/js/animations/valuetransitions/AbstractValueTransition.js"></script>
+    <script src="${pageContext.request.contextPath}/js/animations/valuetransitions/FloatValueTransition.js"></script>
+    <script src="${pageContext.request.contextPath}/js/animations/valuetransitions/ColorValueTransition.js"></script>
 
     <script src="${pageContext.request.contextPath}/js/ChunkIdGenerator.js"></script>
     <script src="${pageContext.request.contextPath}/js/Camera.js"></script>
@@ -137,7 +140,7 @@
             for (var key in positions) {
                 if (positions.hasOwnProperty(key)) {
                     var position = positions[key];
-                    cellsAnimationLayer.addAnimation(position, new OpenCellLayerAnimation(500));
+                    cellsAnimationLayer.addAnimation(position, new OpenCellLayerAnimation());
                 }
             }
 
@@ -172,7 +175,7 @@
         <div>camera scope = <span id="camera-scope"></span></div>
         <div>chunks scope = <span id="chunks-scope"></span></div>
         <input type="button" value="requestChunks()" onclick="fieldManager.requestChunks();">
-        <input type="button" value="anim" onclick="fieldView.getLayer('cells-animation-layer').addAnimation(new CellPosition(15, 10), new OpenCellLayerAnimation(500));">
+        <input type="button" value="anim" onclick="fieldView.getLayer('cells-animation-layer').addAnimation(new CellPosition(15, 10), new OpenCellLayerAnimation());">
         <input type="text" name="chunk" id="chunk_id_text" value="0">
 
         <input type="button" value="left" onclick="
