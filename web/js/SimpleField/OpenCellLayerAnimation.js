@@ -27,10 +27,10 @@ OpenCellLayerAnimation.prototype = Object.create(AbstractLayerAnimation.prototyp
 OpenCellLayerAnimation.prototype.rect = function(cellPosition, chunksScope) {
     // TODO fix this
     var rect = chunksScope.cellRect(cellPosition);
-    rect.x -= 0.5;
-    rect.y -= 0.5;
-    rect.width++;
-    rect.height++;
+    rect.x += 0.5;
+    rect.y += 0.5;
+    rect.width--;
+    rect.height--;
 
     return rect;
 };
@@ -47,5 +47,5 @@ OpenCellLayerAnimation.prototype.render = function(context, rect) {
     context.fillRect(rect.x, rect.y, rect.width, rect.height);
     context.restore();
 
-    console.log(JSON.stringify(rect));
+    // console.log(JSON.stringify(rect));
 };

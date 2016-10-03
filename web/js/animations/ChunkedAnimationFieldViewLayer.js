@@ -24,30 +24,83 @@ var ChunkedAnimationFieldViewLayer = function (fieldView, canvasId) {
     // key - position, value - animation
     // TODO map
     this.animations = {};
+    this.c = 0;
+    
+    // animation request ID
+    var id;
+    var stop;
+    var frameCount = 0;
+    var fps, fpsInterval, startTime, now, then, elapsed;
+
+    fps = 30;
 
     this.addAnimation = function(cellPosition, animation) {
+        this.c++;
         this.animations[cellPosition.toString()] = animation;
         animation.start();
 
-        requestAnimationFrame(animationFrameCallback);
+        // requestAnimationFrame(animationFrameCallback);
+
+        stop = false;
+        fpsInterval = 1000 / fps;
+        frameCount = 0;
+        then = Date.now();
+        startTime = then;
+        
+        animate();
     };
 
     this.animationCount = function() {
-        return Object.keys(this.animations).length;
+        // return Object.keys(this.animations).length;
+        return this.c;
     };
 
     var layer = this;
-    var animationFrameCallback = function() {
-        layer.refresh();
 
-        if (layer.animationCount() > 0) {
-            // console.log('request another frame');
-            requestAnimationFrame(animationFrameCallback);
-        } else {
-            // console.log('all animations are over');
+    // var animationFrameCallback = function() {
+    //     layer.refresh();
+    //
+    //     if (layer.animationCount() > 0) {
+    //         // console.log('request another frame');
+    //         requestAnimationFrame(animationFrameCallback);
+    //     } else {
+    //         // console.log('all animations are over');
+    //     }
+    // }
+
+    // http://stackoverflow.com/questions/19764018/controlling-fps-with-requestanimationframe
+    function animate() {
+        if (!stop) {
+            // request another frame
+            id = requestAnimationFrame(animate);
+
+            // calc elapsed time since last loop
+            now = Date.now();
+            elapsed = now - then;
+
+            // if enough time has elapsed, draw the next frame
+            if (elapsed > fpsInterval) {
+                // Get ready for next frame by setting then=now, but also adjust for your
+                // specified fpsInterval not being a multiple of RAF's interval (16.7ms)
+                then = now - (elapsed % fpsInterval);
+
+                // Put your drawing code here
+                layer.refresh();
+
+                var sinceStart = now - startTime;
+                var currentFps = Math.round(1000 / (sinceStart / ++frameCount) * 100) / 100;
+
+                // console.log('current fps = ' + currentFps);
+            }
+
+            if (layer.animationCount() == 0) {
+                // alert('123');
+                stop = true;
+                console.log('stop');
+
+                cancelAnimationFrame(id);
+            }
         }
-
-        // requestAnimationFrame(animationFrameCallback)
     }
 };
 
@@ -70,6 +123,7 @@ ChunkedAnimationFieldViewLayer.prototype.renderByPosition = function(position, r
 
     if (animation.finished()) {
         delete this.animations[key];
+        this.c--;
     }
 };
 
@@ -84,18 +138,7 @@ ChunkedAnimationFieldViewLayer.prototype.refresh = function() {
         positions[position.toString()] = position;
     }
 
-    // console.log('positions = ' + JSON.stringify(positions));
-
-    // console.log('before imageData.width = ' + this.imageData.width + ', height = ' + this.imageData.height);
-
-    // if (this.imageData.width == 0) {
-    //     console.log('0');
-    // }
-
-    // var chunksScope = this.fieldView.currentChunksScope();
-    // this.calculateImageDataSizeAndShift(chunksScope);
-    // console.log('after imageData.width = ' + this.imageData.width + ', height = ' + this.imageData.height);
-
     this.renderByPositions(positions);
     this.display();
+    // this.test({x: 0, y: 0, width: 1100, height: 800});
 };

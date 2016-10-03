@@ -37,5 +37,9 @@ var FieldViewLayerImageData = function(layer/*layerCanvas, widthFactor, heightFa
 
             // todo copy existing image data on resize
         }
-    }
+    };
+
+    this.clear = function() {
+        this.renderContext.clearRect(0, 0, this.width, this.height);
+    };
 };

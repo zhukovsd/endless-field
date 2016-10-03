@@ -124,6 +124,8 @@
 
         var cellsLayer = fieldView.getLayer('cells-layer');
         var labelsLayer = fieldView.getLayer('players-labels-layer');
+        var cellsAnimationLayer = fieldView.getLayer('cells-animation-layer');
+
         fieldManager.onChunksReceived = function(chunkIds) {
             fieldView.forEachLayer(function(layer) {
                 layer.renderByChunkIds(chunkIds);
@@ -132,6 +134,13 @@
         };
 
         fieldManager.OnActionMessageReceived = function (positions) {
+            for (var key in positions) {
+                if (positions.hasOwnProperty(key)) {
+                    var position = positions[key];
+                    cellsAnimationLayer.addAnimation(position, new OpenCellLayerAnimation(500));
+                }
+            }
+
             cellsLayer.renderByPositions(positions);
             cellsLayer.display();
 
@@ -163,7 +172,7 @@
         <div>camera scope = <span id="camera-scope"></span></div>
         <div>chunks scope = <span id="chunks-scope"></span></div>
         <input type="button" value="requestChunks()" onclick="fieldManager.requestChunks();">
-        <input type="button" value="anim" onclick="fieldView.getLayer('cells-animation-layer').addAnimation(new CellPosition(15, 10), new OpenCellLayerAnimation(3000));">
+        <input type="button" value="anim" onclick="fieldView.getLayer('cells-animation-layer').addAnimation(new CellPosition(15, 10), new OpenCellLayerAnimation(500));">
         <input type="text" name="chunk" id="chunk_id_text" value="0">
 
         <input type="button" value="left" onclick="

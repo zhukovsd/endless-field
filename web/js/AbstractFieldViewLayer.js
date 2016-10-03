@@ -127,6 +127,7 @@ AbstractFieldViewLayer.prototype.renderByPositions = function(positions) {
 AbstractFieldViewLayer.prototype.renderByChunkIds = function(chunkIds) {
     var time = Date.now();
 
+    this.imageData.clear();
     this.displayedChunkIds = chunkIds;
 
     var fieldManager = this.fieldManager;
