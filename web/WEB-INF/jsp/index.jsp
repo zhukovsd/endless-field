@@ -28,6 +28,7 @@
     <script src="${pageContext.request.contextPath}/js/PlayersLabelsFieldViewLayer.js"></script>
     <script src="${pageContext.request.contextPath}/js/MouseEventListener.js"></script>
     <script src="${pageContext.request.contextPath}/js/animations/AbstractLayerAnimation.js"></script>
+    <script src="${pageContext.request.contextPath}/js/animations/AbstractReversibleLayerAnimation.js"></script>
     <script src="${pageContext.request.contextPath}/js/animations/ChunkedAnimationFieldViewLayer.js"></script>
     <script src="${pageContext.request.contextPath}/js/animations/valuetransitions/AbstractValueTransition.js"></script>
     <script src="${pageContext.request.contextPath}/js/animations/valuetransitions/FloatValueTransition.js"></script>
@@ -140,9 +141,13 @@
             for (var key in positions) {
                 if (positions.hasOwnProperty(key)) {
                     var position = positions[key];
-                    cellsAnimationLayer.addAnimation(
-                            position, new OpenCellLayerAnimation(fieldManager.getCell(position.row, position.column).isChecked)
-                    );
+                    var isChecked = fieldManager.getCell(position.row, position.column).isChecked;
+
+                    if (cellsAnimationLayer.containsAnimation(position)) {
+                        cellsAnimationLayer.animations[position.toString()].isReversed = !isChecked;
+                    } else {
+                        cellsAnimationLayer.addAnimation(position, new OpenCellLayerAnimation(!isChecked));
+                    }
                 }
             }
             // refresh animation layer before cells layer

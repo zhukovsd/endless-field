@@ -18,22 +18,21 @@
  * Created by ZhukovSD on 22.09.2016.
  */
 
-var OpenCellLayerAnimation = function(reversed) {
-    AbstractLayerAnimation.call(this, 200);
+var OpenCellLayerAnimation = function(isReversed) {
+    AbstractReversibleLayerAnimation.call(this, 5000, isReversed);
 
     // this.alphaTransition = new FloatValueTransition(this.maxPosition, 1, 0);
-    var openedColor = '#E8E8E8';
-    var closedColor = '#FFFFFF';
-    // var openedColor = '#FF0000';
-    // var closedColor = '#0000FF';
-    
-    if (!reversed)
-        this.colorTransition = new ColorValueTransition(openedColor, closedColor, 1, 1, this.maxPosition);
-    else
-        this.colorTransition = new ColorValueTransition(closedColor, openedColor, 1, 1, this.maxPosition);        
+    // var unchecked = '#E8E8E8';
+    var unchecked = '#000000';
+    var checked = '#FFFFFF';
+    // var unchecked = '#FF0000';
+    // var checked = '#0000FF';
+
+    // unreversed -> from white to gray (from unchecked to checked)
+    this.colorTransition = new ColorValueTransition(checked, unchecked, 1, 1, this.maxPosition);
 };
 
-OpenCellLayerAnimation.prototype = Object.create(AbstractLayerAnimation.prototype);
+OpenCellLayerAnimation.prototype = Object.create(AbstractReversibleLayerAnimation.prototype);
 
 OpenCellLayerAnimation.prototype.rect = function(cellPosition, chunksScope) {
     // TODO fix this

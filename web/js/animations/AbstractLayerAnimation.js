@@ -29,19 +29,18 @@ var AbstractLayerAnimation = function(duration) {
     this.start = function() {
         this.startTimestamp = Date.now();
     };
+};
 
-    this.finished = function() {
-        return (this.position == this.maxPosition);
-    };
+AbstractLayerAnimation.prototype.updatePosition = function() {
+    var elapsedTime = Date.now() - this.startTimestamp;
+    var elapsedValue = Math.floor((elapsedTime / this.duration) * this.maxPosition);
 
-    this.updatePosition = function() {
-        var elapsedTime = Date.now() - this.startTimestamp;
-        var elapsedValue = Math.floor((elapsedTime / this.duration) * this.maxPosition);
+    // console.log('inherited, duration = ' + this.duration + ', maxPosition = ' + this.maxPosition);
+    this.position = Math.min(elapsedValue, this.maxPosition);
+};
 
-        this.position = Math.min(elapsedValue, this.maxPosition);
-
-        // console.log('value = ' + this.value);
-    };
+AbstractLayerAnimation.prototype.finished = function() {
+    return (this.position == this.maxPosition);
 };
 
 AbstractLayerAnimation.prototype.rect = function(cellPosition, chunksScope) {

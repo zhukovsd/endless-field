@@ -50,6 +50,10 @@ var ChunkedAnimationFieldViewLayer = function (fieldView, canvasId) {
         animate();
     };
 
+    this.containsAnimation = function(cellPosition) {
+        return this.animations.hasOwnProperty(cellPosition.toString());
+    };
+    
     this.animationCount = function() {
         // return Object.keys(this.animations).length;
         return this.c;
