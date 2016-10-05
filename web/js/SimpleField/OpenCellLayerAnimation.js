@@ -18,11 +18,19 @@
  * Created by ZhukovSD on 22.09.2016.
  */
 
-var OpenCellLayerAnimation = function() {
-    AbstractLayerAnimation.call(this, 500);
+var OpenCellLayerAnimation = function(reversed) {
+    AbstractLayerAnimation.call(this, 200);
 
     // this.alphaTransition = new FloatValueTransition(this.maxPosition, 1, 0);
-    this.colorTransition = new ColorValueTransition('#ff0000', '#0000ff', 1, 0, this.maxPosition);
+    var openedColor = '#E8E8E8';
+    var closedColor = '#FFFFFF';
+    // var openedColor = '#FF0000';
+    // var closedColor = '#0000FF';
+    
+    if (!reversed)
+        this.colorTransition = new ColorValueTransition(openedColor, closedColor, 1, 1, this.maxPosition);
+    else
+        this.colorTransition = new ColorValueTransition(closedColor, openedColor, 1, 1, this.maxPosition);        
 };
 
 OpenCellLayerAnimation.prototype = Object.create(AbstractLayerAnimation.prototype);
@@ -41,10 +49,12 @@ OpenCellLayerAnimation.prototype.rect = function(cellPosition, chunksScope) {
 OpenCellLayerAnimation.prototype.render = function(context, rect) {
     context.clearRect(rect.x, rect.y, rect.width, rect.height);
 
-    context.save();
-    // context.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';
-    // context.fillStyle = 'rgba(255, 0, 0, ' + this.alphaTransition.currentValue(this.position) + ')';
-    context.fillStyle = this.colorTransition.currentValue(this.position);
-    context.fillRect(rect.x, rect.y, rect.width, rect.height);
-    context.restore();
+    if (!this.finished()) {
+        context.save();
+        // context.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';
+        // context.fillStyle = 'rgba(255, 0, 0, ' + this.alphaTransition.currentValue(this.position) + ')';
+        context.fillStyle = this.colorTransition.currentValue(this.position);
+        context.fillRect(rect.x, rect.y, rect.width, rect.height);
+        context.restore();
+    }
 };

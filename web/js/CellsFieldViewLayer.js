@@ -49,6 +49,6 @@ CellsFieldViewLayer.prototype.drawCell = function(rect, cell, clear) {
         c.beginPath();
         c.rect(rect.x, rect.y, rect.width, rect.height);
         c.stroke();
-        c.fillText(cell.text, rect.x + 2, rect.y + 9);
+        // c.fillText(cell.text, rect.x + 2, rect.y + 9);
     }
 };

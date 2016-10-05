@@ -103,8 +103,15 @@ enum SimpleFieldAction implements EndlessFieldAction {
                 CellPosition pos = entry.getKey();
 
                 if (Math.round(Math.sqrt(Math.pow(pos.row - position.row, 2) + Math.pow(pos.column - position.column, 2))) <= radius) {
-                    ((SimpleFieldCell) entry.getValue()).setChecked(value);
-                    result.put(pos, entry.getValue());
+                    SimpleFieldCell casted = (SimpleFieldCell) entry.getValue();
+
+                    if (casted.isChecked() != value) {
+                        result.put(pos, casted);
+                    }
+
+                    synchronized (casted) {
+                        casted.setChecked(value);
+                    }
                 }
             }
 

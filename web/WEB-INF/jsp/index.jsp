@@ -140,9 +140,13 @@
             for (var key in positions) {
                 if (positions.hasOwnProperty(key)) {
                     var position = positions[key];
-                    cellsAnimationLayer.addAnimation(position, new OpenCellLayerAnimation());
+                    cellsAnimationLayer.addAnimation(
+                            position, new OpenCellLayerAnimation(fieldManager.getCell(position.row, position.column).isChecked)
+                    );
                 }
             }
+            // refresh animation layer before cells layer
+            cellsAnimationLayer.refresh();
 
             cellsLayer.renderByPositions(positions);
             cellsLayer.display();
