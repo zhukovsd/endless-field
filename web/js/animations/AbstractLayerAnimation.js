@@ -33,10 +33,10 @@ var AbstractLayerAnimation = function(duration) {
 
 AbstractLayerAnimation.prototype.updatePosition = function() {
     var elapsedTime = Date.now() - this.startTimestamp;
-    var elapsedValue = Math.floor((elapsedTime / this.duration) * this.maxPosition);
+    var elapsedPosition = Math.floor((elapsedTime / this.duration) * this.maxPosition);
 
     // console.log('inherited, duration = ' + this.duration + ', maxPosition = ' + this.maxPosition);
-    this.position = Math.min(elapsedValue, this.maxPosition);
+    this.position = Math.min(elapsedPosition, this.maxPosition);
 };
 
 AbstractLayerAnimation.prototype.finished = function() {

@@ -57,6 +57,7 @@
         fieldView.addLayer('cells-layer', new SimpleCellsFieldViewLayer(fieldView, 'field-cells-layer-canvas'));
         fieldView.addLayer('cells-animation-layer', new ChunkedAnimationFieldViewLayer(fieldView, 'field-cells-animation-layer-canvas'));
         fieldView.addLayer('players-labels-layer', new PlayersLabelsFieldViewLayer(fieldView, 'field-players-labels-layer-canvas'));
+        fieldView.addLayer('cells-text-animation-layer', new ChunkedAnimationFieldViewLayer(fieldView, 'field-cells-text-animation-layer-canvas'));
 
         var mouseEventListener = new SimpleMouseEventListener(fieldView, 'players-labels-layer');
         var uriManager = new AddressBarManager(contextPath + '/game/');
@@ -144,7 +145,7 @@
                     var isChecked = fieldManager.getCell(position.row, position.column).isChecked;
 
                     if (cellsAnimationLayer.containsAnimation(position)) {
-                        cellsAnimationLayer.animations[position.toString()].isReversed = !isChecked;
+                        cellsAnimationLayer.animations[position.toString()].setIsReversed(!isChecked);
                     } else {
                         cellsAnimationLayer.addAnimation(position, new OpenCellLayerAnimation(!isChecked));
                     }
@@ -175,6 +176,7 @@
         <canvas class="cells-layer-canvas" id="field-cells-layer-canvas"></canvas>
         <canvas class="cells-layer-canvas" id="field-cells-animation-layer-canvas"></canvas>
         <canvas class="cells-layer-canvas" id="field-players-labels-layer-canvas"></canvas>
+        <canvas class="cells-layer-canvas" id="field-cells-text-animation-layer-canvas"></canvas>
     </div>
 
     <div style="position: absolute; left: 20px; top: 20px; width: 600px; height: 200px; background-color: rgba(240, 255, 255, 0.8); z-index: 100;">

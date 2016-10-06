@@ -18,12 +18,12 @@
  * Created by ZhukovSD on 22.09.2016.
  */
 
+// TODO rename to SimpleFieldCheckCellLayerAnimation
 var OpenCellLayerAnimation = function(isReversed) {
-    AbstractReversibleLayerAnimation.call(this, 5000, isReversed);
+    AbstractReversibleLayerAnimation.call(this, 200, isReversed);
 
-    // this.alphaTransition = new FloatValueTransition(this.maxPosition, 1, 0);
-    // var unchecked = '#E8E8E8';
-    var unchecked = '#000000';
+    var unchecked = '#E8E8E8';
+    // var unchecked = '#000000';
     var checked = '#FFFFFF';
     // var unchecked = '#FF0000';
     // var checked = '#0000FF';

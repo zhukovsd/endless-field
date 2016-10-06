@@ -49,6 +49,10 @@ canvas.cells-layer-canvas {
     z-index: 3;
 }
 
+#field-cells-text-animation-layer-canvas {
+    z-index: 4;
+}
+
 .unselectable {
     /*disable double-click select */
     -webkit-user-select: none; /* webkit (safari, chrome) browsers */

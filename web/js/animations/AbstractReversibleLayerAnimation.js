@@ -22,6 +22,20 @@ var AbstractReversibleLayerAnimation = function(duration, isReversed) {
     AbstractLayerAnimation.call(this, duration);
 
     this.isReversed = isReversed;
+
+    this.setIsReversed = function(value) {
+        if (this.isReversed != value) {
+            // recalculate start time to affect position calculation
+            // if 30% of animation passed, on reversing it we need to 'set' position to 70% by changing its startTimestamp
+            this.updatePosition();
+            var currentPosition = this.position;
+            var desiredPosition = this.maxPosition - this.position;
+
+            this.startTimestamp = Date.now() - (desiredPosition * this.duration) / this.maxPosition;
+
+            this.isReversed = value;
+        }
+    }
 };
 
 AbstractReversibleLayerAnimation.prototype = Object.create(AbstractLayerAnimation.prototype);
@@ -34,7 +48,7 @@ AbstractReversibleLayerAnimation.prototype.updatePosition = function() {
         this.position = this.maxPosition - this.position;
     }
 
-    console.log('position = ' + this.position);
+    // console.log('position = ' + this.position);
 };
 
 var inheritedFinished = AbstractReversibleLayerAnimation.prototype.finished;
