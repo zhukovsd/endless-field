@@ -18,11 +18,13 @@
  * Created by ZhukovSD on 06.10.2016.
  */
 
-var SimpleFieldCheckCellTextLayerAnimation = function() {
-    AbstractLayerAnimation.call(this, 300);    
-    
-    this.yTransition = new FloatValueTransition(this.maxPosition, 0, 20);
-    this.alphaTransition = new FloatValueTransition(this.maxPosition, 100, 0);
+var SimpleFieldCellTextAnimationLayer = function(fieldView, canvasId)  {
+    ChunkedAnimationFieldViewLayer.call(this, fieldView, canvasId);
 };
 
-SimpleFieldCheckCellTextLayerAnimation.prototype = Object.create(AbstractLayerAnimation.prototype);
+SimpleFieldCellTextAnimationLayer.prototype = Object.create(ChunkedAnimationFieldViewLayer.prototype);
+
+SimpleFieldCellTextAnimationLayer.prototype.calculateImageDataSizeAndShift = function(chunksScope) {
+    this.imageData.setSize(chunksScope.widthInPixels + 50, chunksScope.heightInPixels);
+    this.chunksScopeImageDataOffset = {x: 0, y: -SimpleFieldCheckCellTextAnimation.height};
+};

@@ -25,6 +25,7 @@ var AbstractLayerAnimation = function(duration) {
     // animation duration in milliseconds
     this.duration = duration;
     this.startTimestamp = 0;
+    this.removeOnNextFrame = false;
 
     this.start = function() {
         this.startTimestamp = Date.now();

@@ -47,6 +47,8 @@
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleMouseEventListener.js"></script>
     <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleCellsFieldViewLayer.js"></script>
     <script src="${pageContext.request.contextPath}/js/SimpleField/OpenCellLayerAnimation.js"></script>
+    <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldCellTextAnimationLayer.js"></script>
+    <script src="${pageContext.request.contextPath}/js/SimpleField/SimpleFieldCheckCellTextAnimation.js"></script>
 
     <title>Title</title>
     <script>
@@ -57,9 +59,9 @@
         fieldView.addLayer('cells-layer', new SimpleCellsFieldViewLayer(fieldView, 'field-cells-layer-canvas'));
         fieldView.addLayer('cells-animation-layer', new ChunkedAnimationFieldViewLayer(fieldView, 'field-cells-animation-layer-canvas'));
         fieldView.addLayer('players-labels-layer', new PlayersLabelsFieldViewLayer(fieldView, 'field-players-labels-layer-canvas'));
-        fieldView.addLayer('cells-text-animation-layer', new ChunkedAnimationFieldViewLayer(fieldView, 'field-cells-text-animation-layer-canvas'));
+        fieldView.addLayer('cells-text-animation-layer', new SimpleFieldCellTextAnimationLayer(fieldView, 'field-cells-text-animation-layer-canvas'));
 
-        var mouseEventListener = new SimpleMouseEventListener(fieldView, 'players-labels-layer');
+        var mouseEventListener = new SimpleMouseEventListener(fieldView, 'cells-text-animation-layer');
         var uriManager = new AddressBarManager(contextPath + '/game/');
 
         fieldView.getLayer('players-labels-layer').mouseListener = mouseEventListener;
@@ -130,6 +132,7 @@
         var cellsLayer = fieldView.getLayer('cells-layer');
         var labelsLayer = fieldView.getLayer('players-labels-layer');
         var cellsAnimationLayer = fieldView.getLayer('cells-animation-layer');
+        var cellsTextAnimationLayer = fieldView.getLayer('cells-text-animation-layer');
 
         fieldManager.onChunksReceived = function(chunkIds) {
             fieldView.forEachLayer(function(layer) {
@@ -138,7 +141,9 @@
             });
         };
 
-        fieldManager.OnActionMessageReceived = function (positions) {
+        fieldManager.OnActionMessageReceived = function (originPosition, positions) {
+            cellsTextAnimationLayer.addAnimation(originPosition, new SimpleFieldCheckCellTextAnimation(1));
+
             for (var key in positions) {
                 if (positions.hasOwnProperty(key)) {
                     var position = positions[key];

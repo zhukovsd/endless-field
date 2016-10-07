@@ -18,18 +18,18 @@
  * Created by ZhukovSD on 22.09.2016.
  */
 
-// TODO rename to SimpleFieldCheckCellLayerAnimation
+// TODO rename to SimpleFieldCheckCellAnimation
 var OpenCellLayerAnimation = function(isReversed) {
     AbstractReversibleLayerAnimation.call(this, 200, isReversed);
 
-    var unchecked = '#E8E8E8';
     // var unchecked = '#000000';
+    var unchecked = '#E8E8E8';
     var checked = '#FFFFFF';
     // var unchecked = '#FF0000';
     // var checked = '#0000FF';
 
     // unreversed -> from white to gray (from unchecked to checked)
-    this.colorTransition = new ColorValueTransition(checked, unchecked, 1, 1, this.maxPosition);
+    this.fillColorTransition = new ColorValueTransition(checked, unchecked, 1, 1, this.maxPosition);
 };
 
 OpenCellLayerAnimation.prototype = Object.create(AbstractReversibleLayerAnimation.prototype);
@@ -46,14 +46,8 @@ OpenCellLayerAnimation.prototype.rect = function(cellPosition, chunksScope) {
 };
 
 OpenCellLayerAnimation.prototype.render = function(context, rect) {
-    context.clearRect(rect.x, rect.y, rect.width, rect.height);
-
-    if (!this.finished()) {
-        context.save();
-        // context.fillStyle = 'rgba(255, 0, 0, ' + alpha + ')';
-        // context.fillStyle = 'rgba(255, 0, 0, ' + this.alphaTransition.currentValue(this.position) + ')';
-        context.fillStyle = this.colorTransition.currentValue(this.position);
-        context.fillRect(rect.x, rect.y, rect.width, rect.height);
-        context.restore();
-    }
+    context.save();
+    context.fillStyle = this.fillColorTransition.currentValue(this.position);
+    context.fillRect(rect.x, rect.y, rect.width, rect.height);
+    context.restore();
 };

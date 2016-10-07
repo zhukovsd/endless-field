@@ -108,15 +108,17 @@ var FieldManager = function (applicationContextPath) {
                     positions[position.toString()] = position;
                 }
             }
-            console.log(c + "cells updated");
+            console.log(c + " cells updated");
+
+            var originPosition = new CellPosition(msg.origin.row, msg.origin.column);
 
             var player = new Player(msg.player.id, msg.player.name);
-            if (player.id !== this.manager.userId) {                
-                this.manager.playersPositions.put(new CellPosition(msg.origin.row, msg.origin.column), player);
+            if (player.id !== this.manager.userId) {
+                this.manager.playersPositions.put(originPosition, player);
             }
             
             if (this.manager.OnActionMessageReceived !== null) {
-                this.manager.OnActionMessageReceived(positions);
+                this.manager.OnActionMessageReceived(originPosition, positions);
             }
         }
     };

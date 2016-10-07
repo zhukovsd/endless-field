@@ -18,7 +18,7 @@
  * Created by ZhukovSD on 22.09.2016.
  */
 
-var ChunkedAnimationFieldViewLayer = function (fieldView, canvasId) {
+var ChunkedAnimationFieldViewLayer = function(fieldView, canvasId) {
     AbstractFieldViewLayer.call(this, fieldView, canvasId);
 
     // key - position, value - animation
@@ -122,16 +122,25 @@ ChunkedAnimationFieldViewLayer.prototype.renderByPosition = function(position, r
     var key = position.toString();
     var animation = this.animations[key];
 
-    animation.updatePosition();    
-    animation.render(this.imageData.renderContext, rect);
-
-    if (animation.finished()) {
+    if (animation.removeOnNextFrame) {
         delete this.animations[key];
         this.c--;
+    } else {
+        animation.updatePosition();
+        animation.render(this.imageData.renderContext, rect);
+
+        if (animation.finished()) {
+            // delete this.animations[key];
+            // this.c--;
+
+            animation.removeOnNextFrame = true;
+        }
     }
 };
 
 ChunkedAnimationFieldViewLayer.prototype.refresh = function() {
+    this.imageData.clear();
+    
     // TODO fix this after migrating 'animations' to map
     var keys = Object.keys(this.animations);
     var positions = {};
