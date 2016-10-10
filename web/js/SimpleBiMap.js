@@ -78,5 +78,13 @@ var SimpleBiMap = function() {
         if (this.containsValue(value)) {
             removePair(this.key(value), value);
         }
-    }
+    };
+
+    this.keys = function() {
+        return keys;
+    };
+
+    this.values = function() {
+        return values;
+    };
 };

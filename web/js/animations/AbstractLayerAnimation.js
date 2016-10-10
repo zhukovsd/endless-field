@@ -22,6 +22,8 @@ var AbstractLayerAnimation = function(duration) {
     this.position = 0;
     this.maxPosition = 100;
 
+    this.id = animationCounter++;
+    
     // animation duration in milliseconds
     this.duration = duration;
     this.startTimestamp = 0;
@@ -31,6 +33,8 @@ var AbstractLayerAnimation = function(duration) {
         this.startTimestamp = Date.now();
     };
 };
+
+var animationCounter = 0;
 
 AbstractLayerAnimation.prototype.updatePosition = function() {
     var elapsedTime = Date.now() - this.startTimestamp;

@@ -142,15 +142,24 @@
         };
 
         fieldManager.OnActionMessageReceived = function (originPosition, positions) {
-            cellsTextAnimationLayer.addAnimation(originPosition, new SimpleFieldCheckCellTextAnimation(1));
+            var c = 0;
 
             for (var key in positions) {
                 if (positions.hasOwnProperty(key)) {
                     var position = positions[key];
                     var isChecked = fieldManager.getCell(position.row, position.column).isChecked;
 
+                    if (isChecked) c++; else c--;
+
                     if (cellsAnimationLayer.containsAnimation(position)) {
-                        cellsAnimationLayer.animations[position.toString()].setIsReversed(!isChecked);
+                        /// cellsAnimationLayer.animations[position.toString()].setIsReversed(!isChecked);
+                        /// cellsAnimationLayer.animationByPosition(position).setIsReversed(!isChecked);
+
+                        var ids = cellsAnimationLayer.animationIdsByPosition(position);
+                        for (var i; i < ids.length; i++) {
+                            var animation = cellsAnimationLayer.animations[ids[i]];
+                            animation.setIsReversed(!isChecked);
+                        }
                     } else {
                         cellsAnimationLayer.addAnimation(position, new OpenCellLayerAnimation(!isChecked));
                     }
@@ -158,6 +167,10 @@
             }
             // refresh animation layer before cells layer
             cellsAnimationLayer.refresh();
+
+//            console.log('c = ' + c);
+
+            cellsTextAnimationLayer.addAnimation(originPosition, new SimpleFieldCheckCellTextAnimation(c));
 
             cellsLayer.renderByPositions(positions);
             cellsLayer.display();

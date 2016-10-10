@@ -23,9 +23,14 @@ var ChunkedAnimationFieldViewLayer = function(fieldView, canvasId) {
 
     // key - position, value - animation
     // TODO map
-    this.animations = {};
+    /// this.animations = {};
+
+    this.animations = {}; // id -> animation
+    this.positions = {}; // id -> position
+    this.a = {};
+
     this.c = 0;
-    
+
     // animation request ID
     var id;
     var stop;
@@ -36,7 +41,17 @@ var ChunkedAnimationFieldViewLayer = function(fieldView, canvasId) {
 
     this.addAnimation = function(cellPosition, animation) {
         this.c++;
-        this.animations[cellPosition.toString()] = animation;
+
+        // console.log('id = ' + animation.id);
+
+        /// this.animations[cellPosition.toString()] = animation;
+        this.animations[animation.id] = animation;
+        this.positions[animation.id] = cellPosition;
+        var key = cellPosition.toString();
+        if (!this.a.hasOwnProperty(key))
+            this.a[key] = [];
+        this.a[key].push(animation.id);
+
         animation.start();
 
         // requestAnimationFrame(animationFrameCallback);
@@ -51,27 +66,27 @@ var ChunkedAnimationFieldViewLayer = function(fieldView, canvasId) {
     };
 
     this.containsAnimation = function(cellPosition) {
-        return this.animations.hasOwnProperty(cellPosition.toString());
+        /// return this.animations.hasOwnProperty(cellPosition.toString());
+
+        // console.log('a = ' + this.positions.containsValue(cellPosition));
+        // return this.positions.containsValue(cellPosition);
+        return this.a.hasOwnProperty(cellPosition);
     };
-    
+
+    this.animationIdsByPosition = function(cellPosition) {
+        // var id = this.positions.key(cellPosition);
+        // if (id) {
+        //     return this.animations[id];
+        // }
+        return this.a[cellPosition.toString()];
+    };
+
     this.animationCount = function() {
         // return Object.keys(this.animations).length;
         return this.c;
     };
 
     var layer = this;
-
-    // var animationFrameCallback = function() {
-    //     layer.refresh();
-    //
-    //     if (layer.animationCount() > 0) {
-    //         // console.log('request another frame');
-    //         requestAnimationFrame(animationFrameCallback);
-    //     } else {
-    //         // console.log('all animations are over');
-    //     }
-    // }
-
     // http://stackoverflow.com/questions/19764018/controlling-fps-with-requestanimationframe
     function animate() {
         if (!stop) {
@@ -98,7 +113,6 @@ var ChunkedAnimationFieldViewLayer = function(fieldView, canvasId) {
             }
 
             if (layer.animationCount() == 0) {
-                // alert('123');
                 stop = true;
                 console.log('stop');
 
@@ -111,29 +125,56 @@ var ChunkedAnimationFieldViewLayer = function(fieldView, canvasId) {
 ChunkedAnimationFieldViewLayer.prototype = Object.create(AbstractFieldViewLayer.prototype);
 
 ChunkedAnimationFieldViewLayer.prototype.rectByPosition = function(position, chunksScope) {
-    var key = position.toString();
-    if (key in this.animations) {
-        return this.animations[key].rect(position, chunksScope);
+    var ids = this.animationIdsByPosition(position);
+    if (ids && ids.length > 0) {
+        return this.animations[ids[0]].rect(position, chunksScope);
     }
+
+    /// var key = position.toString();
+    /// if (key in this.animations) {
+    ///     return this.animations[key].rect(position, chunksScope);
+    /// }
 };
 
 ChunkedAnimationFieldViewLayer.prototype.renderByPosition = function(position, rect) {
     // render animation for given rect
-    var key = position.toString();
-    var animation = this.animations[key];
+    /// var key = position.toString();
+    /// var animation = this.animations[key];
 
-    if (animation.removeOnNextFrame) {
-        delete this.animations[key];
-        this.c--;
-    } else {
-        animation.updatePosition();
-        animation.render(this.imageData.renderContext, rect);
+    var ids = this.animationIdsByPosition(position).slice();
 
-        if (animation.finished()) {
-            // delete this.animations[key];
-            // this.c--;
+    for (var i = 0; i < ids.length; i++) {
+        var animation = this.animations[ids[i]];
 
-            animation.removeOnNextFrame = true;
+        if (animation.removeOnNextFrame) {
+            //delete this.animations[animation.id];
+            //this.positions.removeValue(position);
+            delete this.animations[animation.id];
+            delete this.positions[animation.id];
+
+            var a = this.a[position.toString()];
+            if (a.length > 1) {
+                if (a.indexOf(animation.id) !== 1) {
+                    a.splice(a.indexOf(animation.id), 1);
+                }
+
+                console.log('remove, ids = ' + ids.toString());
+            } else {
+                delete this.a[position.toString()];
+            }
+
+            ///delete this.animations[key];
+            this.c--;
+        } else {
+            animation.updatePosition();
+            animation.render(this.imageData.renderContext, rect);
+
+            if (animation.finished()) {
+                // delete this.animations[key];
+                // this.c--;
+
+                animation.removeOnNextFrame = true;
+            }
         }
     }
 };
@@ -142,16 +183,15 @@ ChunkedAnimationFieldViewLayer.prototype.refresh = function() {
     this.imageData.clear();
     
     // TODO fix this after migrating 'animations' to map
-    var keys = Object.keys(this.animations);
+    var ids = Object.keys(this.animations);
     var positions = {};
 
-    for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        var position = new CellPosition().fromKey(key);
+    for (var i = 0; i < ids.length; i++) {
+        var id = ids[i];
+        var position = this.positions[id];
         positions[position.toString()] = position;
     }
 
     this.renderByPositions(positions);
     this.display();
-    // this.test({x: 0, y: 0, width: 1100, height: 800});
 };

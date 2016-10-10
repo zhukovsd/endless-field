@@ -19,13 +19,17 @@
  */
 
 var SimpleFieldCheckCellTextAnimation = function(count) {
-    AbstractLayerAnimation.call(this, 500);
+    AbstractLayerAnimation.call(this, 400);
     
     this.count = count;
-    
+
     this.yTransition = new FloatValueTransition(this.maxPosition, 0, 15);
-    this.fillColorTransition = new ColorValueTransition('#00ff00', '#00ff00', 1, 0.5, this.maxPosition);
     this.strokeColorTransition = new ColorValueTransition('#000000', '#000000', 1, 0.5, this.maxPosition);
+
+    if (count > 0)
+        this.fillColorTransition = new ColorValueTransition('#00ff00', '#00ff00', 1, 0.5, this.maxPosition);
+    else
+        this.fillColorTransition = new ColorValueTransition('#ff0000', '#ff0000', 1, 0.5, this.maxPosition);
 };
 
 SimpleFieldCheckCellTextAnimation.height = 50;
@@ -49,12 +53,16 @@ SimpleFieldCheckCellTextAnimation.prototype.render = function(context, rect) {
 
     context.font = "bold 20px Arial";
     context.fillStyle = this.fillColorTransition.currentValue(this.position);
+
+    // console.log('id = ' + this.id + ', ' + context.fillStyle);
+
     context.strokeStyle = this.strokeColorTransition.currentValue(this.position);
     context.lineWidth = 1;
 
     var x = rect.x + 2;
     var y = rect.y + rect.height - 5 - this.yTransition.currentValue(this.position);
 
-    context.fillText('text', x, y);
-    context.strokeText('test', x, y);
+    var text = Math.abs(this.count) + ' cells';
+    context.fillText(text, x, y);
+    context.strokeText(text, x, y);
 };
