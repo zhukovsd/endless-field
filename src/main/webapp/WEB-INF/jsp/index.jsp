@@ -129,6 +129,8 @@
             localStorage["cameraPosition"] = JSON.stringify(position);
         };
 
+        fieldView.camera.onPositionChanged(localStorage["cameraPosition"]);
+
         // TODO websocket close/error events
     </script>
 </head>
