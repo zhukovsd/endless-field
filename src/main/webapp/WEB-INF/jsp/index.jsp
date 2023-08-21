@@ -57,26 +57,20 @@
 
         window.addEventListener('load',
             function(event) {
-//                fieldView.init('field-canvas-container', 'field-canvas');
-//                mouseEventListener.init(fieldView.getLayer('player-labels-layer'));
-
                 var canvas = document.getElementById('field-cells-layer-canvas');
 
-                window.addEventListener('resize',
-                        function() {
-                            canvas.width = canvas.clientWidth;
-                            canvas.height = canvas.clientHeight;
+                window.addEventListener('resize', function() {
+                    canvas.width = canvas.clientWidth;
+                    canvas.height = canvas.clientHeight;
 
-                            var scope = fieldView.camera.cellsScope();
-                            document.getElementById('canvas-size').textContent = canvas.width + ", " + canvas.height;
-                            document.getElementById('camera-position').textContent = JSON.stringify(fieldView.camera.position);
-                            document.getElementById('camera-scope').textContent = JSON.stringify(scope);
-                            document.getElementById('chunks-scope').textContent = JSON.stringify(scope.chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
+                    var scope = fieldView.camera.cellsScope();
+                    document.getElementById('canvas-size').textContent = canvas.width + ", " + canvas.height;
+                    document.getElementById('camera-position').textContent = JSON.stringify(fieldView.camera.position);
+                    document.getElementById('camera-scope').textContent = JSON.stringify(scope);
+                    document.getElementById('chunks-scope').textContent = JSON.stringify(scope.chunkIds(fieldManager.chunkSize, fieldManager.chunkIdFactor));
 
-                            fieldView.getLayer('cells-layer').renderByChunkIds([0, 1]);
-                        },
-                        false
-                );
+                    fieldView.getLayer('cells-layer').renderByChunkIds([0, 1]);
+                }, false);
             }, false
         );
 

@@ -20,7 +20,6 @@ import com.zhukovsd.endlessfield.ChunkIdGenerator;
 import com.zhukovsd.endlessfield.field.EndlessField;
 import com.zhukovsd.endlessfield.field.EndlessFieldCell;
 import com.zhukovsd.endlessfield.field.EndlessFieldCellView;
-import com.zhukovsd.minesweeperfield.MinesweeperFieldCell;
 import com.zhukovsd.serverapp.cache.scopes.UsersByChunkConcurrentCollection;
 import com.zhukovsd.serverapp.cache.sessions.SessionsCacheConcurrentHashMap;
 import com.zhukovsd.serverapp.cache.sessions.WebSocketSessionsConcurrentHashMap;
