@@ -23,7 +23,7 @@
     <groupId>com.zhukovsd</groupId>
     <artifactId>endless-field</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>${packaging.type}</packaging>
 
     <dependencies>
         <dependency>
@@ -58,6 +58,24 @@
             <version>3.2.2</version>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>jar</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <packaging.type>jar</packaging.type>
+            </properties>
+        </profile>
+        <profile>
+            <id>war</id>
+            <properties>
+                <packaging.type>war</packaging.type>
+            </properties>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
